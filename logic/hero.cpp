@@ -1,9 +1,12 @@
 #include "hero.h"
 
+#include <iostream>
 #include <algorithm>
+#include "monster.h"
+#include "asset.h"
 
 MHero::MHero():MObject() {
-	id = OBJ_HERO;
+	typeId = OBJ_HERO;
 	actionsLimit = 2;
 	actions[0] = EVNT_HERO_ATTACK;
 	actions[1] = EVNT_HERO_RESEARCH;
@@ -16,24 +19,34 @@ MHero::MHero():MObject() {
 	tokenPerSkillLimit = 1;
     tokenLimitType = TKN_USUAL;
     tokensLimit = 2;
+    usedHands = 0;
 	skills.insert(std::pair<int, stTokenValue>(SKL_KNOWLEDGE, stTokenValue()));
     skills.insert(std::pair<int, stTokenValue>(SKL_COMMUNICATION, stTokenValue()));
     skills.insert(std::pair<int, stTokenValue>(SKL_ATTENTION, stTokenValue()));
     skills.insert(std::pair<int, stTokenValue>(SKL_STRENGTH, stTokenValue()));
     skills.insert(std::pair<int, stTokenValue>(SKL_WILL, stTokenValue()));
-    attributes.insert(std::pair<int, stTokenValue>(ATR_HEALTH, stTokenValue()));
-    attributes.insert(std::pair<int, stTokenValue>(ATR_MIND, stTokenValue()));
+    //attributes.insert(std::pair<int, stTokenValue>(ATR_HEALTH, stTokenValue()));
+    //attributes.insert(std::pair<int, stTokenValue>(ATR_MIND, stTokenValue()));
     attributes.insert(std::pair<int, stTokenValue>(ATR_DOLLAR, stTokenValue()));
     attributes.insert(std::pair<int, stTokenValue>(ATR_SPEED, stTokenValue()));
     attributes.insert(std::pair<int, stTokenValue>(ATR_TROPHEY, stTokenValue()));
     attributes.insert(std::pair<int, stTokenValue>(ATR_EVIDENCE, stTokenValue()));
+    assets.insert(std::pair<int, MAsset*>(AST_ADJUSTABLE_WRENCH, new MAsset(AST_ADJUSTABLE_WRENCH)));
+    assets.insert(std::pair<int, MAsset*>(AST_TOMMY_GUN, new MAsset(AST_TOMMY_GUN)));
 }
 MHero::~MHero() {
 	usedActions.clear();
+	skills.clear();
+	monsters.clear();
+	for(std::map<int, MAsset*>::iterator it = assets.begin(); it != assets.end(); it++) {
+		if(it->second) delete it->second;
+	}
+	assets.clear();
 }
-void MHero::execute(int eventId) {
-	switch(eventId) {
+bool MHero::execute(MEvent* _event) {
+	switch(_event->getType()) {
 	case EVNT_HERO_ATTACK:
+	    //todo
 		break;
     case EVNT_HERO_RESEARCH:
         break;
@@ -50,7 +63,8 @@ void MHero::execute(int eventId) {
     case EVNT_HERO_EVADE:
         break;
 	}
-	usedActions.push_back(eventId);
+	usedActions.push_back(_event->getType());
+	return true;
 }
 bool MHero::actionWasUsed(int action) {
 	return (std::find(usedActions.begin(), usedActions.end(), action) != usedActions.end());
@@ -72,4 +86,13 @@ void MHero::setSkill(int id, stTokenValue value) {
 }
 stTokenValue MHero::getSkill(int id) {
     return skills[id];
+}
+void MHero::addMonster(MMonster* monster) {
+    monsters.push_back(monster);
+}
+void MHero::removeMonster(MMonster* monster) {
+    monsters.erase(std::remove(monsters.begin(), monsters.end(), monster), monsters.end());
+}
+std::vector<MMonster*> MHero::getMonsters() {
+    return monsters;
 }

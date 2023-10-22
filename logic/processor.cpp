@@ -3,9 +3,10 @@
 #include "dice.h"
 #include "mui.h"
 #include "hero.h"
+#include "monster.h"
 #include "event.h"
 
-void MProcessor::addEvent(int eventType, MEvent* parent) {
+MEvent* MProcessor::addEvent(int eventType) {
 	MObject* object;
 	switch(eventObjectType[eventType]) {
 	case OBJ_HERO:
@@ -21,54 +22,72 @@ void MProcessor::addEvent(int eventType, MEvent* parent) {
 	std::string evtName = getEventName(eventType);
 	if(evtName == "") {
 		std::cout<<"addEvent error: can't determine event: "<<eventType<<std::endl;
-		return;
+		return nullptr;
 	}
-	std::string objName = getObjectName(object->getId());
+	std::string objName = getObjectName(object->getTypeId());
 	if(objName == "") {
-		std::cout<<"addEvent error: can't determine object: "<<object->getId()<<std::endl;
-		return;
+		std::cout<<"addEvent error: can't determine object: "<<object->getTypeId()<<std::endl;
+		return nullptr;
 	}
 	std::cout<<"Event add. Event type: "<<evtName<<". Object: "<<objName<<std::endl;
-	MEvent* nextEvent = new MEvent(eventType, object, parent);
+	MEvent* nextEvent = new MEvent(eventType, object);
 	nextEvent->setId(eventNumber ++);
-	events.push_front(nextEvent);
+    events.push_front(nextEvent);
 	switch(eventType) {
 	case EVNT_HERO_ATTACK:
-		addEvent(EVNT_MUI_SELECT_MONSTER, events.back());
-		resoveNextEvent();
-		addEvent(EVNT_HERO_CHECK_STRENGTH, events.back());
+	    addEvent(EVNT_HERO_CHECK_STRENGTH);
+		addEvent(EVNT_MUI_SELECT_MONSTER);
 		break;
 	case EVNT_HERO_CHECK_STRENGTH:
-		addEvent(EVNT_DICE_CAST, events.back());
+		addEvent(EVNT_DICE_CAST);
 		break;
 	case EVNT_MUI_SELECT_ACTION:
-		object->setExecParamObject("hero", hero);
+		nextEvent->setExecParamObject("hero", hero);
+		break;
+    case EVNT_MUI_SELECT_MONSTER:
+		nextEvent->setExecParamObject("hero", hero);
 		break;
 	}
+
+	return nextEvent;
 }
 void MProcessor::resoveNextEvent() {
+    int result = -1;
+
 	event = events.front();
 	std::string evtName = getEventName(event->getType());
 	if(evtName == "") {
 		std::cout<<"resoveNextEvent error: can't determine event"<<std::endl;
 		return;
 	}
-	std::cout<<"trying resolve: "<<evtName<<std::endl;
-	event->execute();
-	//save execute event in history and remove from stack
+
+	std::cout<<"start resolve event: "<<evtName<<std::endl;
+	if(!event->execute()) {
+        std::cout<<"terminate process"<<std::endl;
+        terminate = true;
+        return;
+	}
+
+	std::cout<<"add to history: "<<evtName<<std::endl;
 	history.push_back(event);
 	events.pop_front();
-	//post execute actions
+
+	std::cout<<"post processing"<<std::endl;
 	switch(event->getType()) {
-	case EVNT_MUI_SELECT_ACTION: {
-		int result = event->getObject()->getExecResultInt("selected");
+	case EVNT_MUI_SELECT_ACTION:
+		result = event->getExecResultInt("selected");
 		std::cout<<"mui action selected: "<<result<<std::endl;
-		addEvent(result, NULL);
+		addEvent(result);
+		break;
+	case EVNT_MUI_SELECT_MONSTER:
+		result = event->getExecResultInt("selected");
+		std::cout<<"mui monster selected: "<<result<<std::endl;
 		break;
 	}
-	}
-	event->getObject()->clearParams();
-	event->getObject()->clearResults();
+
+	std::cout<<"end resolve event: "<<evtName<<std::endl;
+    event->clearParams();
+    event->clearResults();
 }
 std::string MProcessor::getEventName(int id) {
 	std::map<int, std::string>::iterator it = eventName.find(id);
@@ -80,16 +99,21 @@ std::string MProcessor::getEventName(int id) {
 std::string MProcessor::getObjectName(int id) {
 	std::map<int, std::string>::iterator it = objectName.find(id);
 	if(it == objectName.end()) {
-		std::cout<<"Alrama!"<<std::endl;
 		return "";
 	}
 	return objectName[id];
 }
 MProcessor::MProcessor() {
+    terminate = false;
 	eventNumber = 0;
 	dice = new MDice;
-	hero = new MHero;
 	mui = new MMui;
+	monster = new MMonster(MSTR_DOG);
+	monster->setAttribute(ATR_HEALTH, stTokenValue(1, 0));
+	hero = new MHero;
+	hero->addMonster(monster);
+	hero->setAttribute(ATR_HEALTH, stTokenValue(6, 0));
+	hero->setAttribute(ATR_MIND, stTokenValue(6, 0));
 	eventObjectType.insert(std::pair<int, int>(EVNT_HERO_ATTACK, OBJ_HERO));
 	eventObjectType.insert(std::pair<int, int>(EVNT_DICE_CAST, OBJ_DICE));
 	eventObjectType.insert(std::pair<int, int>(EVNT_HERO_CHECK_STRENGTH, OBJ_HERO));
@@ -121,12 +145,13 @@ MProcessor::~MProcessor() {
 	if(dice) delete dice;
 	if(mui) delete mui;
 	if(hero) delete hero;
+	if(monster) delete monster;
 }
 void MProcessor::start() {
-	addEvent(EVNT_MUI_SELECT_ACTION, NULL);
+	addEvent(EVNT_MUI_SELECT_ACTION);
 }
 void MProcessor::resolveEvents() {
-	while(!events.empty()) {
+	while(!events.empty() && !terminate) {
 		resoveNextEvent();
 	}
 }

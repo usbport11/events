@@ -4,12 +4,13 @@ void MDice::cast() {
 }
 
 MDice::MDice():MObject() {
-	id = OBJ_DICE;
+	typeId = OBJ_DICE;
 }
-void MDice::execute(int eventId) {
-	switch(eventId) {
+bool MDice::execute(MEvent* _event) {
+	switch(_event->getType()) {
 	case EVNT_DICE_CAST:
 		cast();
 		break;
 	}
+	return true;
 }

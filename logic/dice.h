@@ -11,7 +11,7 @@ private:
     void cast();
 public:
     MDice();
-    void execute(int eventId);
+    bool execute(MEvent* _event);
 };
 
 #endif

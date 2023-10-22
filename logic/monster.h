@@ -9,7 +9,8 @@ private:
     void takeDamage(int damage);
 public:
     MMonster();
-    void execute(int eventId);
+    MMonster(int _id);
+    bool execute(MEvent* _event);
 };
 
 #endif

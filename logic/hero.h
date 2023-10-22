@@ -11,6 +11,9 @@
 #define TKN_SPELLS_NUMBER 2
 #define TKN_UNLIMITED 3
 
+class MMonster;
+class MAsset;
+
 class MHero: public MObject {
 private:
     bool detained;
@@ -22,6 +25,11 @@ private:
     int actions[ACTIONS_SIZE];
     std::vector<int> usedActions;
     std::map<int, stTokenValue> skills;
+    //data
+    std::vector<MMonster*> monsters;
+    std::map<int, MAsset*> assets;
+    //other
+    int usedHands;
     //actions helpers
     bool actionWasUsed(int action);
     //actions
@@ -36,13 +44,17 @@ private:
 public:
     MHero();
     ~MHero();
-    void execute(int eventId);
+    bool execute(MEvent* _event);
     //actions helpers
     std::vector<int> getAvailableActions();
     void clearUsedActions();
     //get/set
     void setSkill(int id, stTokenValue value);
     stTokenValue getSkill(int id);
+    //monsters
+    void addMonster(MMonster* monster);
+    void removeMonster(MMonster* monster);
+    std::vector<MMonster*> getMonsters();
 };
 
 #endif

@@ -2,18 +2,22 @@
 #define muiH
 
 #include "object.h"
-
 #include <map>
+
+class MHero;
+class MEvent;
 
 class MMui: public MObject {
 private:
+    MHero* hero;
+    MEvent* event;
     std::map<int, std::string> actionNames;
-    void selectEvent();
-    void selectMonster();
+    bool selectEvent();
+    bool selectMonster();
 public:
     MMui();
     ~MMui();
-    void execute(int eventId);
+    bool execute(MEvent* _event);
 };
 
 #endif

@@ -1,9 +1,11 @@
 #ifndef objectH
 #define objectH
 
-#include "variant.h"
-
+#include "event.h"
 #include <map>
+
+#define PRSR_EVNT_BAD 0
+#define PRSR_EVNT_GOOD 1
 
 #define OBJ_OBJ 0
 #define OBJ_HERO 1
@@ -21,6 +23,10 @@
 #define EVNT_HERO_TRADE 207
 #define EVNT_HERO_EVADE 208
 #define EVNT_HERO_CHECK_STRENGTH 209
+#define EVNT_HERO_TAKE_DAMAGE 210
+
+#define HERO_AGNES_BAKER 2001
+#define HERO_VENDY_ADAMS 2002
 
 #define MSTR_DOG 1001
 #define MSTR_CULTIST 1002
@@ -44,6 +50,19 @@
 #define ATR_SPEED 4
 #define ATR_TROPHEY 5
 #define ATR_EVIDENCE 6
+
+#define AST_ADJUSTABLE_WRENCH 3001
+#define AST_TOMMY_GUN 3002
+#define AST_FLESH_DEFENSE 3003
+
+#define AST_CONDITION_ANY 1
+#define AST_CONDITION_ONEHAND 2
+#define AST_CONDITION_TWOHAND 3
+
+#define AST_RESULT_PLUS_ONE_STRENGTH 1
+#define AST_RESULT_PLUS_THREE_STRENGTH 2
+#define AST_RESULT_PLUS_FOUR_STRENGTH 3
+#define AST_RESULT_DEF_BY_KNOWLEDGE_CHECK 4
 
 struct stTokenValue {
 	int base;
@@ -83,22 +102,18 @@ struct stTokenValue {
 
 class MObject {
 protected:
-    int id;
-    std::map<std::string, MVariant*> execParams;
-    std::map<std::string, MVariant*> execResults;
+    int id;//id of object
+    int typeId; //id of object type
     std::map<int, stTokenValue> attributes;
 public:
     MObject();
     ~MObject();
-    virtual void execute(int eventId);
+    virtual bool execute(MEvent* _event);
     int getId();
-    int getExecResultInt(std::string name);
-    void setExecParamObject(std::string name, MObject* object);
-    MObject* getExecParamObject(std::string name);
-    void clearResults();
-    void clearParams();
+    int getTypeId();
     void setAttribute(int id, stTokenValue value);
     stTokenValue getAttribute(int id);
+    void takeDamage(int health, int mind);
 };
 
 #endif

@@ -4,10 +4,9 @@
 #include "monster.h"
 
 MScenario::MScenario() {
-	MHero* hero = new MHero;
-	MMonster* monster = new MMonster;
-	heroes.push_back(hero);
-	monsters.push_back(monster);
+	heroes.push_back(new MHero);
+	monsters.push_back(new MMonster);
+	monsters.push_back(new MMonster);
 }
 MScenario::~MScenario() {
 	for(std::vector<MHero*>::iterator it = heroes.begin(); it != heroes.end(); it ++) {
