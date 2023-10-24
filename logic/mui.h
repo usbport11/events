@@ -10,7 +10,6 @@ class MEvent;
 class MMui: public MObject {
 private:
     MHero* hero;
-    MEvent* event;
     std::map<int, std::string> actionNames;
     bool selectEvent();
     bool selectMonster();

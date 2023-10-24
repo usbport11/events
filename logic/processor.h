@@ -7,7 +7,7 @@
 #include <string>
 #include <iostream>
 
-class MDice;
+class MDiceSet;
 class MMui;
 class MHero;
 class MEvent;
@@ -19,7 +19,7 @@ private:
     std::deque<MEvent*> events;
     std::vector<MEvent*> history;
     int eventNumber;
-    MDice* dice;
+    MDiceSet* diceSet;
     MMui* mui;
     MHero* hero;
     MMonster* monster;

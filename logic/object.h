@@ -10,7 +10,7 @@
 #define OBJ_OBJ 0
 #define OBJ_HERO 1
 #define OBJ_MONSTER 2
-#define OBJ_DICE 3
+#define OBJ_DICESET 3
 #define OBJ_ASSET 4
 #define OBJ_MUI 5
 
@@ -32,7 +32,8 @@
 #define MSTR_CULTIST 1002
 #define MSTR_SHADOW 1003
 
-#define EVNT_DICE_CAST 301
+#define EVNT_DICESET_ROLL 301
+
 #define EVNT_ASSET_USE 401
 #define EVNT_MUI_SELECT_ACTION 501
 #define EVNT_MUI_SELECT_MONSTER 502
@@ -102,6 +103,7 @@ struct stTokenValue {
 
 class MObject {
 protected:
+    MEvent* event;
     int id;//id of object
     int typeId; //id of object type
     std::map<int, stTokenValue> attributes;

@@ -12,8 +12,12 @@ MObject::~MObject() {
 	attributes.clear();
 }
 bool MObject::execute(MEvent* _event) {
-	std::cout<<"base execute!"<<std::endl;
-	return false;
+    event = _event;
+    if(!event) {
+        std::cout<<"null event"<<std::endl;
+        return false;
+    }
+    return true;
 }
 int MObject::getId() {
     return id;

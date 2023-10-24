@@ -20,13 +20,11 @@ MHero::MHero():MObject() {
     tokenLimitType = TKN_USUAL;
     tokensLimit = 2;
     usedHands = 0;
-	skills.insert(std::pair<int, stTokenValue>(SKL_KNOWLEDGE, stTokenValue()));
-    skills.insert(std::pair<int, stTokenValue>(SKL_COMMUNICATION, stTokenValue()));
-    skills.insert(std::pair<int, stTokenValue>(SKL_ATTENTION, stTokenValue()));
-    skills.insert(std::pair<int, stTokenValue>(SKL_STRENGTH, stTokenValue()));
-    skills.insert(std::pair<int, stTokenValue>(SKL_WILL, stTokenValue()));
-    //attributes.insert(std::pair<int, stTokenValue>(ATR_HEALTH, stTokenValue()));
-    //attributes.insert(std::pair<int, stTokenValue>(ATR_MIND, stTokenValue()));
+	skills.insert(std::pair<int, stTokenValue>(SKL_KNOWLEDGE, stTokenValue(3, 0)));
+    skills.insert(std::pair<int, stTokenValue>(SKL_COMMUNICATION, stTokenValue(3, 0)));
+    skills.insert(std::pair<int, stTokenValue>(SKL_ATTENTION, stTokenValue(3, 0)));
+    skills.insert(std::pair<int, stTokenValue>(SKL_STRENGTH, stTokenValue(3, 0)));
+    skills.insert(std::pair<int, stTokenValue>(SKL_WILL, stTokenValue(1, 0)));
     attributes.insert(std::pair<int, stTokenValue>(ATR_DOLLAR, stTokenValue()));
     attributes.insert(std::pair<int, stTokenValue>(ATR_SPEED, stTokenValue()));
     attributes.insert(std::pair<int, stTokenValue>(ATR_TROPHEY, stTokenValue()));
@@ -44,9 +42,9 @@ MHero::~MHero() {
 	assets.clear();
 }
 bool MHero::execute(MEvent* _event) {
+    if(!MObject::execute(_event)) return false;
 	switch(_event->getType()) {
 	case EVNT_HERO_ATTACK:
-	    //todo
 		break;
     case EVNT_HERO_RESEARCH:
         break;
@@ -63,7 +61,7 @@ bool MHero::execute(MEvent* _event) {
     case EVNT_HERO_EVADE:
         break;
 	}
-	usedActions.push_back(_event->getType());
+	usedActions.push_back(event->getType());
 	return true;
 }
 bool MHero::actionWasUsed(int action) {

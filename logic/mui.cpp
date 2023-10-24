@@ -49,11 +49,7 @@ MMui::~MMui() {
 	actionNames.clear();
 }
 bool MMui::execute(MEvent* _event) {
-    event = _event;
-    if(!event) {
-        std::cout<<"null event"<<std::endl;
-        return false;
-    }
+    if(!MObject::execute(_event)) return false;
 	hero = (MHero*)event->getExecParamObject("hero");
 	if(!hero) {
         std::cout<<"mui: can't find hero"<<std::endl;

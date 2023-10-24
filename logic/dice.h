@@ -4,14 +4,25 @@
 #include "object.h"
 
 #include <vector>
+#include <random>
+#include <ctime>
 
-class MDice: public MObject {
+class MDiceSet: public MObject {
 private:
-    std::vector<int> res;
-    void cast();
+    std::mt19937 rng;
+    std::uniform_int_distribution<int> distribute;
+    std::vector<int> rollResults;
+    bool roll(int diceNumber);
+    void reRollAll();
+    void reRoll(int number);
+    void reRollLessThan(int value);
 public:
-    MDice();
+    MDiceSet();
+    ~MDiceSet();
     bool execute(MEvent* _event);
+    void nullAll();
+    void removeAll();
+    int getSuccessRolls();
 };
 
 #endif
