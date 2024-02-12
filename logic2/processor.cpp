@@ -103,14 +103,25 @@ void MProcessor::intitMaps() {
   m.insert(std::pair<std::string, pt2>("usecard", &MProcessor::useCard));
   m.insert(std::pair<std::string, pt2>("getartifact", &MProcessor::getArtifact));
 
-  areas.insert(std::pair<std::string, MObject*>("area1", new MArea("area1")));
-  areas.insert(std::pair<std::string, MObject*>("area2", new MArea("area2")));
-  areas.insert(std::pair<std::string, MObject*>("area3", new MArea("area3")));
-  areas.insert(std::pair<std::string, MObject*>("area4", new MArea("area4")));
-  areas.insert(std::pair<std::string, MObject*>("area5", new MArea("area5")));
+  initAreas();
 
   adventurers.insert(std::pair<std::string, MObject*>("adven1", new MAdventurer("adven1")));
   adventurers.insert(std::pair<std::string, MObject*>("adven2", new MAdventurer("adven2")));
+}
+void MProcessor::initAreas() {
+  int rows = 2;
+  int cols = 2;
+  char buff[4];
+  std::string base;
+  for(int i=0; i<rows; i++) {
+    for(int j=0; j<cols; j++) {
+      base = "area";
+      base += itoa(i, buff, 10);
+      base += itoa(j, buff, 10);
+      areas.insert(std::pair<std::string, MObject*>(base, new MArea(base, i, j)));
+    }
+  }
+  std::map<std::string, MObject*> areas;
 }
 MProcessor::MProcessor() {
   intitMaps();

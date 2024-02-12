@@ -38,6 +38,7 @@ private:
   void parseArgs(const std::string& _sargs);
   void call(const std::string& name);
   void intitMaps();
+  void initAreas();
 public:
   MProcessor();
   ~MProcessor();
