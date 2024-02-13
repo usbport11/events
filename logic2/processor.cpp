@@ -3,6 +3,7 @@
 #include <iostream>
 #include "area.h"
 #include "adventurer.h"
+#include "card.h"
 
 bool MProcessor::argsLessLimit(int num) {
   return (vargs.size() < num);
@@ -21,24 +22,27 @@ MAdventurer* MProcessor::getAdventurer(const std::string& name) {
   }
   return (MAdventurer*)adventurers[name];
 }
-void MProcessor::print() {
-  std::cout<<sargs<<std::endl;
+MCard* MProcessor::getItemCard(const std::string& name) {
+  moi moit = itemCards.find(name);
+  if(moit == itemCards.end()) {
+    std::cout<<"Item Card ["<<name<<"] not found!"<<std::endl;
+  }
+  return (MCard*)itemCards[name];
+}
+MCard* MProcessor::getFloodCard(const std::string& name) {
+  moi moit = floodCards.find(name);
+  if(moit == floodCards.end()) {
+    std::cout<<"Flood Card ["<<name<<"] not found!"<<std::endl;
+  }
+  return (MCard*)floodCards[name];
 }
 void MProcessor::move() {
   if(argsLessLimit(2)) return;
-  MObject* adv = getAdventurer(vargs[0]);
-  MObject* area = getArea(vargs[1]);
-  if(!adv) return;
-  if(!area) return;
-  std::cout<<"Move: "<<adv->getName()<<" to the "<<area->getName()<<std::endl;
+  std::cout<<"Move: "<<vargs[0]<<" to the "<<vargs[1]<<std::endl;
 }
 void MProcessor::abfluss() {
   if(argsLessLimit(2)) return;
-  MObject* adv = getAdventurer(vargs[0]);
-  MObject* area = getArea(vargs[1]);
-  if(!adv) return;
-  if(!area) return;
-    std::cout<<"Abfluss: "<<adv->getName()<<" the "<<area->getName()<<std::endl;
+  std::cout<<"Abfluss: "<<vargs[0]<<" the "<<vargs[1]<<std::endl;
 }
 void MProcessor::flood() {
   if(argsLessLimit(2)) return;
@@ -46,9 +50,7 @@ void MProcessor::flood() {
 }
 void MProcessor::skip() {
   if(argsLessLimit(1)) return;
-  MObject* adv = getAdventurer(vargs[0]);
-  if(!adv) return;
-  std::cout<<"Skip: "<<adv->getName()<<std::endl;
+  std::cout<<"Skip: "<<vargs[0]<<std::endl;
 }
 void MProcessor::handOver() {
   if(argsLessLimit(3)) return;
@@ -92,7 +94,6 @@ void MProcessor::call(const std::string& name) {
   (*this.*m[name])();
 }
 void MProcessor::intitMaps() {
-  m.insert(std::pair<std::string, pt2>("print", &MProcessor::print));
   m.insert(std::pair<std::string, pt2>("move", &MProcessor::move));
   m.insert(std::pair<std::string, pt2>("abfluss", &MProcessor::abfluss));
   m.insert(std::pair<std::string, pt2>("flood", &MProcessor::flood));
@@ -107,6 +108,14 @@ void MProcessor::intitMaps() {
 
   adventurers.insert(std::pair<std::string, MObject*>("adven1", new MAdventurer("adven1")));
   adventurers.insert(std::pair<std::string, MObject*>("adven2", new MAdventurer("adven2")));
+
+  itemCards.insert(std::pair<std::string, MObject*>("itemcard1", new MCard("itemcard1")));
+  itemCards.insert(std::pair<std::string, MObject*>("itemcard2", new MCard("itemcard2")));
+  itemCards.insert(std::pair<std::string, MObject*>("itemcard3", new MCard("itemcard3")));
+
+  floodCards.insert(std::pair<std::string, MObject*>("floodcard1", new MCard("floodcard1")));
+  floodCards.insert(std::pair<std::string, MObject*>("floodcard2", new MCard("floodcard2")));
+  floodCards.insert(std::pair<std::string, MObject*>("floodcard3", new MCard("floodcard3")));
 }
 void MProcessor::initAreas() {
   int rows = 2;
@@ -121,7 +130,7 @@ void MProcessor::initAreas() {
       areas.insert(std::pair<std::string, MObject*>(base, new MArea(base, i, j)));
     }
   }
-  std::map<std::string, MObject*> areas;
+  //some additional stuff
 }
 MProcessor::MProcessor() {
   intitMaps();
@@ -130,8 +139,22 @@ MProcessor::~MProcessor() {
   m.clear();
   vargs.clear();
   sargs.clear();
+  for(moi moit = areas.begin(); moit != areas.end(); moit++) {
+    if(moit->second) delete moit->second;
+  }
   areas.clear();
+  for(moi moit = adventurers.begin(); moit != adventurers.end(); moit++) {
+    if(moit->second) delete moit->second;
+  }
   adventurers.clear();
+  for(moi moit = itemCards.begin(); moit != itemCards.end(); moit++) {
+    if(moit->second) delete moit->second;
+  }
+  itemCards.clear();
+  for(moi moit = floodCards.begin(); moit != floodCards.end(); moit++) {
+    if(moit->second) delete moit->second;
+  }
+  floodCards.clear();
 }
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {
   parseArgs(_sargs);

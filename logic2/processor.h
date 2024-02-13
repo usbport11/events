@@ -8,6 +8,7 @@
 class MObject;
 class MArea;
 class MAdventurer;
+class MCard;
 
 class MProcessor {
 private:
@@ -21,11 +22,14 @@ private:
 
   std::map<std::string, MObject*> areas;
   std::map<std::string, MObject*> adventurers;
+  std::map<std::string, MObject*> itemCards;
+  std::map<std::string, MObject*> floodCards;
 
   bool argsLessLimit(int num);
   MArea* getArea(const std::string& name);
   MAdventurer* getAdventurer(const std::string& name);
-  void print();
+  MCard* getItemCard(const std::string& name);
+  MCard* getFloodCard(const std::string& name);
   void move();
   void abfluss();
   void flood();
