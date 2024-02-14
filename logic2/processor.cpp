@@ -8,33 +8,39 @@
 bool MProcessor::argsLessLimit(int num) {
   return (vargs.size() < num);
 }
-MArea* MProcessor::getArea(const std::string& name) {
+MArea* MProcessor::findArea(const std::string& name) {
   moi moit = areas.find(name);
   if(moit == areas.end()) {
     std::cout<<"Area ["<<name<<"] not found!"<<std::endl;
   }
   return (MArea*)areas[name];
 }
-MAdventurer* MProcessor::getAdventurer(const std::string& name) {
+MAdventurer* MProcessor::findAdventurer(const std::string& name) {
   moi moit = adventurers.find(name);
   if(moit == adventurers.end()) {
     std::cout<<"Adventurer ["<<name<<"] not found!"<<std::endl;
   }
   return (MAdventurer*)adventurers[name];
 }
-MCard* MProcessor::getItemCard(const std::string& name) {
+MCard* MProcessor::findItemCard(const std::string& name) {
   moi moit = itemCards.find(name);
   if(moit == itemCards.end()) {
     std::cout<<"Item Card ["<<name<<"] not found!"<<std::endl;
   }
   return (MCard*)itemCards[name];
 }
-MCard* MProcessor::getFloodCard(const std::string& name) {
+MCard* MProcessor::findFloodCard(const std::string& name) {
   moi moit = floodCards.find(name);
   if(moit == floodCards.end()) {
     std::cout<<"Flood Card ["<<name<<"] not found!"<<std::endl;
   }
   return (MCard*)floodCards[name];
+}
+void MProcessor::start() {
+  //random areas
+  //random adventurers
+  //random item queue
+  //random flood queue
 }
 void MProcessor::move() {
   if(argsLessLimit(2)) return;
@@ -56,16 +62,45 @@ void MProcessor::handOver() {
   if(argsLessLimit(3)) return;
   std::cout<<"Hand over: "<<vargs[0]<<" card "<<vargs[1]<<" to "<<vargs[3]<<std::endl;
 }
-void MProcessor::getCard() {
+void MProcessor::getItemCard() {
   if(argsLessLimit(2)) return;
-  std::cout<<"Get card: "<<vargs[0]<<" card "<<vargs[1]<<std::endl;
+  MAdventurer* adventurer = findAdventurer(vargs[0]);
+  MCard* card = findItemCard(vargs[1]);
+  if(!adventurer) return;
+  if(!card) return;
+  adventurer->addCard(card);
+  if(adventurer->getCardsNumber() > CARDS_LIMIT) {
+    //draw cards
+  }
+  std::cout<<"Get: "<<vargs[0]<<" item card "<<vargs[1]<<std::endl;
+}
+void MProcessor::getFloodCard() {
+  if(argsLessLimit(2)) return;
+  MCard* card = findItemCard(vargs[1]);
+  if(!card) return;
+  std::string params = vargs[0] + " " + card->getName();
+  execFunction("flood", params);
+  std::cout<<"Get: "<<vargs[0]<<" flood card "<<vargs[1]<<std::endl;
 }
 void MProcessor::drawCard() {
   if(argsLessLimit(2)) return;
+  MAdventurer* adventurer = findAdventurer(vargs[0]);
+  MCard* card = findItemCard(vargs[1]);
+  if(!adventurer) return;
+  if(!card) return;
+  adventurer->removeCard(card);
   std::cout<<"Draw card: "<<vargs[0]<<" card "<<vargs[1]<<std::endl;
 }
 void MProcessor::useCard() {
   if(argsLessLimit(2)) return;
+  MAdventurer* adventurer = findAdventurer(vargs[0]);
+  MCard* card = findItemCard(vargs[1]);
+  if(!adventurer) return;
+  if(!card) return;
+  //get card type
+  //use card
+  //remove card
+  adventurer->removeCard(card);
   std::cout<<"Use card: "<<vargs[0]<<" card "<<vargs[1]<<std::endl;
 }
 void MProcessor::getArtifact() {
@@ -94,12 +129,14 @@ void MProcessor::call(const std::string& name) {
   (*this.*m[name])();
 }
 void MProcessor::intitMaps() {
+  m.insert(std::pair<std::string, pt2>("start", &MProcessor::start));
   m.insert(std::pair<std::string, pt2>("move", &MProcessor::move));
   m.insert(std::pair<std::string, pt2>("abfluss", &MProcessor::abfluss));
   m.insert(std::pair<std::string, pt2>("flood", &MProcessor::flood));
   m.insert(std::pair<std::string, pt2>("skip", &MProcessor::skip));
   m.insert(std::pair<std::string, pt2>("handover", &MProcessor::handOver));
-  m.insert(std::pair<std::string, pt2>("getcard", &MProcessor::getCard));
+  m.insert(std::pair<std::string, pt2>("getitemcard", &MProcessor::getItemCard));
+  m.insert(std::pair<std::string, pt2>("getfloodcard", &MProcessor::getFloodCard));
   m.insert(std::pair<std::string, pt2>("drawcard", &MProcessor::drawCard));
   m.insert(std::pair<std::string, pt2>("usecard", &MProcessor::useCard));
   m.insert(std::pair<std::string, pt2>("getartifact", &MProcessor::getArtifact));

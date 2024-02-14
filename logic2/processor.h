@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+#define CARDS_LIMIT 5
+
 class MObject;
 class MArea;
 class MAdventurer;
@@ -24,18 +26,22 @@ private:
   std::map<std::string, MObject*> adventurers;
   std::map<std::string, MObject*> itemCards;
   std::map<std::string, MObject*> floodCards;
+  std::vector<MObject*> itemDeck;
+  std::vector<MObject*> floodDeck;
 
   bool argsLessLimit(int num);
-  MArea* getArea(const std::string& name);
-  MAdventurer* getAdventurer(const std::string& name);
-  MCard* getItemCard(const std::string& name);
-  MCard* getFloodCard(const std::string& name);
+  MArea* findArea(const std::string& name);
+  MAdventurer* findAdventurer(const std::string& name);
+  MCard* findItemCard(const std::string& name);
+  MCard* findFloodCard(const std::string& name);
+  void start();
   void move();
   void abfluss();
   void flood();
   void skip();
   void handOver();
-  void getCard();
+  void getItemCard();
+  void getFloodCard();
   void drawCard();
   void useCard();
   void getArtifact();

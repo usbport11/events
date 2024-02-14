@@ -10,7 +10,7 @@ class MArea;
 
 class MAdventurer: public MObject {
 private:
-  int cardsLimit;
+  std::string specification;
   std::vector<MArtifact*> artifacts;
   std::vector<MCard*> cards;
   MArea* area;
@@ -24,6 +24,7 @@ public:
   void removeCard(MCard* card);
   void move(MArea* _area);
   void handOver(MCard* card, MAdventurer* adventurer);
+  int getCardsNumber();
 };
 
 #endif
