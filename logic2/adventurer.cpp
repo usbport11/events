@@ -1,10 +1,9 @@
 #include "adventurer.h"
 
-#include <algorithm>
-
 #include "area.h"
 #include "card.h"
 #include "artifact.h"
+#include <algorithm>
 
 MAdventurer::MAdventurer():MObject() {
 }

@@ -1,9 +1,11 @@
 #include "processor.h"
 
-#include <iostream>
 #include "area.h"
 #include "adventurer.h"
 #include "card.h"
+#include <random>
+#include <ctime>
+#include <iostream>
 
 bool MProcessor::argsLessLimit(int num) {
   return (vargs.size() < num);
@@ -37,10 +39,10 @@ MCard* MProcessor::findFloodCard(const std::string& name) {
   return (MCard*)floodCards[name];
 }
 void MProcessor::start() {
-  //random areas
-  //random adventurers
-  //random item queue
-  //random flood queue
+  //random areas +
+  //random adventurers -
+  //random item queue -
+  //random flood queue -
 }
 void MProcessor::move() {
   if(argsLessLimit(2)) return;
@@ -106,6 +108,11 @@ void MProcessor::useCard() {
 void MProcessor::getArtifact() {
   if(argsLessLimit(2)) return;
   std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
+  //draw four artifacts cards
+  //for(int i=0; i<4; i++) {
+  //  execFunction("drawcard", vargs[0] + " artifact_card_name")
+  //}
+  std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
 }
 void MProcessor::parseArgs(const std::string& _sargs) {
   sargs = _sargs;
@@ -141,7 +148,10 @@ void MProcessor::intitMaps() {
   m.insert(std::pair<std::string, pt2>("usecard", &MProcessor::useCard));
   m.insert(std::pair<std::string, pt2>("getartifact", &MProcessor::getArtifact));
 
-  initAreas();
+  areas.insert(std::pair<std::string, MObject*>("area1", new MArea("area1")));
+  areas.insert(std::pair<std::string, MObject*>("area2", new MArea("area2")));
+  areas.insert(std::pair<std::string, MObject*>("area3", new MArea("area3")));
+  areas.insert(std::pair<std::string, MObject*>("area4", new MArea("area4")));
 
   adventurers.insert(std::pair<std::string, MObject*>("adven1", new MAdventurer("adven1")));
   adventurers.insert(std::pair<std::string, MObject*>("adven2", new MAdventurer("adven2")));
@@ -157,20 +167,54 @@ void MProcessor::intitMaps() {
 void MProcessor::initAreas() {
   int rows = 2;
   int cols = 2;
-  char buff[4];
-  std::string base;
+
+  if(areas.size() < rows * cols) return;
+
+  int inds[8][2] = {{-1,-1}, {0,-1}, {1,-1}, {1,0}, {1,1}, {0,1}, {-1,1}, {-1,0}};
+  int* ind;
+  MArea* area;
+  std::map<int, MArea*> temp;
+  std::vector<std::string> rndBase;
+  std::vector<std::string>::iterator it;
+  bool areaUsed[4] = {0};
+
+  int rnd, num = 0;
+  int x, y;
+  std::mt19937 rng;
+  std::uniform_int_distribution<int> distribute;
+  struct timespec tm;
+  clock_gettime(CLOCK_REALTIME, &tm);
+  rng.seed(tm.tv_nsec);
+
+  for(moi moit=areas.begin(); moit!=areas.end(); moit++) {
+    rndBase.push_back(moit->first);
+  }
+  while(!rndBase.empty()) {
+    distribute = std::uniform_int_distribution<int>(0, rndBase.size()-1);
+    rnd = distribute(rng);
+    area = (MArea*)areas[rndBase[rnd]];
+    area->setIndex(int(num / rows), num - (int(num / rows))*rows);
+    rndBase.erase(rndBase.begin() + rnd);
+    temp.insert(std::pair<int, MArea*>(num, area));
+    num ++;
+  }
   for(int i=0; i<rows; i++) {
     for(int j=0; j<cols; j++) {
-      base = "area";
-      base += itoa(i, buff, 10);
-      base += itoa(j, buff, 10);
-      areas.insert(std::pair<std::string, MObject*>(base, new MArea(base, i, j)));
-    }
+	  ind = temp[i * rows + j]->getIndex();
+	  for(int k=0; k<8; k++) {
+        x = ind[0] + inds[k][0];
+        y = ind[1] + inds[k][1];
+	    if((x < 0 || y < 0) || (x >= rows || y >= cols)) continue;
+	  	temp[i * rows + j]->addNeighbor(temp[x * rows + y]);
+	  }
+	}
   }
-  //some additional stuff
+  temp.clear();
+  rndBase.clear();
 }
 MProcessor::MProcessor() {
   intitMaps();
+  initAreas();
 }
 MProcessor::~MProcessor() {
   m.clear();

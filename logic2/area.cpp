@@ -2,12 +2,20 @@
 
 #include <math.h>
 #include <vector>
+#include <algorithm>
 
 MArea::MArea():MObject() {
+  floodLevel = 0;
+  index[0] = -1;
+  index[1] = -1;
 }
 MArea::MArea(const std::string& _name):MObject(_name) {
+  floodLevel = 0;
+  index[0] = -1;
+  index[1] = -1;
 }
 MArea::MArea(const std::string& _name, int x, int y):MArea(_name) {
+  floodLevel = 0;
   index[0] = x;
   index[1] = y;
 }
@@ -19,6 +27,10 @@ bool MArea::isDiagonal(MArea* area) {
 }
 int* MArea::getIndex() {
   return (int*)index;
+}
+void MArea::setIndex(int x, int y) {
+  index[0] = x;
+  index[1] = y;
 }
 std::list<MArea*> MArea::getNeighbors(bool all=false) {
   if(all) {
@@ -33,18 +45,34 @@ std::list<MArea*> MArea::getNeighbors(bool all=false) {
   }
 }
 void MArea::addNeighbor(MArea* area) {
+  std::list<MArea*>::iterator it = std::find(neighbors.begin(), neighbors.end(), area);
+  if(it != neighbors.end()) return;
   neighbors.push_back(area);
+  area->addNeighbor(this);
 }
 void MArea::removeAllNeighbors() {
   neighbors.clear();
 }
 void MArea::removeNeighbor(MArea* area) {
-  for(std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
-    if(area == *it) neighbors.erase(it);
-  }
+  std::list<MArea*>::iterator it = std::find(neighbors.begin(), neighbors.end(), area);
+  if(it == neighbors.end()) return;
+  neighbors.erase(it);
+  area->removeNeighbor(this);
 }
 void MArea::removeNeighbor(std::string name) {
   for(std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
-    if((*it)->getName() == name) neighbors.erase(it);
+    if((*it)->getName() == name) {
+	  neighbors.erase(it);
+	  (*it)->removeNeighbor(this);
+	  break;
+	}
   }
+}
+int MArea::flood() {
+  floodLevel ++;
+  return floodLevel;
+}
+int MArea::abfluss() {
+  floodLevel --;
+  return floodLevel;
 }
