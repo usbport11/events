@@ -6,11 +6,13 @@
 #include <algorithm>
 
 MAdventurer::MAdventurer():MObject() {
+  startArea = "";
 }
 MAdventurer::MAdventurer(const std::string& _name):MObject(_name) {
+  startArea = "";
 }
-MAdventurer::MAdventurer(const std::string& _name, MArea* _area):MObject(_name){
-  area = _area;
+MAdventurer::MAdventurer(const std::string& _name, const std::string& _startArea):MObject(_name) {
+  startArea = _startArea;
 }
 MAdventurer::~MAdventurer() {
   artifacts.clear();
@@ -30,7 +32,10 @@ void MAdventurer::removeCard(MCard* card) {
   if(it == cards.end()) return;
   cards.erase(it);
 }
-void MAdventurer::move(MArea* _area) {
+void MAdventurer::removeAllCards() {
+  cards.clear();
+}
+void MAdventurer::setArea(MArea* _area) {
   area = _area;
 }
 void MAdventurer::handOver(MCard* card, MAdventurer* adventurer) {
@@ -39,4 +44,10 @@ void MAdventurer::handOver(MCard* card, MAdventurer* adventurer) {
 }
 int MAdventurer::getCardsNumber() {
   return cards.size();
+}
+std::string MAdventurer::getStartArea() {
+  return startArea;
+}
+void MAdventurer::setStartArea(std::string _startArea){
+  startArea = _startArea;
 }

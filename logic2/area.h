@@ -24,6 +24,8 @@ public:
   void removeNeighbor(std::string name);
   int flood();
   int abfluss();
+  void setFloodLevel(int _floodLevel);
+  int getFloodLevel();
 };
 
 #endif

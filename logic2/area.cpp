@@ -76,3 +76,9 @@ int MArea::abfluss() {
   floodLevel --;
   return floodLevel;
 }
+void MArea::setFloodLevel(int _floodLevel) {
+  floodLevel = _floodLevel;
+}
+int MArea::getFloodLevel() {
+  return floodLevel;
+}
