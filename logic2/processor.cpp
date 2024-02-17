@@ -76,13 +76,13 @@ void MProcessor::start() {
   for(moi moit = adventurers.begin(); moit != adventurers.end(); moit++) {
     adv = (MAdventurer*)moit->second;
 	adv->removeAllCards();
-	adv->setArea((MArea*)areas[adv->getStartArea()]);
+	adv->setArea(nullptr);
   }
 
   std::cout<<"random place areas, remove flood on areas"<<std::endl;
   initAreas();
 
-  std::cout<<"chose random adventurers"<<std::endl;
+  std::cout<<"chose random adventurers, set them on their start areas"<<std::endl;
   activeAdventurers.clear();
   std::vector<std::string> rndBaseStr;
   std::vector<int> rndBaseInt;
@@ -92,7 +92,10 @@ void MProcessor::start() {
   while(!rndBaseStr.empty() && num < adventurerNumber) {
     distribute = std::uniform_int_distribution<int>(0, rndBaseStr.size()-1);
     rnd = distribute(rng);
-	activeAdventurers.push_back(rndBaseStr[rnd]);
+    adv = findAdventurer(rndBaseStr[rnd]);
+    if(!adv) return;
+    adv->setArea((MArea*)areas[adv->getStartArea()]);
+	activeAdventurers.push_back(adv->getName());
 	rndBaseStr.erase(rndBaseStr.begin() + rnd);
 	num ++;
   }
@@ -172,7 +175,6 @@ void MProcessor::getItemCard() {
   MCard* card = findItemCard(itemDeck.front());
   if(!card) return;
   std::cout<<"Get item card"<<card->getName()<<" by "<<vargs[0]<<std::endl;
-
   if(card->getType() == "item" || card->getType() == "artifact") {
     adventurer->addCard(card);
   }
@@ -182,10 +184,9 @@ void MProcessor::getItemCard() {
     while(!floodDropDeck.empty()) {
       distribute = std::uniform_int_distribution<int>(0, floodDropDeck.size()-1);
       rnd = distribute(rng);
-      floodDeck.push_front(floodDropDeck.at(rnd));
+      floodDeck.push_front(floodDeck.at(rnd));
       floodDropDeck.erase(floodDropDeck.begin() + rnd);
     }
-    floodDropDeck.clear();
   }
   itemDropDeck.push_front(itemDeck.front());
   itemDeck.pop_front();
@@ -200,20 +201,40 @@ void MProcessor::discard() {
   MCard* card = findItemCard(vargs[1]);
   if(!adventurer) return;
   if(!card) return;
+  itemDropDeck.push_front(card->getName());
   adventurer->removeCard(card);
-  std::cout<<"Draw card: "<<vargs[0]<<" card "<<vargs[1]<<std::endl;
+  std::cout<<"Discard: "<<vargs[0]<<" card "<<vargs[1]<<std::endl;
 }
 void MProcessor::useCard() {
   if(argsLessLimit(2)) return;
+  std::cout<<"Use card: "<<vargs[1]<<" by "<<vargs[0]<<std::endl;
+
+  std::vector<std::string> names;
+  names.push_back("helicopter");
+  names.push_back("sandbag");
   MAdventurer* adventurer = findAdventurer(vargs[0]);
   MCard* card = findItemCard(vargs[1]);
   if(!adventurer) return;
   if(!card) return;
-  //get card type
-  //use card
-  //remove card
+  if(card->getType() == "item") {
+    for(int i=0; i<names.size(); i++) {
+      if(names[i] == card->getName().substr(0, names[i].length())) {
+        if(names[i] == "helicopter") {
+          if(argsLessLimit(4)) return;
+          execFunction("move", vargs[2] + " " + vargs[3]);
+          break;
+        }
+        if(names[i] == "sandbag") {
+          if(argsLessLimit(3)) return;
+          execFunction("abfluss", vargs[2]);
+          break;
+        }
+      }
+    }
+  }
+  else return;
+  itemDropDeck.push_front(card->getName());
   adventurer->removeCard(card);
-  std::cout<<"Use card: "<<vargs[0]<<" card "<<vargs[1]<<std::endl;
 }
 void MProcessor::getArtifact() {
   if(argsLessLimit(2)) return;
