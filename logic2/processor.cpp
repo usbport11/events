@@ -111,6 +111,7 @@ void MProcessor::start() {
   std::cout<<"get two cards by each adventurer"<<std::endl;
   for(int i=0; i<adventurerNumber; i++) {
     execFunction("getitemcard", activeAdventurers[i]);
+    execFunction("getitemcard", activeAdventurers[i]);
   }
 }
 void MProcessor::move() {
