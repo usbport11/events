@@ -21,7 +21,8 @@ private:
   typedef std::map<std::string, pt2>::iterator mi;
   typedef std::map<std::string, MObject*>::iterator moi;
 
-  float totalFloodLevel;
+  float floodLevel;
+  int adventurerNumber;
 
   std::mt19937 rng;
   std::uniform_int_distribution<int> distribute;
@@ -39,14 +40,18 @@ private:
   std::deque<std::string> itemDropDeck;
   std::deque<std::string> floodDeck;
   std::deque<std::string> floodDropDeck;
+  std::deque<std::string> floodOutDeck;
   std::vector<std::string> activeAdventurers;
 
   bool argsLessLimit(int num);
+  MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
   MCard* findItemCard(const std::string& name);
   MCard* findFloodCard(const std::string& name);
-  void randDeck(std::map<std::string, MObject*> cards, std::deque<std::string>& deck);
+  MArtifact* findActifact(const std::string& name);
+  void randStartDeck(std::map<std::string, MObject*> cards, std::deque<std::string>& deck);
+  void randDeck(std::deque<std::string>& deck);
   void start();
   void move();
   void abfluss();

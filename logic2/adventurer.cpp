@@ -32,11 +32,19 @@ void MAdventurer::removeCard(MCard* card) {
   if(it == cards.end()) return;
   cards.erase(it);
 }
+void MAdventurer::removeArtifactCards(std::string name) {
+  int i = 0;
+  for(std::vector<MCard*>::iterator it=cards.begin(); it != cards.end() && i < 4; it++) {
+    if((*it)->getType() == "artifact") {
+      if(name == (*it)->getName().substr(0, name.length())) {
+        cards.erase(it);
+        i ++;
+      }
+    }
+  }
+}
 void MAdventurer::removeAllCards() {
   cards.clear();
-}
-void MAdventurer::setArea(MArea* _area) {
-  area = _area;
 }
 void MAdventurer::handOver(MCard* card, MAdventurer* adventurer) {
   removeCard(card);
@@ -50,4 +58,10 @@ std::string MAdventurer::getStartArea() {
 }
 void MAdventurer::setStartArea(std::string _startArea){
   startArea = _startArea;
+}
+void MAdventurer::setArea(MArea* _area) {
+  area = _area;
+}
+MArea* MAdventurer::getArea() {
+  return area;
 }

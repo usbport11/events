@@ -17,7 +17,7 @@ public:
   ~MArea();
   int* getIndex();
   void setIndex(int x, int y);
-  std::list<MArea*> getNeighbors(bool all);
+  std::list<MArea*> getNeighbors(bool all=false);
   void addNeighbor(MArea* area);
   void removeAllNeighbors();
   void removeNeighbor(MArea* area);

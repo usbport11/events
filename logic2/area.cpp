@@ -32,7 +32,7 @@ void MArea::setIndex(int x, int y) {
   index[0] = x;
   index[1] = y;
 }
-std::list<MArea*> MArea::getNeighbors(bool all=false) {
+std::list<MArea*> MArea::getNeighbors(bool all) {
   if(all) {
     return neighbors;
   }

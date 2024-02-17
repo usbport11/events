@@ -11,35 +11,30 @@
 bool MProcessor::argsLessLimit(int num) {
   return (vargs.size() < num);
 }
-MArea* MProcessor::findArea(const std::string& name) {
-  moi moit = areas.find(name);
-  if(moit == areas.end()) {
-    std::cout<<"Area ["<<name<<"] not found!"<<std::endl;
+MObject* MProcessor::findObject(std::map<std::string, MObject*>& objects, const std::string& name) {
+  moi moit = objects.find(name);
+  if(moit == objects.end()) {
+    std::cout<<"Object ["<<name<<"] not found!"<<std::endl;
+    return nullptr;
   }
-  return (MArea*)areas[name];
+  return objects[name];
+}
+MArea* MProcessor::findArea(const std::string& name) {
+  return (MArea*)findObject(areas, name);
 }
 MAdventurer* MProcessor::findAdventurer(const std::string& name) {
-  moi moit = adventurers.find(name);
-  if(moit == adventurers.end()) {
-    std::cout<<"Adventurer ["<<name<<"] not found!"<<std::endl;
-  }
-  return (MAdventurer*)adventurers[name];
+  return (MAdventurer*)findObject(adventurers, name);
 }
 MCard* MProcessor::findItemCard(const std::string& name) {
-  moi moit = itemCards.find(name);
-  if(moit == itemCards.end()) {
-    std::cout<<"Item Card ["<<name<<"] not found!"<<std::endl;
-  }
-  return (MCard*)itemCards[name];
+  return (MCard*)findObject(itemCards, name);
 }
 MCard* MProcessor::findFloodCard(const std::string& name) {
-  moi moit = floodCards.find(name);
-  if(moit == floodCards.end()) {
-    std::cout<<"Flood Card ["<<name<<"] not found!"<<std::endl;
-  }
-  return (MCard*)floodCards[name];
+  return (MCard*)findObject(floodCards, name);
 }
-void MProcessor::randDeck(std::map<std::string, MObject*> cards, std::deque<std::string>& deck) {
+MArtifact* MProcessor::findActifact(const std::string& name) {
+  return (MArtifact*)findObject(artifacts, name);
+}
+void MProcessor::randStartDeck(std::map<std::string, MObject*> cards, std::deque<std::string>& deck) {
   std::vector<std::string> rndBase;
   int rnd;
   deck.clear();
@@ -52,12 +47,22 @@ void MProcessor::randDeck(std::map<std::string, MObject*> cards, std::deque<std:
 	deck.push_front(rndBase[rnd]);
 	rndBase.erase(rndBase.begin() + rnd);
   }
-  rndBase.clear();
+}
+void MProcessor::randDeck(std::deque<std::string>& deck) {
+  std::deque<std::string> temp;
+  int rnd;
+  while(!deck.empty()) {
+    distribute = std::uniform_int_distribution<int>(0, deck.size()-1);
+    rnd = distribute(rng);
+    temp.push_back(deck.at(rnd));
+    deck.erase(deck.begin() + rnd);
+  }
+  deck = temp;
 }
 void MProcessor::start() {
-  totalFloodLevel = 0;
+  floodLevel = 0;
+  adventurerNumber = 2;
 
-  int adventurerNumber = 2;
   int startFloods = 6;
   int rnd, num = 0;
 
@@ -91,7 +96,6 @@ void MProcessor::start() {
 	rndBaseStr.erase(rndBaseStr.begin() + rnd);
 	num ++;
   }
-  rndBaseStr.clear();
 
   std::cout<<"random item deck and flood deck"<<std::endl;
   initDecks();
@@ -108,6 +112,11 @@ void MProcessor::start() {
 }
 void MProcessor::move() {
   if(argsLessLimit(2)) return;
+  MAdventurer* adventurer = findAdventurer(vargs[0]);
+  MArea* area = findArea(vargs[1]);
+  if(!adventurer) return;
+  if(!area) return;
+  adventurer->setArea(area);
   std::cout<<"Move: "<<vargs[0]<<" to the "<<vargs[1]<<std::endl;
 }
 void MProcessor::abfluss() {
@@ -120,8 +129,25 @@ void MProcessor::abfluss() {
 void MProcessor::flood() {
   if(argsLessLimit(1)) return;
   MArea* area = findArea(vargs[0]);
+  MAdventurer* adventurer;
   if(!area) return;
   area->flood();
+  if(area->getFloodLevel() >= 2) {
+    for(int i=0; i<activeAdventurers.size(); i++) {
+      adventurer = findAdventurer(activeAdventurers[i]);
+      if(!adventurer) return;
+      if(adventurer->getArea() == area) {
+        std::list<MArea*> near = area->getNeighbors();
+        execFunction("move", adventurer->getName() + " " + (*near.begin())->getName());
+      }
+    }
+    area->removeAllNeighbors();
+    floodOutDeck.push_back(floodDeck.front());
+  }
+  else {
+    floodDropDeck.push_back(floodDeck.front());
+  }
+  floodDeck.pop_front();
   std::cout<<"Flood: "<<vargs[0]<<std::endl;
 }
 void MProcessor::skip() {
@@ -130,22 +156,43 @@ void MProcessor::skip() {
 }
 void MProcessor::handOver() {
   if(argsLessLimit(3)) return;
-  std::cout<<"Hand over: "<<vargs[0]<<" card "<<vargs[1]<<" to "<<vargs[3]<<std::endl;
+  MAdventurer* srcAdventurer = findAdventurer(vargs[0]);
+  MAdventurer* dstAdventurer = findAdventurer(vargs[1]);
+  MCard* card = findItemCard(vargs[2]);
+  if(!srcAdventurer || !dstAdventurer) return;
+  if(!card) return;
+  dstAdventurer->addCard(card);
+  std::cout<<"Handover: from"<<vargs[0]<<" to "<<vargs[1]<<" card "<<vargs[2]<<std::endl;
 }
 void MProcessor::getItemCard() {
+  int rnd;
   if(argsLessLimit(1)) return;
-  std::cout<<"Get item card by "<<vargs[0]<<std::endl;
   MAdventurer* adventurer = findAdventurer(vargs[0]);
   if(!adventurer) return;
-  adventurer->addCard((MCard*)itemCards[itemDeck.front()]);
+  MCard* card = findItemCard(itemDeck.front());
+  if(!card) return;
+  std::cout<<"Get item card"<<card->getName()<<" by "<<vargs[0]<<std::endl;
+
+  if(card->getType() == "item" || card->getType() == "artifact") {
+    adventurer->addCard(card);
+  }
+  if(card->getType() == "flood") {
+    floodLevel += 0.5;
+    randDeck(floodDropDeck);
+    while(!floodDropDeck.empty()) {
+      distribute = std::uniform_int_distribution<int>(0, floodDropDeck.size()-1);
+      rnd = distribute(rng);
+      floodDeck.push_front(floodDropDeck.at(rnd));
+      floodDropDeck.erase(floodDropDeck.begin() + rnd);
+    }
+    floodDropDeck.clear();
+  }
   itemDropDeck.push_front(itemDeck.front());
   itemDeck.pop_front();
 }
 void MProcessor::getFloodCard() {
   std::cout<<"Get flood card"<<std::endl;
   execFunction("flood", floodDeck.front());
-  floodDropDeck.push_back(floodDeck.front());
-  floodDeck.pop_front();
 }
 void MProcessor::discard() {
   if(argsLessLimit(2)) return;
@@ -170,11 +217,12 @@ void MProcessor::useCard() {
 }
 void MProcessor::getArtifact() {
   if(argsLessLimit(2)) return;
-  std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
-  //draw four artifacts cards
-  //for(int i=0; i<4; i++) {
-  //  execFunction("drawcard", vargs[0] + " artifact_card_name")
-  //}
+  MAdventurer* adventurer = findAdventurer(vargs[0]);
+  MArtifact* artifact = findActifact(vargs[1]);
+  if(!adventurer) return;
+  if(!artifact) return;
+  adventurer->addArtifact(artifact);
+  adventurer->removeArtifactCards(vargs[1]);
   std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
 }
 void MProcessor::extract() {
@@ -298,12 +346,10 @@ void MProcessor::initAreas() {
 	  }
 	}
   }
-  temp.clear();
-  rndBase.clear();
 }
 void MProcessor::initDecks() {
-  randDeck(itemCards, itemDeck);
-  randDeck(floodCards, floodDeck);
+  randStartDeck(itemCards, itemDeck);
+  randStartDeck(floodCards, floodDeck);
 }
 MProcessor::MProcessor() {
   struct timespec tm;
@@ -341,6 +387,7 @@ MProcessor::~MProcessor() {
   itemDropDeck.clear();
   floodDeck.clear();
   floodDropDeck.clear();
+  floodOutDeck.clear();
   activeAdventurers.clear();
 }
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {

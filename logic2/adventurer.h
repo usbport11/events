@@ -23,12 +23,14 @@ public:
   void addArtifact(MArtifact* artifact);
   void addCard(MCard* card);
   void removeCard(MCard* card);
+  void removeArtifactCards(std::string name);
   void removeAllCards();
-  void setArea(MArea* _area);
   void handOver(MCard* card, MAdventurer* adventurer);
   int getCardsNumber();
   std::string getStartArea();
   void setStartArea(std::string _startArea);
+  void setArea(MArea* _area);
+  MArea* getArea();
 };
 
 #endif
