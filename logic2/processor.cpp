@@ -174,7 +174,7 @@ void MProcessor::getItemCard() {
   if(!adventurer) return;
   MCard* card = findItemCard(itemDeck.front());
   if(!card) return;
-  std::cout<<"Get item card"<<card->getName()<<" by "<<vargs[0]<<std::endl;
+  std::cout<<"Get item card "<<card->getName()<<" by "<<vargs[0]<<std::endl;
   if(card->getType() == "item" || card->getType() == "artifact") {
     adventurer->addCard(card);
   }
@@ -271,9 +271,10 @@ void MProcessor::call(const std::string& name) {
   (*this.*m[name])();
 }
 void MProcessor::fillItemCards(const std::string& _name, const std::string& type, int number) {
-  std::string name = _name;
+  std::string name;
   char buff[4];
   for(int i=0; i<number; i++) {
+    name = _name;
     std::memset(buff, 0, 4);
     itoa(i, buff, 10);
     name += buff;
@@ -350,7 +351,9 @@ void MProcessor::initAreas() {
     distribute = std::uniform_int_distribution<int>(0, rndBase.size()-1);
     rnd = distribute(rng);
     area = (MArea*)areas[rndBase[rnd]];
-    area->setIndex(int(num / rows), num - (int(num / rows)) * rows);
+    x = int(num / rows);
+    y = num - (int(num / rows)) * rows;
+    area->setIndex(x, y);
 	area->setFloodLevel(0);
     rndBase.erase(rndBase.begin() + rnd);
     temp.insert(std::pair<int, MArea*>(num, area));
