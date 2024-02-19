@@ -46,6 +46,9 @@ void MAdventurer::removeArtifactCards(std::string name) {
 void MAdventurer::removeAllCards() {
   cards.clear();
 }
+void MAdventurer::removeAllArtifacts() {
+  artifacts.clear();
+}
 void MAdventurer::handOver(MCard* card, MAdventurer* adventurer) {
   removeCard(card);
   adventurer->addCard(card);

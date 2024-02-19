@@ -7,6 +7,7 @@
 #include <ctime>
 #include <iostream>
 #include <cstring>
+#include <algorithm>
 
 bool MProcessor::argsLessLimit(int num) {
   return (vargs.size() < num);
@@ -71,11 +72,15 @@ void MProcessor::start() {
     return;
   }
 
-  std::cout<<"clear adventurer items, positions"<<std::endl;
+  std::cout<<"clear collected artifacts"<<std::endl;
+  collectedArtifacts.clear();
+
+  std::cout<<"clear adventurer items, artifacts, positions"<<std::endl;
   MAdventurer* adv;
   for(moi moit = adventurers.begin(); moit != adventurers.end(); moit++) {
     adv = (MAdventurer*)moit->second;
 	adv->removeAllCards();
+	adv->removeAllArtifacts();
 	adv->setArea(nullptr);
   }
 
@@ -173,6 +178,15 @@ void MProcessor::getItemCard() {
   if(argsLessLimit(1)) return;
   MAdventurer* adventurer = findAdventurer(vargs[0]);
   if(!adventurer) return;
+
+  if(itemDeck.empty()) {
+    randDeck(itemDropDeck);
+	while(!itemDropDeck.empty()) {
+      itemDeck.push_back(itemDropDeck.front());
+      itemDropDeck.pop_front();
+    }
+  }
+
   MCard* card = findItemCard(itemDeck.front());
   if(!card) return;
   std::cout<<"Get item card "<<card->getName()<<" by "<<vargs[0]<<std::endl;
@@ -193,6 +207,13 @@ void MProcessor::getItemCard() {
   itemDeck.pop_front();
 }
 void MProcessor::getFloodCard() {
+  if(floodDeck.empty()) {
+    randDeck(floodDropDeck);
+	while(!floodDropDeck.empty()) {
+      floodDeck.push_back(floodDropDeck.front());
+      floodDropDeck.pop_front();
+    }
+  }
   std::cout<<"Get flood card"<<std::endl;
   execFunction("flood", floodDeck.front());
 }
@@ -245,6 +266,7 @@ void MProcessor::getArtifact() {
   if(!artifact) return;
   adventurer->addArtifact(artifact);
   adventurer->removeArtifactCards(vargs[1]);
+  collectedArtifacts.push_back(vargs[1]);
   std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
 }
 void MProcessor::extract() {
@@ -309,10 +331,12 @@ void MProcessor::intitMaps() {
   areas.insert(std::pair<std::string, MObject*>("cavern", new MArea("cavern")));
   areas.insert(std::pair<std::string, MObject*>("plato", new MArea("plato")));
 
-  adventurers.insert(std::pair<std::string, MObject*>("trader", new MAdventurer("trader", "gate")));
-  adventurers.insert(std::pair<std::string, MObject*>("pilot", new MAdventurer("pilot", "plato")));
-  adventurers.insert(std::pair<std::string, MObject*>("engineer", new MAdventurer("engineer", "factory")));
-  adventurers.insert(std::pair<std::string, MObject*>("traveler", new MAdventurer("traveler", "plato")));
+  adventurers.insert(std::pair<std::string, MObject*>("explorer", new MAdventurer("explorer", "gate")));//can diag move or abfluss
+  adventurers.insert(std::pair<std::string, MObject*>("pilot", new MAdventurer("pilot", "plato")));//one time can move anywhere
+  adventurers.insert(std::pair<std::string, MObject*>("engineer", new MAdventurer("engineer", "factory")));//can abluss one or two areas
+  adventurers.insert(std::pair<std::string, MObject*>("liaison", new MAdventurer("liaison", "plato")));//can handover on any distance
+  adventurers.insert(std::pair<std::string, MObject*>("navigator", new MAdventurer("navigator", "castle")));//can move other adventurer on one or two areas
+  adventurers.insert(std::pair<std::string, MObject*>("diver", new MAdventurer("diver", "lake")));//can move on any number abfluss or none areas
 
   artifacts.insert(std::pair<std::string, MObject*>("crystall", new MArtifact("crystall")));
   artifacts.insert(std::pair<std::string, MObject*>("sphere", new MArtifact("sphere")));
@@ -376,12 +400,33 @@ void MProcessor::initDecks() {
   randStartDeck(itemCards, itemDeck);
   randStartDeck(floodCards, floodDeck);
 }
-MProcessor::MProcessor() {
+MProcessor::MProcessor():extractionArea("plato") {
   struct timespec tm;
   clock_gettime(CLOCK_REALTIME, &tm);
   rng.seed(tm.tv_nsec);
-
   intitMaps();
+}
+bool MProcessor::looseCheck() {
+  //some artifact areas flood but artifact not get
+  int num;
+  MArtifact* artifact;
+  MArea* area;
+  for(moi moit = artifacts.begin(); moit != moit; moit++) {
+    num = 0;
+    if(find(collectedArtifacts.begin(), collectedArtifacts.end(), moit->first) != collectedArtifacts.end()) continue;
+    artifact = (MArtifact*)moit->second;
+    for(int i=0; i<2; i++) {
+      area = (MArea*)areas[artifact->getMainAreas()[i]];
+	  if(area->getFloodLevel() >= 2) num ++;
+	}
+	if(num >= 2) return true;
+  }
+  //extraction area flood
+  area = (MArea*)areas[extractionArea];
+  if(area->getFloodLevel() >= 2) return true;
+  //max flood level reach
+  if(floodLevel > 5) return true;
+  return false;
 }
 MProcessor::~MProcessor() {
   m.clear();
@@ -414,6 +459,7 @@ MProcessor::~MProcessor() {
   floodDropDeck.clear();
   floodOutDeck.clear();
   activeAdventurers.clear();
+  collectedArtifacts.clear();
 }
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {
   parseArgs(_sargs);
@@ -424,4 +470,23 @@ bool MProcessor::execFunction(const std::string& name, const std::string& _sargs
   }
   call(name);
   return true;
+}
+void MProcessor::run() {
+  while(!looseCheck()) {
+    for(int i=0; i<activeAdventurers.size(); i++) {
+	  //three actions by turn
+	  //for(int j=0; j < 3; j++) {
+	  //}
+	  //get 2 item cards
+	  for(int j=0; i<2; i++) {
+	    execFunction("getitemcard", adventurers[activeAdventurers[j]]->getName());
+		//need discard item card if cards in hand more than 5 or use card
+		//if get second flood card - just increase flood level
+	  }
+	  //get 2 flood cards
+	  for(int j=0; j<2; j++) {
+	    execFunction("getfloodcard", adventurers[activeAdventurers[j]]->getName());
+	  }
+    }
+  }
 }

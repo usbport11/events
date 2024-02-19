@@ -42,6 +42,8 @@ private:
   std::deque<std::string> floodDropDeck;
   std::deque<std::string> floodOutDeck;
   std::vector<std::string> activeAdventurers;
+  const std::string extractionArea;
+  std::vector<std::string> collectedArtifacts;
 
   bool argsLessLimit(int num);
   MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
@@ -70,10 +72,12 @@ private:
   void intitMaps();
   void initAreas();
   void initDecks();
+  bool looseCheck();
 public:
   MProcessor();
   ~MProcessor();
   bool execFunction(const std::string& name, const std::string& _sargs="");
+  void run();
 };
 
 #endif

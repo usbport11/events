@@ -11,7 +11,6 @@ class MArea;
 class MAdventurer: public MObject {
 private:
   std::string startArea;
-  std::string specification;
   std::vector<MArtifact*> artifacts;
   std::vector<MCard*> cards;
   MArea* area;
@@ -25,6 +24,7 @@ public:
   void removeCard(MCard* card);
   void removeArtifactCards(std::string name);
   void removeAllCards();
+  void removeAllArtifacts();
   void handOver(MCard* card, MAdventurer* adventurer);
   int getCardsNumber();
   std::string getStartArea();
