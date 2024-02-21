@@ -4,6 +4,7 @@
 #include "adventurer.h"
 #include "card.h"
 #include "artifact.h"
+#include "ui.h"
 #include <ctime>
 #include <iostream>
 #include <cstring>
@@ -63,6 +64,7 @@ void MProcessor::randDeck(std::deque<std::string>& deck) {
 void MProcessor::start() {
   floodLevel = 0;
   adventurerNumber = 2;
+  lastItemCard = nullptr;
 
   int startFloods = 6;
   int rnd, num = 0;
@@ -195,16 +197,20 @@ void MProcessor::getItemCard() {
   }
   if(card->getType() == "flood") {
     floodLevel += 0.5;
-    randDeck(floodDropDeck);
-    while(!floodDropDeck.empty()) {
-      distribute = std::uniform_int_distribution<int>(0, floodDropDeck.size()-1);
-      rnd = distribute(rng);
-      floodDeck.push_front(floodDeck.at(rnd));
-      floodDropDeck.erase(floodDropDeck.begin() + rnd);
+    if(lastItemCard->getType() != "flood") {
+      randDeck(floodDropDeck);
+      while(!floodDropDeck.empty()) {
+        distribute = std::uniform_int_distribution<int>(0, floodDropDeck.size()-1);
+        rnd = distribute(rng);
+        floodDeck.push_front(floodDeck.at(rnd));
+        floodDropDeck.erase(floodDropDeck.begin() + rnd);
+      }
     }
   }
   itemDropDeck.push_front(itemDeck.front());
   itemDeck.pop_front();
+
+  lastItemCard = card;
 }
 void MProcessor::getFloodCard() {
   if(floodDeck.empty()) {
@@ -265,8 +271,11 @@ void MProcessor::getArtifact() {
   if(!adventurer) return;
   if(!artifact) return;
   adventurer->addArtifact(artifact);
-  adventurer->removeArtifactCards(vargs[1]);
   collectedArtifacts.push_back(vargs[1]);
+  std::vector<MCard*> cards = adventurer->getArtifactCards(vargs[1]);
+  for(int i=0; i<4 ;i++) {
+    execFunction("discard", adventurer->getName() + " " + cards[i]->getName());
+  }
   std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
 }
 void MProcessor::extract() {
@@ -472,20 +481,37 @@ bool MProcessor::execFunction(const std::string& name, const std::string& _sargs
   return true;
 }
 void MProcessor::run() {
+  MAdventurer* adventurer;
+  MUI ui;
+  MCard* card;
+  std::vector<MCard*> cards;
   while(!looseCheck()) {
     for(int i=0; i<activeAdventurers.size(); i++) {
+      adventurer = (MAdventurer*)adventurers[activeAdventurers[i]];
 	  //three actions by turn
 	  //for(int j=0; j < 3; j++) {
+	  //  action = selectAction(adventurer->getAvailableActions());
+	  //  param = selectActionParams(adventurer, action);
+	  //  execFunction(action, adventurer->getName() + " " + action + " " + param);
 	  //}
 	  //get 2 item cards
-	  for(int j=0; i<2; i++) {
-	    execFunction("getitemcard", adventurers[activeAdventurers[j]]->getName());
-		//need discard item card if cards in hand more than 5 or use card
-		//if get second flood card - just increase flood level
+	  for(int j=0; j<2; j++) {
+        execFunction("getitemcard", adventurers[activeAdventurers[j]]->getName());
+		while(adventurer->getCardsNumber() > 5) {
+		  cards = adventurer->getMomentCards();
+		  if(!cards.empty()) {
+			while(ui.askQuestion("Whould you like to use moment card?") == true) {
+			   card = ui.selectCard(cards);
+			   execFunction("usecard", adventurer->getName() + " " + card->getName());
+			}
+		  }
+		  card = ui.selectCard(adventurer->getAllCards());
+		  execFunction("discard", adventurer->getName() + " " + card->getName());
+		}
 	  }
 	  //get 2 flood cards
 	  for(int j=0; j<2; j++) {
-	    execFunction("getfloodcard", adventurers[activeAdventurers[j]]->getName());
+	    execFunction("getfloodcard", adventurer->getName());
 	  }
     }
   }

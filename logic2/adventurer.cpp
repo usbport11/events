@@ -32,17 +32,6 @@ void MAdventurer::removeCard(MCard* card) {
   if(it == cards.end()) return;
   cards.erase(it);
 }
-void MAdventurer::removeArtifactCards(std::string name) {
-  int i = 0;
-  for(std::vector<MCard*>::iterator it=cards.begin(); it != cards.end() && i < 4; it++) {
-    if((*it)->getType() == "artifact") {
-      if(name == (*it)->getName().substr(0, name.length())) {
-        cards.erase(it);
-        i ++;
-      }
-    }
-  }
-}
 void MAdventurer::removeAllCards() {
   cards.clear();
 }
@@ -67,4 +56,27 @@ void MAdventurer::setArea(MArea* _area) {
 }
 MArea* MAdventurer::getArea() {
   return area;
+}
+std::vector<MCard*> MAdventurer::getAllCards() {
+  return cards;
+}
+std::vector<MCard*> MAdventurer::getMomentCards() {
+  std::vector<MCard*> resCards;
+  for(int i=0; i<cards.size(); i++) {
+    if(cards[i]->getMomentUse()) {
+      resCards.push_back(cards[i]);
+	}
+  }
+  return resCards;
+}
+std::vector<MCard*> MAdventurer::getArtifactCards(std::string name) {
+  std::vector<MCard*> resCards;
+  for(int i=0; i < cards.size() && i < 4; i++) {
+    if(cards[i]->getType() == "artifact") {
+      if(name == cards[i]->getName().substr(0, name.length())) {
+        resCards.push_back(cards[i]);
+      }
+    }
+  }
+  return resCards;
 }

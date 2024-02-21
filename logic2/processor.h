@@ -23,6 +23,7 @@ private:
 
   float floodLevel;
   int adventurerNumber;
+  MCard* lastItemCard;
 
   std::mt19937 rng;
   std::uniform_int_distribution<int> distribute;
