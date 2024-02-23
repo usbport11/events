@@ -1,10 +1,10 @@
 #include "artifact.h"
 
 MArtifact::MArtifact():MObject() {
-  mainAreas[0] = mainAreas[2] = "";
+  mainAreas[0] = mainAreas[1] = "";
 }
 MArtifact::MArtifact(const std::string& _name):MObject(_name) {
-  mainAreas[0] = mainAreas[2] = "";
+  mainAreas[0] = mainAreas[1] = "";
 }
 MArtifact::MArtifact(const std::string& _name, const std::string& mainArea1, const std::string& mainArea2):MObject(_name) {
   mainAreas[0] = mainArea1;

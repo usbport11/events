@@ -14,6 +14,7 @@ class MArea;
 class MAdventurer;
 class MCard;
 class MArtifact;
+class MUI;
 
 class MProcessor {
 private:
@@ -31,6 +32,8 @@ private:
   std::map<std::string, pt2> m;
   std::vector<std::string> vargs;
   std::string sargs;
+
+  MUI* ui;
 
   std::map<std::string, MObject*> areas;
   std::map<std::string, MObject*> adventurers;
@@ -55,6 +58,7 @@ private:
   MArtifact* findActifact(const std::string& name);
   void randStartDeck(std::map<std::string, MObject*> cards, std::deque<std::string>& deck);
   void randDeck(std::deque<std::string>& deck);
+  void moveDeck(std::deque<std::string>& src, std::deque<std::string>& dest);
   void start();
   void move();
   void abfluss();
@@ -74,6 +78,7 @@ private:
   void initAreas();
   void initDecks();
   bool looseCheck();
+  bool useMomentCard(MAdventurer* adventurer);
 public:
   MProcessor();
   ~MProcessor();

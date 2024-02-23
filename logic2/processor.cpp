@@ -5,6 +5,7 @@
 #include "card.h"
 #include "artifact.h"
 #include "ui.h"
+
 #include <ctime>
 #include <iostream>
 #include <cstring>
@@ -60,6 +61,12 @@ void MProcessor::randDeck(std::deque<std::string>& deck) {
     deck.erase(deck.begin() + rnd);
   }
   deck = temp;
+}
+void MProcessor::moveDeck(std::deque<std::string>& src, std::deque<std::string>& dest) {
+  while(!src.empty()) {
+    dest.push_back(src.front());
+    src.pop_front();
+  }
 }
 void MProcessor::start() {
   floodLevel = 0;
@@ -183,10 +190,7 @@ void MProcessor::getItemCard() {
 
   if(itemDeck.empty()) {
     randDeck(itemDropDeck);
-	while(!itemDropDeck.empty()) {
-      itemDeck.push_back(itemDropDeck.front());
-      itemDropDeck.pop_front();
-    }
+    moveDeck(itemDropDeck, itemDeck);
   }
 
   MCard* card = findItemCard(itemDeck.front());
@@ -195,16 +199,18 @@ void MProcessor::getItemCard() {
   if(card->getType() == "item" || card->getType() == "artifact") {
     adventurer->addCard(card);
   }
+
   if(card->getType() == "flood") {
     floodLevel += 0.5;
-    if(lastItemCard->getType() != "flood") {
-      randDeck(floodDropDeck);
-      while(!floodDropDeck.empty()) {
-        distribute = std::uniform_int_distribution<int>(0, floodDropDeck.size()-1);
-        rnd = distribute(rng);
-        floodDeck.push_front(floodDeck.at(rnd));
-        floodDropDeck.erase(floodDropDeck.begin() + rnd);
+    if(lastItemCard) {
+      if(lastItemCard->getType() != "flood") {
+        randDeck(floodDropDeck);
+        moveDeck(floodDropDeck, floodDeck);
       }
+    }
+    else {
+      randDeck(floodDropDeck);
+      moveDeck(floodDropDeck, floodDeck);
     }
   }
   itemDropDeck.push_front(itemDeck.front());
@@ -215,10 +221,7 @@ void MProcessor::getItemCard() {
 void MProcessor::getFloodCard() {
   if(floodDeck.empty()) {
     randDeck(floodDropDeck);
-	while(!floodDropDeck.empty()) {
-      floodDeck.push_back(floodDropDeck.front());
-      floodDropDeck.pop_front();
-    }
+    moveDeck(floodDropDeck, floodDeck);
   }
   std::cout<<"Get flood card"<<std::endl;
   execFunction("flood", floodDeck.front());
@@ -347,10 +350,10 @@ void MProcessor::intitMaps() {
   adventurers.insert(std::pair<std::string, MObject*>("navigator", new MAdventurer("navigator", "castle")));//can move other adventurer on one or two areas
   adventurers.insert(std::pair<std::string, MObject*>("diver", new MAdventurer("diver", "lake")));//can move on any number abfluss or none areas
 
-  artifacts.insert(std::pair<std::string, MObject*>("crystall", new MArtifact("crystall")));
-  artifacts.insert(std::pair<std::string, MObject*>("sphere", new MArtifact("sphere")));
-  artifacts.insert(std::pair<std::string, MObject*>("cube", new MArtifact("cube")));
-  artifacts.insert(std::pair<std::string, MObject*>("key", new MArtifact("key")));
+  artifacts.insert(std::pair<std::string, MObject*>("crystall", new MArtifact("crystall", "gate", "house")));
+  artifacts.insert(std::pair<std::string, MObject*>("sphere", new MArtifact("sphere", "monastary", "cavern")));
+  artifacts.insert(std::pair<std::string, MObject*>("cube", new MArtifact("cube", "plato", "port")));
+  artifacts.insert(std::pair<std::string, MObject*>("key", new MArtifact("key", "hole", "factory")));
 
   //artifact cards
   for(moi moit = artifacts.begin(); moit != artifacts.end(); moit++) {
@@ -414,6 +417,7 @@ MProcessor::MProcessor():extractionArea("plato") {
   clock_gettime(CLOCK_REALTIME, &tm);
   rng.seed(tm.tv_nsec);
   intitMaps();
+  ui = new MUI;
 }
 bool MProcessor::looseCheck() {
   //some artifact areas flood but artifact not get
@@ -462,6 +466,8 @@ MProcessor::~MProcessor() {
   }
   artifacts.clear();
 
+  if(ui) delete ui;
+
   itemDeck.clear();
   itemDropDeck.clear();
   floodDeck.clear();
@@ -480,9 +486,20 @@ bool MProcessor::execFunction(const std::string& name, const std::string& _sargs
   call(name);
   return true;
 }
+bool MProcessor::useMomentCard(MAdventurer* adventurer) {
+  MCard* card;
+  std::vector<MCard*> cards = adventurer->getMomentCards();
+  if(!cards.empty()) {
+    while(ui->askQuestion("Whould you like to use moment card?") == true) {
+	  card = ui->selectCard(cards);
+      execFunction("usecard", adventurer->getName() + " " + card->getName());
+      return true;
+    }
+  }
+  return false;
+}
 void MProcessor::run() {
   MAdventurer* adventurer;
-  MUI ui;
   MCard* card;
   std::vector<MCard*> cards;
   while(!looseCheck()) {
@@ -497,15 +514,9 @@ void MProcessor::run() {
 	  //get 2 item cards
 	  for(int j=0; j<2; j++) {
         execFunction("getitemcard", adventurers[activeAdventurers[j]]->getName());
-		while(adventurer->getCardsNumber() > 5) {
-		  cards = adventurer->getMomentCards();
-		  if(!cards.empty()) {
-			while(ui.askQuestion("Whould you like to use moment card?") == true) {
-			   card = ui.selectCard(cards);
-			   execFunction("usecard", adventurer->getName() + " " + card->getName());
-			}
-		  }
-		  card = ui.selectCard(adventurer->getAllCards());
+		while(adventurer->getCardsNumber() > CARDS_LIMIT) {
+		  if(useMomentCard(adventurer)) continue;
+		  card = ui->selectCard(adventurer->getAllCards());
 		  execFunction("discard", adventurer->getName() + " " + card->getName());
 		}
 	  }
