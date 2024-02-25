@@ -19,7 +19,6 @@ class MUI;
 class MProcessor {
 private:
   typedef void (MProcessor::*pt2)();
-  typedef std::map<std::string, pt2>::iterator mi;
   typedef std::map<std::string, MObject*>::iterator moi;
 
   float floodLevel;
@@ -48,6 +47,7 @@ private:
   std::vector<std::string> activeAdventurers;
   const std::string extractionArea;
   std::vector<std::string> collectedArtifacts;
+  std::vector<std::string> usedActions;
 
   bool argsLessLimit(int num);
   MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
@@ -70,6 +70,9 @@ private:
   void discard();
   void useCard();
   void getArtifact();
+  void fly();
+  void moveOther();
+  void swim();
   void extract();
   void parseArgs(const std::string& _sargs);
   void call(const std::string& name);
@@ -78,7 +81,8 @@ private:
   void initAreas();
   void initDecks();
   bool looseCheck();
-  bool useMomentCard(MAdventurer* adventurer);
+  bool tryMomentCard(MAdventurer* adventurer);
+  std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
 public:
   MProcessor();
   ~MProcessor();

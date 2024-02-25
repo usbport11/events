@@ -281,6 +281,29 @@ void MProcessor::getArtifact() {
   }
   std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
 }
+void MProcessor::fly() {
+  if(argsLessLimit(2)) return;
+  MAdventurer* adventurer = findAdventurer(vargs[0]);
+  MArea* area = findArea(vargs[1]);
+  if(!adventurer) return;
+  if(!area) return;
+  adventurer->setArea(area);
+  std::cout<<"Fly: "<<vargs[0]<<" to the "<<vargs[1]<<std::endl;
+}
+void MProcessor::moveOther() {
+  if(argsLessLimit(3)) return;
+  std::cout<<"Move by "<<vargs[0]<<": "<<vargs[1]<<" to the "<<vargs[2]<<std::endl;
+  execFunction("move", vargs[1] + " " + vargs[2]);
+}
+void MProcessor::swim() {
+  if(argsLessLimit(2)) return;
+  MAdventurer* adventurer = findAdventurer(vargs[0]);
+  MArea* area = findArea(vargs[1]);
+  if(!adventurer) return;
+  if(!area) return;
+  adventurer->setArea(area);
+  std::cout<<"Swim: "<<vargs[0]<<" to the "<<vargs[1]<<std::endl;
+}
 void MProcessor::extract() {
   std::cout<<"extract!"<<std::endl;
 }
@@ -313,47 +336,50 @@ void MProcessor::fillItemCards(const std::string& _name, const std::string& type
     std::memset(buff, 0, 4);
     itoa(i, buff, 10);
     name += buff;
-    itemCards.insert(std::pair<std::string, MObject*>(name, new MCard(name, type)));
+    itemCards[name] = new MCard(name, type);
   }
 }
 void MProcessor::intitMaps() {
-  m.insert(std::pair<std::string, pt2>("start", &MProcessor::start));
-  m.insert(std::pair<std::string, pt2>("move", &MProcessor::move));
-  m.insert(std::pair<std::string, pt2>("abfluss", &MProcessor::abfluss));
-  m.insert(std::pair<std::string, pt2>("flood", &MProcessor::flood));
-  m.insert(std::pair<std::string, pt2>("skip", &MProcessor::skip));
-  m.insert(std::pair<std::string, pt2>("handover", &MProcessor::handOver));
-  m.insert(std::pair<std::string, pt2>("getitemcard", &MProcessor::getItemCard));
-  m.insert(std::pair<std::string, pt2>("getfloodcard", &MProcessor::getFloodCard));
-  m.insert(std::pair<std::string, pt2>("discard", &MProcessor::discard));
-  m.insert(std::pair<std::string, pt2>("usecard", &MProcessor::useCard));
-  m.insert(std::pair<std::string, pt2>("getartifact", &MProcessor::getArtifact));
-  m.insert(std::pair<std::string, pt2>("extract", &MProcessor::extract));
+  m["start"] = MProcessor::start;
+  m["move"] = MProcessor::move;
+  m["abfluss"] = MProcessor::abfluss;
+  m["flood"] = MProcessor::flood;
+  m["skip"] = MProcessor::skip;
+  m["handover"] = MProcessor::handOver;
+  m["getitemcard"] = MProcessor::getItemCard;
+  m["getfloodcard"] = MProcessor::getFloodCard;
+  m["discard"] = MProcessor::discard;
+  m["usecard"] = MProcessor::useCard;
+  m["getartifact"] = MProcessor::getArtifact;
+  m["fly"] = MProcessor::fly;
+  m["moveother"] = MProcessor::moveOther;
+  m["swim"] = MProcessor::swim;
+  m["extract"] = MProcessor::extract;
 
-  areas.insert(std::pair<std::string, MObject*>("gate", new MArea("gate")));
-  areas.insert(std::pair<std::string, MObject*>("castle", new MArea("castle")));
-  areas.insert(std::pair<std::string, MObject*>("house", new MArea("house")));
-  areas.insert(std::pair<std::string, MObject*>("swamp", new MArea("swamp")));
-  areas.insert(std::pair<std::string, MObject*>("monastary", new MArea("monastary")));
-  areas.insert(std::pair<std::string, MObject*>("factory", new MArea("factory")));
-  areas.insert(std::pair<std::string, MObject*>("river", new MArea("river")));
-  areas.insert(std::pair<std::string, MObject*>("hole", new MArea("hole")));
-  areas.insert(std::pair<std::string, MObject*>("lake", new MArea("lake")));
-  areas.insert(std::pair<std::string, MObject*>("port", new MArea("port")));
-  areas.insert(std::pair<std::string, MObject*>("cavern", new MArea("cavern")));
-  areas.insert(std::pair<std::string, MObject*>("plato", new MArea("plato")));
+  areas["gate"] = new MArea("gate");
+  areas["castle"] = new MArea("castle");
+  areas["house"] = new MArea("house");
+  areas["swamp"] = new MArea("swamp");
+  areas["monastary"] = new MArea("monastary");
+  areas["factory"] = new MArea("factory");
+  areas["river"] = new MArea("river");
+  areas["hole"] = new MArea("hole");
+  areas["lake"] = new MArea("lake");
+  areas["port"] = new MArea("port");
+  areas["cavern"] = new MArea("cavern");
+  areas["plato"] = new MArea("plato");
 
-  adventurers.insert(std::pair<std::string, MObject*>("explorer", new MAdventurer("explorer", "gate")));//can diag move or abfluss
-  adventurers.insert(std::pair<std::string, MObject*>("pilot", new MAdventurer("pilot", "plato")));//one time can move anywhere
-  adventurers.insert(std::pair<std::string, MObject*>("engineer", new MAdventurer("engineer", "factory")));//can abluss one or two areas
-  adventurers.insert(std::pair<std::string, MObject*>("liaison", new MAdventurer("liaison", "plato")));//can handover on any distance
-  adventurers.insert(std::pair<std::string, MObject*>("navigator", new MAdventurer("navigator", "castle")));//can move other adventurer on one or two areas
-  adventurers.insert(std::pair<std::string, MObject*>("diver", new MAdventurer("diver", "lake")));//can move on any number abfluss or none areas
+  adventurers["explorer"] = new MAdventurer("explorer", "gate");//can diag move or abfluss
+  adventurers["pilot"] = new MAdventurer("pilot", "plato");//one time can move anywhere
+  adventurers["engineer"] = new MAdventurer("engineer", "factory");//can abluss one or two areas
+  adventurers["liaison"] = new MAdventurer("liaison", "plato");//can handover on any distance
+  adventurers["navigator"] = new MAdventurer("navigator", "castle");//can move other adventurer on one or two areas
+  adventurers["diver"] = new MAdventurer("diver", "lake");//can move on any number abfluss or none areas
 
-  artifacts.insert(std::pair<std::string, MObject*>("crystall", new MArtifact("crystall", "gate", "house")));
-  artifacts.insert(std::pair<std::string, MObject*>("sphere", new MArtifact("sphere", "monastary", "cavern")));
-  artifacts.insert(std::pair<std::string, MObject*>("cube", new MArtifact("cube", "plato", "port")));
-  artifacts.insert(std::pair<std::string, MObject*>("key", new MArtifact("key", "hole", "factory")));
+  artifacts["crystall"] = new MArtifact("crystall", "gate", "house");
+  artifacts["sphere"] = new MArtifact("sphere", "monastary", "cavern");
+  artifacts["cube"] = new MArtifact("cube", "plato", "port");
+  artifacts["key"] = new MArtifact("key", "hole", "factory");
 
   //artifact cards
   for(moi moit = artifacts.begin(); moit != artifacts.end(); moit++) {
@@ -366,7 +392,7 @@ void MProcessor::intitMaps() {
 
   //equal to areas number and name
   for(moi moit=areas.begin(); moit != areas.end(); moit++) {
-    floodCards.insert(std::pair<std::string, MObject*>(moit->first, new MCard(moit->first)));
+    floodCards[moit->first] = new MCard(moit->first);
   }
 }
 void MProcessor::initAreas() {
@@ -393,7 +419,7 @@ void MProcessor::initAreas() {
     area->setIndex(x, y);
 	area->setFloodLevel(0);
     rndBase.erase(rndBase.begin() + rnd);
-    temp.insert(std::pair<int, MArea*>(num, area));
+    temp[num] = area;
     num ++;
   }
   for(int i=0; i<rows; i++) {
@@ -475,10 +501,11 @@ MProcessor::~MProcessor() {
   floodOutDeck.clear();
   activeAdventurers.clear();
   collectedArtifacts.clear();
+  usedActions.clear();
 }
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {
   parseArgs(_sargs);
-  mi mit = m.find(name);
+  std::map<std::string, pt2>::iterator mit = m.find(name);
   if(mit == m.end()) {
     std::cout<<"Function ["<<name<<"] not found!"<<std::endl;
     return false;
@@ -486,7 +513,7 @@ bool MProcessor::execFunction(const std::string& name, const std::string& _sargs
   call(name);
   return true;
 }
-bool MProcessor::useMomentCard(MAdventurer* adventurer) {
+bool MProcessor::tryMomentCard(MAdventurer* adventurer) {
   MCard* card;
   std::vector<MCard*> cards = adventurer->getMomentCards();
   if(!cards.empty()) {
@@ -498,24 +525,76 @@ bool MProcessor::useMomentCard(MAdventurer* adventurer) {
   }
   return false;
 }
+std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer) {
+  std::vector<std::string> actions;
+
+  std::list<MArea*> neighbors = adventurer->getArea()->getNeighbors(adventurer->getName() == "explorer");
+  if(neighbors.size() > 0) actions.push_back("move");
+
+  if(adventurer->getArea()->getFloodLevel() == 1) {
+    actions.push_back("abfluss");
+  }
+  else {
+    for(std::list<MArea*>::iterator it=neighbors.begin(); it != neighbors.end(); it++) {
+	  if((*it)->getFloodLevel() == 1) {
+	    actions.push_back("abfluss");
+	     if(adventurer->getName() == "diver") {
+           actions.push_back("swim");
+        }
+	    break;
+	  }
+	}
+  }
+
+  if(adventurer->getName() == "liaison") actions.push_back("handover");
+  else {
+    for(int i=0; i<activeAdventurers.size(); i++) {
+      if(adventurers[activeAdventurers[i]] == adventurer) continue;
+	  if(((MAdventurer*)adventurers[activeAdventurers[i]])->getArea() == adventurer->getArea()) {
+	    actions.push_back("handover");
+	    break;
+	  }
+    }
+  }
+
+  for(moi moit = artifacts.begin(); moit != artifacts.end(); moit ++) {
+    if(adventurer->getArtifactCards(moit->first).size() >= 4) {
+	  actions.push_back("getartifact");
+	  break;
+	}
+  }
+
+  if(adventurer->getName() == "navigator") actions.push_back("moveother");
+  if(adventurer->getName() == "pilot") {
+    if(std::find(usedActions.begin(), usedActions.end(), "fly") == usedActions.end()) {
+      actions.push_back("fly");
+	}
+  }
+
+  return actions;
+}
 void MProcessor::run() {
   MAdventurer* adventurer;
   MCard* card;
   std::vector<MCard*> cards;
+  std::string action;
+
   while(!looseCheck()) {
     for(int i=0; i<activeAdventurers.size(); i++) {
       adventurer = (MAdventurer*)adventurers[activeAdventurers[i]];
 	  //three actions by turn
-	  //for(int j=0; j < 3; j++) {
-	  //  action = selectAction(adventurer->getAvailableActions());
-	  //  param = selectActionParams(adventurer, action);
-	  //  execFunction(action, adventurer->getName() + " " + action + " " + param);
-	  //}
+	  usedActions.clear();
+	  for(int j=0; j < 3; j++) {
+	    action = ui->selectAction(getAvailableActions(adventurer));
+	    //param = selectActionParams(adventurer, action);
+	    //execFunction(action, adventurer->getName() + " " + action + " " + param);
+	    usedActions.push_back(action);
+	  }
 	  //get 2 item cards
 	  for(int j=0; j<2; j++) {
         execFunction("getitemcard", adventurers[activeAdventurers[j]]->getName());
 		while(adventurer->getCardsNumber() > CARDS_LIMIT) {
-		  if(useMomentCard(adventurer)) continue;
+		  if(tryMomentCard(adventurer)) continue;
 		  card = ui->selectCard(adventurer->getAllCards());
 		  execFunction("discard", adventurer->getName() + " " + card->getName());
 		}
