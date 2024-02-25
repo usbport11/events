@@ -11,6 +11,16 @@
 #include <cstring>
 #include <algorithm>
 
+#define ACT_MOVE 101
+#define ACT_ABFLUSS 102
+#define ACT_SKIP 103
+#define ACT_HANDOVER 104
+#define ACT_GETARTIFACT 105
+#define ACT_FLY 106
+#define ACT_MOVEOTHER 107
+#define ACT_SWIM 108
+#define ACT_EXTRACT 109
+
 bool MProcessor::argsLessLimit(int num) {
   return (vargs.size() < num);
 }
@@ -394,6 +404,16 @@ void MProcessor::intitMaps() {
   for(moi moit=areas.begin(); moit != areas.end(); moit++) {
     floodCards[moit->first] = new MCard(moit->first);
   }
+
+  actionsSwitches["move"] = ACT_MOVE;
+  actionsSwitches["abfluss"] = ACT_ABFLUSS;
+  actionsSwitches["skip"] = ACT_SKIP;
+  actionsSwitches["handOver"] = ACT_HANDOVER;
+  actionsSwitches["getArtifact"] = ACT_GETARTIFACT;
+  actionsSwitches["fly"] = ACT_FLY;
+  actionsSwitches["moveOther"] = ACT_MOVEOTHER;
+  actionsSwitches["swim"] = ACT_SWIM;
+  actionsSwitches["extract"] = ACT_EXTRACT;
 }
 void MProcessor::initAreas() {
   int rows = 4, cols = 4; // move to global?
@@ -502,6 +522,7 @@ MProcessor::~MProcessor() {
   activeAdventurers.clear();
   collectedArtifacts.clear();
   usedActions.clear();
+  actionsSwitches.clear();
 }
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {
   parseArgs(_sargs);
@@ -572,6 +593,73 @@ std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer
   }
 
   return actions;
+}
+std::vector<std::string> MProcessor::selectActionParams(MAdventurer* adventurer, std::string action) {
+  std::vector<std::string> params;
+  std::list<MArea*> neighbors;
+
+  switch(actionsSwitches[action]) {
+  case ACT_MOVE:
+	neighbors = adventurer->getArea()->getNeighbors(adventurer->getName() == "explorer");
+	for(std::list<MArea*>::iterator it; it != neighbors.end(); it++) {
+	  params.push_back((*it)->getName());
+	}
+	break;
+  case ACT_ABFLUSS:
+    if(adventurer->getArea()->getFloodLevel() == 1) {
+      params.push_back("abfluss");
+    }
+    else {
+	  neighbors = adventurer->getArea()->getNeighbors(adventurer->getName() == "explorer");
+      for(std::list<MArea*>::iterator it=neighbors.begin(); it != neighbors.end(); it++) {
+	    if((*it)->getFloodLevel() == 1) {
+	      params.push_back("abfluss");
+		}
+	    break;
+	  }
+	}
+	break;
+  case ACT_SKIP:
+  case ACT_EXTRACT:
+    break;
+  case ACT_HANDOVER:
+    if(adventurer->getName() == "liaison") {
+	  for(int i=0; i<activeAdventurers.size(); i++) {
+	    if(adventurers[activeAdventurers[i]] == adventurer) continue;
+		params.push_back(activeAdventurers[i]);
+	  }
+	}
+	else {
+	  for(int i=0; i<activeAdventurers.size(); i++) {
+        if(adventurers[activeAdventurers[i]] == adventurer) continue;
+	    if(((MAdventurer*)adventurers[activeAdventurers[i]])->getArea() == adventurer->getArea()) {
+	      params.push_back(activeAdventurers[i]);
+	    }
+      }
+	}
+    break;
+  case ACT_GETARTIFACT:
+    for(moi moit = artifacts.begin(); moit != artifacts.end(); moit ++) {
+      if(adventurer->getArtifactCards(moit->first).size() >= 4) {
+	    params.push_back(moit->first);
+	    break;
+	  }
+    }
+	break;
+  case ACT_FLY:
+    for(moi moit = areas.begin(); moit != areas.end(); moit ++) {
+	  if(moit->first != adventurer->getArea()->getName() && ((MArea*)moit->second)->getFloodLevel() < 2) {
+	    params.push_back(moit->first);
+	  }
+	}
+    break;
+  case ACT_MOVEOTHER:
+    break;
+  case ACT_SWIM:
+    break;
+  }
+
+  return params;
 }
 void MProcessor::run() {
   MAdventurer* adventurer;

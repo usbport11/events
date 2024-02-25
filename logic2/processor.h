@@ -48,6 +48,7 @@ private:
   const std::string extractionArea;
   std::vector<std::string> collectedArtifacts;
   std::vector<std::string> usedActions;
+  std::map<std::string, int> actionsSwitches;
 
   bool argsLessLimit(int num);
   MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
@@ -83,6 +84,7 @@ private:
   bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
   std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
+  std::vector<std::string> selectActionParams(MAdventurer* adventurer, std::string action);
 public:
   MProcessor();
   ~MProcessor();
