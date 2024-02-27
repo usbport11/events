@@ -158,6 +158,7 @@ void MProcessor::flood() {
   if(argsLessLimit(1)) return;
   MArea* area = findArea(vargs[0]);
   MAdventurer* adventurer;
+  std::list<MArea*> neighbors;
   if(!area) return;
   area->flood();
   if(area->getFloodLevel() >= 2) {
@@ -165,11 +166,13 @@ void MProcessor::flood() {
       adventurer = findAdventurer(activeAdventurers[i]);
       if(!adventurer) return;
       if(adventurer->getArea() == area) {
-        std::list<MArea*> near = area->getNeighbors();
-        execFunction("move", adventurer->getName() + " " + (*near.begin())->getName());
+        neighbors = area->getAllActiveNeighbors();
+		if(neighbors.empty()) {
+		  activeAdventurers.erase(activeAdventurers.begin() + i);
+		}
+        execFunction("move", adventurer->getName() + " " + (*neighbors.begin())->getName());
       }
     }
-    area->removeAllNeighbors();
     floodOutDeck.push_back(floodDeck.front());
   }
   else {
@@ -546,10 +549,29 @@ bool MProcessor::tryMomentCard(MAdventurer* adventurer) {
   }
   return false;
 }
+void MProcessor::getSwimAreas(std::string area, std::vector<MArea*>& result, int level) {
+  level ++;
+  std::list<MArea*> neighbors = ((MArea*)areas[area])->getAllNeighbors();
+  for(std::list<MArea*>::iterator it; it != neighbors.end(); it ++) {
+    if((*it)->getFloodLevel() >= 1 && std::find(result.begin(), result.end(), *it) == result.end()) {
+	  result.push_back(*it);
+	  getSwimAreas((*it)->getName(), result, level);
+	}
+  }
+  if(level == 1) {
+    ((MArea*)areas[area])->removeAllNeighbors();
+  }
+}
 std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer) {
   std::vector<std::string> actions;
+  std::list<MArea*> neighbors;
 
-  std::list<MArea*> neighbors = adventurer->getArea()->getNeighbors(adventurer->getName() == "explorer");
+  if(adventurer->getName() == "explorer") {
+	neighbors = adventurer->getArea()->getAllActiveNeighbors();
+  }
+  else {
+	neighbors = adventurer->getArea()->getDirectActiveNeighbors();
+  }
   if(neighbors.size() > 0) actions.push_back("move");
 
   if(adventurer->getArea()->getFloodLevel() == 1) {
@@ -600,7 +622,12 @@ std::vector<std::string> MProcessor::selectActionParams(MAdventurer* adventurer,
 
   switch(actionsSwitches[action]) {
   case ACT_MOVE:
-	neighbors = adventurer->getArea()->getNeighbors(adventurer->getName() == "explorer");
+	if(adventurer->getName() == "explorer") {
+	  neighbors = adventurer->getArea()->getAllActiveNeighbors();
+	}
+	else {
+	  neighbors = adventurer->getArea()->getDirectActiveNeighbors();
+	}
 	for(std::list<MArea*>::iterator it; it != neighbors.end(); it++) {
 	  params.push_back((*it)->getName());
 	}
@@ -610,7 +637,12 @@ std::vector<std::string> MProcessor::selectActionParams(MAdventurer* adventurer,
       params.push_back("abfluss");
     }
     else {
-	  neighbors = adventurer->getArea()->getNeighbors(adventurer->getName() == "explorer");
+	  if(adventurer->getName() == "explorer") {
+	    neighbors = adventurer->getArea()->getAllActiveNeighbors();
+	  }
+	  else {
+	    neighbors = adventurer->getArea()->getDirectActiveNeighbors();
+	  }
       for(std::list<MArea*>::iterator it=neighbors.begin(); it != neighbors.end(); it++) {
 	    if((*it)->getFloodLevel() == 1) {
 	      params.push_back("abfluss");
@@ -654,6 +686,7 @@ std::vector<std::string> MProcessor::selectActionParams(MAdventurer* adventurer,
 	}
     break;
   case ACT_MOVEOTHER:
+    //select adventurer
     break;
   case ACT_SWIM:
     break;

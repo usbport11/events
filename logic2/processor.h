@@ -83,6 +83,7 @@ private:
   void initDecks();
   bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
+  void getSwimAreas(std::string area, std::vector<MArea*>& result, int level);
   std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
   std::vector<std::string> selectActionParams(MAdventurer* adventurer, std::string action);
 public:
