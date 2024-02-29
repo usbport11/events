@@ -12,7 +12,7 @@ public:
   MUI();
   MCard* selectCard(const std::vector<MCard*>& cards);
   bool askQuestion(const std::string& question);
-  std::string selectAction(const std::vector<std::string>& actions);
+  std::string select(const std::vector<std::string>& data);
 };
 
 #endif

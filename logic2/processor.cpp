@@ -341,7 +341,7 @@ void MProcessor::parseArgs(const std::string& _sargs) {
 void MProcessor::call(const std::string& name) {
   (*this.*m[name])();
 }
-void MProcessor::fillItemCards(const std::string& _name, const std::string& type, int number) {
+void MProcessor::createItemCards(const std::string& _name, const std::string& type, int number) {
   std::string name;
   char buff[4];
   for(int i=0; i<number; i++) {
@@ -396,12 +396,12 @@ void MProcessor::intitMaps() {
 
   //artifact cards
   for(moi moit = artifacts.begin(); moit != artifacts.end(); moit++) {
-    fillItemCards(moit->first, "artifact", 5);
+    createItemCards(moit->first, "artifact", 5);
   }
   //ext cards
-  fillItemCards("helicopter", "item", 2);
-  fillItemCards("sandbag", "item", 2);
-  fillItemCards("flood", "flood", 3);
+  createItemCards("helicopter", "item", 2);
+  createItemCards("sandbag", "item", 2);
+  createItemCards("flood", "flood", 3);
 
   //equal to areas number and name
   for(moi moit=areas.begin(); moit != areas.end(); moit++) {
@@ -549,17 +549,20 @@ bool MProcessor::tryMomentCard(MAdventurer* adventurer) {
   }
   return false;
 }
-void MProcessor::getSwimAreas(std::string area, std::vector<MArea*>& result, int level) {
+void MProcessor::getSwimAreas(MArea* area, std::vector<std::string>& result, int level) {
   level ++;
-  std::list<MArea*> neighbors = ((MArea*)areas[area])->getAllNeighbors();
-  for(std::list<MArea*>::iterator it; it != neighbors.end(); it ++) {
-    if((*it)->getFloodLevel() >= 1 && std::find(result.begin(), result.end(), *it) == result.end()) {
-	  result.push_back(*it);
-	  getSwimAreas((*it)->getName(), result, level);
+  std::list<MArea*> neighbors = area->getDirectActiveNeighbors();
+  for(std::list<MArea*>::iterator it=neighbors.begin(); it != neighbors.end(); it ++) {
+    if((*it)->getFloodLevel() >= 1 && std::find(result.begin(), result.end(), (*it)->getName()) == result.end()) {
+	  result.push_back((*it)->getName());
+	  getSwimAreas(*it, result, level);
 	}
   }
   if(level == 1) {
-    ((MArea*)areas[area])->removeAllNeighbors();
+	std::vector<std::string>::iterator it = std::find(result.begin(), result.end(), area->getName());
+	if(it != result.end()) {
+	  result.erase(it);
+	}
   }
 }
 std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer) {
@@ -616,7 +619,7 @@ std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer
 
   return actions;
 }
-std::vector<std::string> MProcessor::selectActionParams(MAdventurer* adventurer, std::string action) {
+std::vector<std::string> MProcessor::getActionParams(MAdventurer* adventurer, std::string action) {
   std::vector<std::string> params;
   std::list<MArea*> neighbors;
 
@@ -686,9 +689,10 @@ std::vector<std::string> MProcessor::selectActionParams(MAdventurer* adventurer,
 	}
     break;
   case ACT_MOVEOTHER:
-    //select adventurer
+    //need think
     break;
   case ACT_SWIM:
+    getSwimAreas(adventurer->getArea(), params);
     break;
   }
 
@@ -699,6 +703,7 @@ void MProcessor::run() {
   MCard* card;
   std::vector<MCard*> cards;
   std::string action;
+  std::string param;
 
   while(!looseCheck()) {
     for(int i=0; i<activeAdventurers.size(); i++) {
@@ -706,9 +711,9 @@ void MProcessor::run() {
 	  //three actions by turn
 	  usedActions.clear();
 	  for(int j=0; j < 3; j++) {
-	    action = ui->selectAction(getAvailableActions(adventurer));
-	    //param = selectActionParams(adventurer, action);
-	    //execFunction(action, adventurer->getName() + " " + action + " " + param);
+	    action = ui->select(getAvailableActions(adventurer));
+	    param = ui->select(getActionParams(adventurer, action));
+	    execFunction(action, adventurer->getName() + " " + action + " " + param);
 	    usedActions.push_back(action);
 	  }
 	  //get 2 item cards

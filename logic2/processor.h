@@ -77,15 +77,15 @@ private:
   void extract();
   void parseArgs(const std::string& _sargs);
   void call(const std::string& name);
-  void fillItemCards(const std::string& _name, const std::string& type, int number);
+  void createItemCards(const std::string& _name, const std::string& type, int number);
   void intitMaps();
   void initAreas();
   void initDecks();
   bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
-  void getSwimAreas(std::string area, std::vector<MArea*>& result, int level);
   std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
-  std::vector<std::string> selectActionParams(MAdventurer* adventurer, std::string action);
+  std::vector<std::string> getActionParams(MAdventurer* adventurer, std::string action);
+  void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
 public:
   MProcessor();
   ~MProcessor();

@@ -21,12 +21,12 @@ bool MUI::askQuestion(const std::string& question) {
   std::cin >> sel;
   return (bool)sel;
 }
-std::string MUI::selectAction(const std::vector<std::string>& actions) {
+std::string MUI::select(const std::vector<std::string>& data) {
   int sel;
-  for(int i=0; i<actions.size(); i++) {
-    std::cout<<i<<" - "<<actions[i]<<std::endl;
+  for(int i=0; i<data.size(); i++) {
+    std::cout<<i<<" - "<<data[i]<<std::endl;
   }
   std::cin >> sel;
-  if(sel > actions.size()) sel = 0;
-  return actions[sel];
+  if(sel > data.size()) sel = 0;
+  return data[sel];
 }
