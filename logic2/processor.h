@@ -34,6 +34,7 @@ private:
 
   MUI* ui;
 
+  const std::string extractionArea;
   std::map<std::string, MObject*> areas;
   std::map<std::string, MObject*> adventurers;
   std::map<std::string, MObject*> itemCards;
@@ -45,7 +46,6 @@ private:
   std::deque<std::string> floodDropDeck;
   std::deque<std::string> floodOutDeck;
   std::vector<std::string> activeAdventurers;
-  const std::string extractionArea;
   std::vector<std::string> collectedArtifacts;
   std::vector<std::string> usedActions;
   std::map<std::string, int> actionsSwitches;
@@ -84,7 +84,7 @@ private:
   bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
   std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
-  std::vector<std::string> getActionParams(MAdventurer* adventurer, std::string action);
+  std::string getActionParams(MAdventurer* adventurer, std::string action);
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
 public:
   MProcessor();
