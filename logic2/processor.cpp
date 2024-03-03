@@ -661,7 +661,7 @@ std::string MProcessor::getActionParams(MAdventurer* adventurer, std::string act
   std::vector<std::string> params;
   std::list<MArea*> neighbors;
   std::string result = "";
-  std::vector<MCard*> artifactCards;
+  std::vector<MCard*> cards;
 
   switch(actionsSwitches[action]) {
   case ACT_MOVE:
@@ -713,9 +713,9 @@ std::string MProcessor::getActionParams(MAdventurer* adventurer, std::string act
 	}
 	result = ui->select(params);
 	params.clear();
-    artifactCards = adventurer->getArtifactCards();
-    for(int i=0; i<artifactCards.size(); i++) {
-      params.push_back(artifactCards[i]->getName());
+    cards = adventurer->getAllCards();
+    for(int i=0; i<cards.size(); i++) {
+      params.push_back(cards[i]->getName());
     }
     result += " " + ui->select(params);
     return result;
@@ -776,7 +776,6 @@ void MProcessor::run() {
 
   int i = 0;
   int steps = 2;
-  std::vector<std::string> data;
 
   std::cout<<"Run====================================="<<std::endl;
 
@@ -787,12 +786,8 @@ void MProcessor::run() {
 	  std::cout<<"[Adventurer] "<<adventurer->getName()<<" 3 actions"<<std::endl;
 	  std::cout<<"  "<<adventurer->getArea()->getName()<<std::endl;
 	  for(int j=0; j < 3; j++) {
-        data = getAvailableActions(adventurer);
-        if(data.empty()) {
-          break;
-        }
         std::cout<<"Select action:"<<std::endl;
-	    action = ui->select(data);
+	    action = ui->select(getAvailableActions(adventurer));
 	    param = getActionParams(adventurer, action);
 	    execFunction(action, adventurer->getName() + " " + param);
 	    usedActions.push_back(action);
