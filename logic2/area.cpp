@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 
+#include <iostream>
+
 MArea::MArea():MObject() {
   floodLevel = 0;
   index[0] = -1;
@@ -32,32 +34,18 @@ void MArea::setIndex(int x, int y) {
   index[0] = x;
   index[1] = y;
 }
-/*
-std::list<MArea*> MArea::getNeighbors(bool all) {
-  if(all) {
-    return neighbors;
-  }
-  else {
-    std::list<MArea*> dn = neighbors;
-    for(std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
-      if(!isDiagonal(*it)) dn.push_back(*it);
-    }
-    return dn;
-  }
-}
-*/
 std::list<MArea*> MArea::getAllNeighbors() {
   return neighbors;
 }
 std::list<MArea*> MArea::getAllActiveNeighbors() {
-  std::list<MArea*> dn = neighbors;
+  std::list<MArea*> dn;
   for(std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
     if((*it)->getFloodLevel() < 2) dn.push_back(*it);
   }
   return dn;
 }
 std::list<MArea*> MArea::getDirectActiveNeighbors() {
-  std::list<MArea*> dn = neighbors;
+  std::list<MArea*> dn;
   for(std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
     if(!isDiagonal(*it) && (*it)->getFloodLevel() < 2) dn.push_back(*it);
   }

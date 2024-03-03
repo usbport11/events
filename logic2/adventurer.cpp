@@ -69,11 +69,16 @@ std::vector<MCard*> MAdventurer::getMomentCards() {
   }
   return resCards;
 }
-std::vector<MCard*> MAdventurer::getArtifactCards(std::string name) {
+std::vector<MCard*> MAdventurer::getArtifactCards(const std::string& name) {
   std::vector<MCard*> resCards;
   for(int i=0; i < cards.size() && i < 4; i++) {
     if(cards[i]->getType() == "artifact") {
-      if(name == cards[i]->getName().substr(0, name.length())) {
+      if(name != "") {
+        if(name == cards[i]->getName().substr(0, name.length())) {
+          resCards.push_back(cards[i]);
+        }
+      }
+      else {
         resCards.push_back(cards[i]);
       }
     }
