@@ -125,7 +125,11 @@ void MProcessor::start() {
   }
 
   std::cout<<"Random item deck and flood deck"<<std::endl;
-  initDecks();
+  itemDropDeck.clear();
+  floodDropDeck.clear();
+  floodOutDeck.clear();
+  randStartDeck(itemCards, itemDeck);
+  randStartDeck(floodCards, floodDeck);
 
   std::cout<<"Flood areas by get flood cards"<<std::endl;
   for(int i=0; i<startFloods; i++) {
@@ -478,10 +482,6 @@ void MProcessor::initAreas() {
 	}
 	std::cout<<std::endl;
   }
-}
-void MProcessor::initDecks() {
-  randStartDeck(itemCards, itemDeck);
-  randStartDeck(floodCards, floodDeck);
 }
 MProcessor::MProcessor():extractionArea("plato") {
   struct timespec tm;
