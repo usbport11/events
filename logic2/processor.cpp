@@ -692,6 +692,14 @@ std::string MProcessor::getActionParams(MAdventurer* adventurer, std::string act
 		}
 	  }
 	}
+	if(adventurer->getName() == "engineer" && params.size() > 1) {
+      result = ui->select(params);
+      if(ui->askQuestion("Select more?")) {
+        params.erase(std::find(params.begin(), params.end(), result));
+        result += " " + ui->select(params);
+      }
+      return result;
+    }
 	break;
   case ACT_SKIP:
   case ACT_EXTRACT:
@@ -755,17 +763,7 @@ std::string MProcessor::getActionParams(MAdventurer* adventurer, std::string act
     return "";
   }
 
-  if(actionsSwitches[action] == ACT_ABFLUSS && adventurer->getName() == "engineer" && params.size() > 1) {
-    result = ui->select(params);
-    if(ui->askQuestion("Select more?")) {
-      params.erase(std::find(params.begin(), params.end(), result));
-      result += " " + ui->select(params);
-    }
-  }
-  else {
-    result = ui->select(params);
-  }
-  return result;
+  return ui->select(params);
 }
 void MProcessor::run() {
   MAdventurer* adventurer;
