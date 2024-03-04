@@ -438,8 +438,36 @@ void MProcessor::intitMaps() {
   actionsSwitches["extract"] = ACT_EXTRACT;
 }
 void MProcessor::initAreas() {
-  int rows = 4, cols = 4; // move to global?
-  if(areas.size() < rows * cols) {
+  int num;
+
+  //simple type
+  int rows = 4, cols = 4;
+  bool areaMap[rows][cols] = {
+    {1,1,1,1},
+    {1,1,1,1},
+    {1,1,1,1},
+    {1,1,1,1}
+  };
+  /*
+  //more complex
+  int rows = 6, cols = 6;
+  bool areaMap[6][6] = {
+    {0,0,1,1,0,0},
+    {0,1,1,1,1,0},
+    {1,1,1,1,1,1},
+    {1,1,1,1,1,1},
+    {0,1,1,1,1,0},
+    {0,0,1,1,0,0}
+  };
+  */
+
+  num = 0;
+  for(int i=0; i<rows; i++) {
+    for(int j=0; j<cols; j++) {
+      if(areaMap[i][j]) num ++;
+    }
+  }
+  if(areas.size() < num) {
     std::cout<<"Error: areas size < row * cols"<<std::endl;
     return;
   }
@@ -450,18 +478,20 @@ void MProcessor::initAreas() {
   std::map<int, MArea*> temp;
   std::vector<std::string> rndBase;
 
-  int rnd, num = 0;
+  int rnd;
   int x, y;
   for(moi moit=areas.begin(); moit!=areas.end(); moit++) {
     rndBase.push_back(moit->first);
   }
 
+  num = 0;
   while(!rndBase.empty()) {
+    x = int(num / rows);
+    y = num - (int(num / rows)) * rows;
+    if(!areaMap[x][y]) continue;
     distribute = std::uniform_int_distribution<int>(0, rndBase.size()-1);
     rnd = distribute(rng);
     area = (MArea*)areas[rndBase[rnd]];
-    x = int(num / rows);
-    y = num - (int(num / rows)) * rows;
     area->setIndex(x, y);
 	area->setFloodLevel(0);
     rndBase.erase(rndBase.begin() + rnd);
