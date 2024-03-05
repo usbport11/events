@@ -18,7 +18,6 @@ class MUI;
 
 class MProcessor {
 private:
-  typedef void (MProcessor::*pt2)();
   typedef bool (MProcessor::*bptr)();
   typedef std::map<std::string, MObject*>::iterator moi;
 
