@@ -1,4 +1,4 @@
-#ifndef ui*207H
+#ifndef uiH
 #define uiH
 
 #include <string>

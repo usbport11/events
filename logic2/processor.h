@@ -19,6 +19,7 @@ class MUI;
 class MProcessor {
 private:
   typedef void (MProcessor::*pt2)();
+  typedef bool (MProcessor::*bptr)();
   typedef std::map<std::string, MObject*>::iterator moi;
 
   float floodLevel;
@@ -28,7 +29,7 @@ private:
   std::mt19937 rng;
   std::uniform_int_distribution<int> distribute;
 
-  std::map<std::string, pt2> m;
+  std::map<std::string, bptr> m;
   std::vector<std::string> vargs;
   std::string sargs;
 
@@ -51,36 +52,38 @@ private:
   std::map<std::string, int> actionsSwitches;
 
   bool argsLessLimit(int num);
+  void parseArgs(const std::string& _sargs);
+  bool call(const std::string& name);
+
   MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
   MCard* findItemCard(const std::string& name);
   MCard* findFloodCard(const std::string& name);
   MArtifact* findActifact(const std::string& name);
+
   void randStartDeck(std::map<std::string, MObject*> cards, std::deque<std::string>& deck);
   void randDeck(std::deque<std::string>& deck);
   void moveDeck(std::deque<std::string>& src, std::deque<std::string>& dest);
-  void start();
-  void move();
-  void abfluss();
-  void flood();
-  void skip();
-  void handOver();
-  void getItemCard();
-  void getFloodCard();
-  void discard();
-  void useCard();
-  void getArtifact();
-  void fly();
-  void moveOther();
-  void swim();
-  void extract();
-  void parseArgs(const std::string& _sargs);
-  void call(const std::string& name);
+
+  bool start();
+  bool move();
+  bool abfluss();
+  bool flood();
+  bool skip();
+  bool handOver();
+  bool getItemCard();
+  bool getFloodCard();
+  bool discard();
+  bool useCard();
+  bool getArtifact();
+  bool fly();
+  bool moveOther();
+  bool swim();
+  bool extract();
+
   void createItemCards(const std::string& _name, const std::string& type, int number);
-  void intitMaps();
-  void initAreas();
-  void initDecks();
+  bool initAreas();
   bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
   std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
@@ -90,7 +93,7 @@ public:
   MProcessor();
   ~MProcessor();
   bool execFunction(const std::string& name, const std::string& _sargs="");
-  void run();
+  bool run();
 };
 
 #endif

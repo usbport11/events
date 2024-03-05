@@ -52,6 +52,7 @@ std::list<MArea*> MArea::getDirectActiveNeighbors() {
   return dn;
 }
 void MArea::addNeighbor(MArea* area) {
+  if(!area) return;
   std::list<MArea*>::iterator it = std::find(neighbors.begin(), neighbors.end(), area);
   if(it != neighbors.end()) return;
   neighbors.push_back(area);

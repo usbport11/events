@@ -1,4 +1,5 @@
 #include "processor.h"
+#include <iostream>
 
 int main() {
   MProcessor pr;
