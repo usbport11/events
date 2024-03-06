@@ -425,18 +425,32 @@ bool MProcessor::initAreas() {
   std::map<int, MArea*> temp;
   std::vector<std::string> rndBase;
 
-  bool extraction = false;
-  int rnd;
-  int x, y;
+  //fill rand base
+  //check areas on extraction(1) and artifacts(4 * 2)
+  int areaChecks = 0;
+  std::vector<std::string> artefactAreas;
+  for(moi moit=artifacts.begin(); moit!=artifacts.end(); moit++) {
+    artefactAreas.push_back(((MArtifact*)moit->second)->getMainAreas()[0]);
+    artefactAreas.push_back(((MArtifact*)moit->second)->getMainAreas()[1]);
+  }
   for(moi moit=areas.begin(); moit!=areas.end(); moit++) {
     if(moit->first == extractionArea) {
-      extraction = true;
+      areaChecks ++;
+    }
+    if(std::find(artefactAreas.begin(), artefactAreas.end(), moit->first) != artefactAreas.end()) {
+      areaChecks ++;
     }
     rndBase.push_back(moit->first);
   }
-  if(!extraction) return false;
+  if(areaChecks < 1 + artifacts.size() * 2) {
+    std::cout<<"Extraction point or some artefact area not created"<<std::endl;
+    return false;
+  }
 
+  int rnd;
+  int x, y;
   num = 0;
+  //rand and init areas
   while(!rndBase.empty()) {
     x = int(num / rows);
     y = num - (int(num / rows)) * rows;
@@ -453,6 +467,7 @@ bool MProcessor::initAreas() {
     num ++;
   }
 
+  //set neighbors
   for(int i=0; i<rows; i++) {
     for(int j=0; j<cols; j++) {
       if(areaMap[i][j]) {
@@ -860,7 +875,6 @@ bool MProcessor::run() {
 	    if(!execFunction("getfloodcard", adventurer->getName())) return false;
 	  }
     }
-
     i ++;
   }
 }
