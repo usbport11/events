@@ -117,6 +117,7 @@ bool MProcessor::start() {
 
   std::cout<<"Clear adventurer items, artifacts, positions"<<std::endl;
   MAdventurer* adv;
+  MArea* area;
   for(moi moit = adventurers.begin(); moit != adventurers.end(); moit++) {
     adv = (MAdventurer*)moit->second;
 	adv->removeAllCards();
@@ -142,7 +143,12 @@ bool MProcessor::start() {
       std::cout<<"Adventurer not found"<<std::endl;
       return false;
     }
-    adv->setArea((MArea*)areas[adv->getStartArea()]);
+    area = findArea(adv->getStartArea());
+    if(!area) {
+      std::cout<<"Base area for adventurer not found"<<std::endl;
+      return false;
+    }
+    adv->setArea(area);
 	activeAdventurers.push_back(adv->getName());
 	rndBaseStr.erase(rndBaseStr.begin() + rnd);
 	num ++;
@@ -665,10 +671,17 @@ void MProcessor::getSwimAreas(MArea* area, std::vector<std::string>& result, int
 	}
   }
   if(level == 1) {
+    //remove self
 	std::vector<std::string>::iterator it = std::find(result.begin(), result.end(), area->getName());
 	if(it != result.end()) {
 	  result.erase(it);
 	}
+    //remove drown areas
+    for(std::vector<std::string>::iterator it=result.begin(); it!=result.end(); it++) {
+      if(((MArea*)areas[*it])->getFloodLevel() == 2) {
+        result.erase(it);
+      }
+    }
   }
 }
 std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer) {
@@ -692,9 +705,15 @@ std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer
     for(std::list<MArea*>::iterator it=neighbors.begin(); it != neighbors.end(); it++) {
 	  if((*it)->getFloodLevel() == 1) {
 	    actions.push_back("abfluss");
-	     if(adventurer->getName() == "diver") {
-           actions.push_back("swim");
-        }
+	    break;
+	  }
+	}
+  }
+
+  if(adventurer->getName() == "diver") {
+    for(std::list<MArea*>::iterator it=neighbors.begin(); it != neighbors.end(); it++) {
+	  if((*it)->getFloodLevel() == 1) {
+	    actions.push_back("swim");
 	    break;
 	  }
 	}
