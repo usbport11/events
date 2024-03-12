@@ -62,16 +62,20 @@ bool HelloWorld::init() {
         this->addChild(sprite, 0);
     }
     
-    const int size = 64;
-    const int half = 64 / 2;
-    int rows = 2, cols = 2;
-    for(int i = 0; i< rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            auto spQuad = Sprite::create("quad64.png");
-            if (spQuad != nullptr) {
-                spQuads.push_back(spQuad);
-                spQuad->setPosition(Vec2(origin.x + half + i * size, origin.y + half + j * size));
-                this->addChild(spQuad, 0);
+    areasOffset = Vec2(32, 32);
+    halfSize = Size(32, 32);
+    fullSize = Size(64, 64);
+    cellsNumber[0] = cellsNumber[1] = 2;
+    areasRect = Rect(0, 0, cellsNumber[0], cellsNumber[1]);
+    overNum[0] = overNum[1] = -1;
+
+    for (int i = 0; i < cellsNumber[0]; i++) {
+        for (int j = 0; j < cellsNumber[1]; j++) {
+            cocos2d::Sprite* sp = Sprite::create("quad64.png");
+            if (sp) {
+                sp->setPosition(Vec2(areasOffset.x + i * fullSize.width, areasOffset.y + j * fullSize.height));
+                this->addChild(sp, 0);
+                cells.push_back(sp);
             }
         }
     }
@@ -88,24 +92,13 @@ void HelloWorld::menuCloseCallback(Ref* pSender) {
 
 void HelloWorld::onMouseMove(cocos2d::Event* event) {
     EventMouse* e = (EventMouse*)event;
-    float x = e->getCursorX();
-    float y = e->getCursorY();
-    int rows = 2, cols = 2;
-    Vec2 point;
-    const int half = 64 / 2;
-    int num;
-
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            num = i * rows + j;
-            point = spQuads[num]->getPosition();
-            if (x > point.x - half && x < point.x + half &&
-                y > point.y - half && y < point.y + half) {
-                spQuads[num]->setColor(Color3B(128, 128, 128));
-            }
-            else {
-                spQuads[num]->setColor(Color3B(255, 255, 255));
-            }
-        }
+    Vec2 mc = Vec2(e->getCursorX(), e->getCursorY());
+    overNum[0] = mc.x / fullSize.width;
+    overNum[1] = mc.y / fullSize.height;
+    for (int i = 0; i < cells.size(); i++) {
+        cells[i]->setColor(Color3B(255, 255, 255));
     }
+    if (overNum[0] < 0 || overNum[1] < 0 || overNum[0] >= cellsNumber[0] || overNum[1] >= cellsNumber[1]) return;
+    int num = overNum[0] * cellsNumber[0] + overNum[1];
+    cells[num]->setColor(Color3B(128, 128, 128));
 }
