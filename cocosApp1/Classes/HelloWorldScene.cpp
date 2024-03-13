@@ -24,6 +24,7 @@ bool HelloWorld::init() {
 
     auto listener = EventListenerMouse::create(); 
     listener->onMouseMove = CC_CALLBACK_1(HelloWorld::onMouseMove, this);
+    listener->onMouseDown = CC_CALLBACK_1(HelloWorld::onMouseDown, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
     auto closeItem = MenuItemImageExt::create("CloseNormal.png", "CloseSelected.png", "", CC_CALLBACK_1(HelloWorld::menuCloseCallback, this));
@@ -65,9 +66,11 @@ bool HelloWorld::init() {
     areasOffset = Vec2(32, 32);
     halfSize = Size(32, 32);
     fullSize = Size(64, 64);
-    cellsNumber[0] = cellsNumber[1] = 2;
-    areasRect = Rect(0, 0, cellsNumber[0], cellsNumber[1]);
+    cellsNumber[0] = cellsNumber[1] = 3;
     overNum[0] = overNum[1] = -1;
+
+    clicked = -1;
+    over = -1;
 
     for (int i = 0; i < cellsNumber[0]; i++) {
         for (int j = 0; j < cellsNumber[1]; j++) {
@@ -96,9 +99,30 @@ void HelloWorld::onMouseMove(cocos2d::Event* event) {
     overNum[0] = mc.x / fullSize.width;
     overNum[1] = mc.y / fullSize.height;
     for (int i = 0; i < cells.size(); i++) {
+        if (i == clicked) continue;
         cells[i]->setColor(Color3B(255, 255, 255));
     }
     if (overNum[0] < 0 || overNum[1] < 0 || overNum[0] >= cellsNumber[0] || overNum[1] >= cellsNumber[1]) return;
     int num = overNum[0] * cellsNumber[0] + overNum[1];
+    if (clicked == num) return;
     cells[num]->setColor(Color3B(128, 128, 128));
+}
+
+void HelloWorld::onMouseDown(Event* event) {
+    EventMouse* e = (EventMouse*)event;
+    Vec2 mc = Vec2(e->getCursorX(), e->getCursorY());
+    overNum[0] = mc.x / fullSize.width;
+    overNum[1] = mc.y / fullSize.height;
+    if (overNum[0] < 0 || overNum[1] < 0 || overNum[0] >= cellsNumber[0] || overNum[1] >= cellsNumber[1]) return;
+    int num = overNum[0] * cellsNumber[0] + overNum[1];
+    EventMouse::MouseButton btn = e->getMouseButton();
+    if (btn == EventMouse::MouseButton::BUTTON_LEFT) {
+        if(clicked != -1) cells[clicked]->setColor(Color3B(255, 255, 255));
+        cells[num]->setColor(Color3B(128, 128, 128));
+        clicked = num;
+    }
+    if (btn == EventMouse::MouseButton::BUTTON_RIGHT) {
+        cells[num]->setColor(Color3B(255, 255, 255));
+        clicked = -1;
+    }
 }
