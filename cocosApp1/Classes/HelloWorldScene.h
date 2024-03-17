@@ -13,8 +13,12 @@ private:
     int cellsNumber[2];
     int overNum[2];
     std::vector<cocos2d::Sprite*> cells;
+    std::vector<int> available;
     int clicked;
     int over;
+    cocos2d::Sprite* animSprite;
+    cocos2d::Animation* animation;
+    cocos2d::Animate* animate;
 public:
     static cocos2d::Scene* createScene();
     virtual bool init();

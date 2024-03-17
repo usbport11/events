@@ -62,22 +62,43 @@ bool HelloWorld::init() {
         sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
         this->addChild(sprite, 0);
     }
-    
+
+    SpriteFrameCache::getInstance()->addSpriteFramesWithFile("anim/out.plist");
+    auto spritecache = SpriteFrameCache::getInstance();
+    Vector<SpriteFrame*> animFrames;
+    animFrames.pushBack(spritecache->getSpriteFrameByName("pt0"));
+    animFrames.pushBack(spritecache->getSpriteFrameByName("pt1"));
+    animFrames.pushBack(spritecache->getSpriteFrameByName("pt2"));
+    animFrames.pushBack(spritecache->getSpriteFrameByName("pt3"));
+    animSprite = Sprite::createWithSpriteFrame(animFrames.front());
+    this->addChild(animSprite, 0);
+    animSprite->setPosition(100, 600);
+    animSprite->setName("anim");
+    animSprite->setVisible(false);
+    animation = Animation::createWithSpriteFrames(animFrames, 1.0f / 4);
+    animate = Animate::create(animation);
+    animSprite->runAction(RepeatForever::create(animate));
+
     areasOffset = Vec2(32, 32);
     halfSize = Size(32, 32);
     fullSize = Size(64, 64);
     cellsNumber[0] = cellsNumber[1] = 3;
     overNum[0] = overNum[1] = -1;
-
     clicked = -1;
     over = -1;
+    available.push_back(0);
+    available.push_back(2);
+    available.push_back(4);
 
     for (int i = 0; i < cellsNumber[0]; i++) {
         for (int j = 0; j < cellsNumber[1]; j++) {
             cocos2d::Sprite* sp = Sprite::create("quad64.png");
             if (sp) {
-                sp->setPosition(Vec2(areasOffset.x + i * fullSize.width, areasOffset.y + j * fullSize.height));
                 this->addChild(sp, 0);
+                sp->setPosition(Vec2(areasOffset.x + i * fullSize.width, areasOffset.y + j * fullSize.height));
+                for (int k = 0; k < available.size(); k++) {
+                    if(available[k] == i* cellsNumber[0] + j) sp->setColor(Color3B(255, 128, 128));
+                }
                 cells.push_back(sp);
             }
         }
@@ -98,14 +119,14 @@ void HelloWorld::onMouseMove(cocos2d::Event* event) {
     Vec2 mc = Vec2(e->getCursorX(), e->getCursorY());
     overNum[0] = mc.x / fullSize.width;
     overNum[1] = mc.y / fullSize.height;
-    for (int i = 0; i < cells.size(); i++) {
-        if (i == clicked) continue;
-        cells[i]->setColor(Color3B(255, 255, 255));
+    if (overNum[0] < 0 || overNum[1] < 0 || overNum[0] >= cellsNumber[0] || overNum[1] >= cellsNumber[1]) {
+        if (over != -1) animSprite->setVisible(false);
+        return;
     }
-    if (overNum[0] < 0 || overNum[1] < 0 || overNum[0] >= cellsNumber[0] || overNum[1] >= cellsNumber[1]) return;
-    int num = overNum[0] * cellsNumber[0] + overNum[1];
-    if (clicked == num) return;
-    cells[num]->setColor(Color3B(128, 128, 128));
+    over = overNum[0] * cellsNumber[0] + overNum[1];
+    if (clicked == over) return;
+    animSprite->setVisible(true);
+    animSprite->setPosition(cells[over]->getPosition());
 }
 
 void HelloWorld::onMouseDown(Event* event) {
@@ -120,9 +141,5 @@ void HelloWorld::onMouseDown(Event* event) {
         if(clicked != -1) cells[clicked]->setColor(Color3B(255, 255, 255));
         cells[num]->setColor(Color3B(128, 128, 128));
         clicked = num;
-    }
-    if (btn == EventMouse::MouseButton::BUTTON_RIGHT) {
-        cells[num]->setColor(Color3B(255, 255, 255));
-        clicked = -1;
     }
 }
