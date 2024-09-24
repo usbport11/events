@@ -19,6 +19,7 @@ private:
     cocos2d::Vec2 getCoordsByCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 HelloWorld::sign(cocos2d::Vec2 vec);
     void moveSprite(cocos2d::Sprite& sprite, cocos2d::Vec2 destination);
+    void createCells(int x, int y);
 
     bool createAnimSpriteFromPlist(const std::string& fileName, const std::string& spriteName, const std::string& prefix, int count, float step);
 

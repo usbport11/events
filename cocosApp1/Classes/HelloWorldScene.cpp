@@ -25,11 +25,11 @@ bool HelloWorld::createAnimSpriteFromPlist(const std::string& fileName, const st
     Vector<SpriteFrame*> animFrames;
     spritecache->addSpriteFramesWithFile(fileName);
     std::string key;
-    char buf[3];
+    char buffer[10];
     for (int i = 0; i < count; i++) {
-        memset(buf, 0, 3);
-        itoa(i, buf, 10);
-        key = prefix + buf;
+        memset(buffer, 0, 10);
+        snprintf(buffer, 10, "%d", i);
+        key = prefix + buffer;
         animFrames.pushBack(spritecache->getSpriteFrameByName(key));
     }
 
@@ -69,23 +69,6 @@ bool HelloWorld::init() {
     listener->onMouseDown = CC_CALLBACK_1(HelloWorld::onMouseDown, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
-    auto cache = SpriteFrameCache::getInstance();
-    if (!cache) {
-        return false;
-    }
-    cache->addSpriteFramesWithFile("anim/grass.plist");
-    auto sprite = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName("gr0"));
-    sprite->setPosition(300, 300);
-    sprite->setScale(4.0);
-    sprite->getTexture()->setAliasTexParameters();
-    this->addChild(sprite);
-
-    auto sprite2 = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName("gr1"));
-    sprite2->setPosition(370, 300);
-    sprite2->setScale(4.0);
-    sprite2->getTexture()->setAliasTexParameters();
-    this->addChild(sprite2);
-
     createAnimSpriteFromPlist("anim/out.plist", "selection", "pt", 4, 0.2);
     this->getChildByName("selection")->setPosition(100, 600);
     this->getChildByName("selection")->setScale(1.0);
@@ -95,7 +78,38 @@ bool HelloWorld::init() {
     this->getChildByName("anim_fox")->setScale(4.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
+    createCells(cellsCount.x, cellsCount.y);
+
     return true;
+}
+
+void HelloWorld::createCells(int x, int y) {
+    if (x < 0 || y < 0) {
+        return;
+    }
+    auto cache = SpriteFrameCache::getInstance();
+    if (!cache) {
+        return;
+    }
+    cache->addSpriteFramesWithFile("anim/grass.plist");
+
+    std::string key;
+    char buffer[16];
+    for (int i = 0; i < x; i++) {
+        for (int j = 0; j < y; j++) {
+            memset(buffer, 0, 16);
+            snprintf(buffer, 10, "cell_%d_%d", i, j);
+            key = buffer;
+            auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName("gr0"));
+            if (!sp) {
+                return;
+            }
+            sp->setScale(4.0);
+            sp->getTexture()->setAliasTexParameters();
+            sp->setPosition(Vec2(offset.x + i * cellSize.x + halfSize.x, offset.y + j * cellSize.y + halfSize.y));
+            this->addChild(sp, 0, key);
+        }
+    }
 }
 
 void HelloWorld::update(float delta) {
@@ -127,7 +141,7 @@ cocos2d::Vec2 HelloWorld::getCellUnderMouse(cocos2d::Event* event) {
     cocos2d::EventMouse* e = (EventMouse*)event;
     cocos2d::Vec2 cell = cocos2d::Vec2(e->getCursorX(), e->getCursorY());
     if (gridRect.containsPoint(cell)) {
-        cell = cocos2d::Vec2((int)(offset.x + cell.x / gridRect.size.width), (int)(offset.y + cell.y / gridRect.size.height));
+        cell = cocos2d::Vec2((int)(cell.x / cellSize.x), (int)(cell.y / cellSize.y));
     }
     else {
         cell = cocos2d::Vec2(-1, -1);
