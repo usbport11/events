@@ -65,7 +65,7 @@ void MPathGenerator::setHeuristic(HeuristicFunction heuristic_) {
 	heuristic = heuristic_;
 }
 
-CoordinateList MPathGenerator::findPath(NVector2 source_, NVector2 target_) {
+std::vector<NVector2> MPathGenerator::findPath(NVector2 source_, NVector2 target_) {
 	Node *current = NULL;
     NodeSet openSet, closedSet;
     openSet.insert(new Node(source_));
@@ -110,7 +110,7 @@ CoordinateList MPathGenerator::findPath(NVector2 source_, NVector2 target_) {
         }
     }
 
-    CoordinateList path;
+    std::vector<NVector2> path;
     while (current != NULL) {
         path.push_back(current->coordinates);
         current = current->parent;

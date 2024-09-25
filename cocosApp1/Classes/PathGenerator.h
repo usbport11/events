@@ -40,7 +40,7 @@ public:
     void setWorldSize(NVector2 worldSize_);
     void setDiagonalMovement(bool enable_);
     void setHeuristic(HeuristicFunction heuristic_);
-    CoordinateList findPath(NVector2 source_, NVector2 target_);
+    std::vector<NVector2> findPath(NVector2 source_, NVector2 target_);
     void addCollision(NVector2 coordinates_);
 	void removeCollision(NVector2 coordinates_);
     void clearCollisions();  

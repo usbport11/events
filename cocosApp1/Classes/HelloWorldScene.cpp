@@ -61,8 +61,6 @@ bool HelloWorld::init() {
     currentCell = cocos2d::Vec2(0, 0);
     gridRect = cocos2d::Rect(0, 0, cellSize.x * cellsCount.x, cellSize.y * cellsCount.y);
     moving = false;
-    //pg.setWorldSize(N2Vector(cellsCount.x, cellsCount.y));
-    //pg.setDiagonalMovement(false);
 
     auto listener = EventListenerMouse::create(); 
     listener->onMouseMove = CC_CALLBACK_1(HelloWorld::onMouseMove, this);
@@ -70,15 +68,19 @@ bool HelloWorld::init() {
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
     createAnimSpriteFromPlist("anim/out.plist", "selection", "pt", 4, 0.2);
-    this->getChildByName("selection")->setPosition(100, 600);
+    this->getChildByName("selection")->setPosition(0, 0);
     this->getChildByName("selection")->setScale(1.0);
     this->getChildByName("selection")->setVisible(false);
     createAnimSpriteFromPlist("anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1);
-    this->getChildByName("anim_fox")->setPosition(700, 80);
-    this->getChildByName("anim_fox")->setScale(4.0);
+    this->getChildByName("anim_fox")->setPosition(32, 32);
+    this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
     createCells(cellsCount.x, cellsCount.y);
+    pg.setWorldSize(NVector2(cellsCount.x, cellsCount.y));
+    pg.setDiagonalMovement(false);
+
+    this->scheduleUpdate();
 
     return true;
 }
@@ -113,24 +115,22 @@ void HelloWorld::createCells(int x, int y) {
 }
 
 void HelloWorld::update(float delta) {
-    /*
     if (moving) {
         if (path.empty()) {
             moving = false;
         }
         else {
-            N2Vector n2v = path.front();
-            currentCell = cocos2d::vec2(n2v.x, n2v.y);
-            cocos2d::vec2 destination = cocos2d::vec2(offset.x + n2v.x * size.x + halfSize.x, offset.y + n2v.y * size.y + halfSize.y);
-            if (sprite.pos == destination) {
+            NVector2 nv2 = path.front();
+            currentCell = cocos2d::Vec2(nv2.x, nv2.y);
+            cocos2d::Vec2 destination = cocos2d::Vec2(offset.x + nv2.x * cellSize.x + halfSize.x, offset.y + nv2.y * cellSize.y + halfSize.y);
+            if (this->getChildByName("anim_fox")->getPosition() == destination) {
                 path.erase(path.begin());
             }
             else {
-                moveSprite(sprite, destination);
+                moveSprite((cocos2d::Sprite*)this->getChildByName("anim_fox"), destination);
             }
         }
     }
-    */
 }
 
 void HelloWorld::menuCloseCallback(Ref* pSender) {
@@ -150,7 +150,7 @@ cocos2d::Vec2 HelloWorld::getCellUnderMouse(cocos2d::Event* event) {
 }
 
 void HelloWorld::selectCell(cocos2d::Vec2 cell, std::string name) {
-    if (cell.x < 0 || cell.y < 0) {
+    if (cell.x < 0 || cell.y < 0 || cell.x >= cellsCount.x || cell.y >= cellsCount.y) {
         this->getChildByName(name)->setVisible(false);
         return;
     }
@@ -166,10 +166,10 @@ cocos2d::Vec2 HelloWorld::sign(cocos2d::Vec2 vec) {
     return cocos2d::Vec2((0 < vec.x) - (vec.x < 0), (0 < vec.y) - (vec.y < 0));
 }
 
-void HelloWorld::moveSprite(cocos2d::Sprite& sprite, cocos2d::Vec2 destination) {
-    cocos2d::Vec2 direction = sign(destination - sprite.getPosition());
+void HelloWorld::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
+    cocos2d::Vec2 direction = sign(destination - sprite->getPosition());
     cocos2d::Vec2 step = cocos2d::Vec2(speed.x * direction.x, speed.y * direction.y);
-    sprite.setPosition(sprite.getPosition() + step);
+    sprite->setPosition(sprite->getPosition() + step);
 }
 
 void HelloWorld::onMouseMove(cocos2d::Event* event) {
@@ -181,12 +181,20 @@ void HelloWorld::onMouseDown(Event* event) {
         return;
     }
     cocos2d::Vec2 cell = getCellUnderMouse(event);
-    if (cell.x < 0 || cell.y < 0) {
+
+    if (cell.x < 0 || cell.y < 0 || cell.x >= cellsCount.x || cell.y >= cellsCount.y) {
         return;
     }
     if (cell == currentCell) {
         return;
     }
-    //std::vector<N2Vector> path = pg.findPath(N2Vector(cell.x, cell.y), N2Vector(sprite->getPositionX(), sprite->getPositionY()));
-    //moving = true;
+
+    //momental move
+    //currentCell = cell;
+    //this->getChildByName("anim_fox")->setPosition(getCoordsByCell(cell));
+    
+    //flow move
+    path.clear(); 
+    path = pg.findPath(NVector2(currentCell.x, currentCell.y), NVector2(cell.x, cell.y));
+    moving = true;
 }
