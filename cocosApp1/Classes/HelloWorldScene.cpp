@@ -57,7 +57,7 @@ bool HelloWorld::init() {
     cellSize = cocos2d::Vec2(64, 64);
     halfSize = cocos2d::Vec2(32, 32);
     cellsCount = cocos2d::Vec2(4, 4);
-    speed = cocos2d::Vec2(1, 1);
+    speed = cocos2d::Vec2(2, 2);
     currentCell = cocos2d::Vec2(0, 0);
     gridRect = cocos2d::Rect(0, 0, cellSize.x * cellsCount.x, cellSize.y * cellsCount.y);
     moving = false;
@@ -67,17 +67,19 @@ bool HelloWorld::init() {
     listener->onMouseDown = CC_CALLBACK_1(HelloWorld::onMouseDown, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
-    createAnimSpriteFromPlist("anim/out.plist", "selection", "pt", 4, 0.2);
+    createAnimSpriteFromPlist("anim/out.plist", "selection", "pt", 4, 0.2f);
     this->getChildByName("selection")->setPosition(0, 0);
     this->getChildByName("selection")->setScale(1.0);
     this->getChildByName("selection")->setVisible(false);
-    createAnimSpriteFromPlist("anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1);
+    createAnimSpriteFromPlist("anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f);
     this->getChildByName("anim_fox")->setPosition(32, 32);
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
-    createCells(cellsCount.x, cellsCount.y);
-    pg.setWorldSize(NVector2(cellsCount.x, cellsCount.y));
+    createMenu();
+
+    createCells((int)cellsCount.x, (int)cellsCount.y);
+    pg.setWorldSize(NVector2((int)cellsCount.x, (int)cellsCount.y));
     pg.setDiagonalMovement(false);
 
     this->scheduleUpdate();
@@ -85,28 +87,32 @@ bool HelloWorld::init() {
     return true;
 }
 
-void HelloWorld::createCells(int x, int y) {
-    if (x < 0 || y < 0) {
+void HelloWorld::createCells(int countX, int countY) {
+    if (countX < 0 || countY < 0) {
         return;
     }
     auto cache = SpriteFrameCache::getInstance();
     if (!cache) {
         return;
     }
-    cache->addSpriteFramesWithFile("anim/grass.plist");
+    cache->addSpriteFramesWithFile("anim/cell.plist");
 
     std::string key;
+    std::string cellName;
     char buffer[16];
-    for (int i = 0; i < x; i++) {
-        for (int j = 0; j < y; j++) {
+    for (int i = 0; i < countX; i++) {
+        for (int j = 0; j < countY; j++) {
             memset(buffer, 0, 16);
-            snprintf(buffer, 10, "cell_%d_%d", i, j);
+            snprintf(buffer, 16, "cell_%d_%d", i, j);
             key = buffer;
-            auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName("gr0"));
+            memset(buffer, 0, 16);
+            snprintf(buffer, 16, "cell%d", i* countX  + j);
+            cellName = buffer;
+            auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(cellName));
             if (!sp) {
                 return;
             }
-            sp->setScale(4.0);
+            sp->setScale(1.0);
             sp->getTexture()->setAliasTexParameters();
             sp->setPosition(Vec2(offset.x + i * cellSize.x + halfSize.x, offset.y + j * cellSize.y + halfSize.y));
             this->addChild(sp, 0, key);
@@ -121,7 +127,7 @@ void HelloWorld::update(float delta) {
         }
         else {
             NVector2 nv2 = path.front();
-            currentCell = cocos2d::Vec2(nv2.x, nv2.y);
+            currentCell = cocos2d::Vec2((float)nv2.x, (float)nv2.y);
             cocos2d::Vec2 destination = cocos2d::Vec2(offset.x + nv2.x * cellSize.x + halfSize.x, offset.y + nv2.y * cellSize.y + halfSize.y);
             if (this->getChildByName("anim_fox")->getPosition() == destination) {
                 path.erase(path.begin());
@@ -133,7 +139,19 @@ void HelloWorld::update(float delta) {
     }
 }
 
-void HelloWorld::menuCloseCallback(Ref* pSender) {
+void HelloWorld::menuEndTurnCallback(cocos2d::Ref* pSender) {
+    //todo
+}
+
+void HelloWorld::menuMoveCallback(cocos2d::Ref* pSender) {
+    //todo
+}
+
+void HelloWorld::menuAbflussCallback(cocos2d::Ref* pSender) {
+    //todo
+}
+
+void HelloWorld::menuExitCallback(Ref* pSender) {
     Director::getInstance()->end();
 }
 
@@ -169,7 +187,15 @@ cocos2d::Vec2 HelloWorld::sign(cocos2d::Vec2 vec) {
 void HelloWorld::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
     cocos2d::Vec2 direction = sign(destination - sprite->getPosition());
     cocos2d::Vec2 step = cocos2d::Vec2(speed.x * direction.x, speed.y * direction.y);
-    sprite->setPosition(sprite->getPosition() + step);
+    cocos2d::Vec2 nextPos = sprite->getPosition() + step;
+    float cur_length = sprite->getPosition().distance(destination);
+    float nex_length = nextPos.distance(destination);
+    if (cur_length < nex_length) {
+        sprite->setPosition(destination);
+    }
+    else {
+        sprite->setPosition(nextPos);
+    }
 }
 
 void HelloWorld::onMouseMove(cocos2d::Event* event) {
@@ -189,12 +215,38 @@ void HelloWorld::onMouseDown(Event* event) {
         return;
     }
 
-    //momental move
-    //currentCell = cell;
-    //this->getChildByName("anim_fox")->setPosition(getCoordsByCell(cell));
-    
-    //flow move
     path.clear(); 
     path = pg.findPath(NVector2(currentCell.x, currentCell.y), NVector2(cell.x, cell.y));
     moving = true;
+}
+
+void HelloWorld::createMenu() {
+    //prepare
+    std::unordered_map<std::string, ccMenuCallback> menu_callback;
+    menu_callback["End Turn"] = CC_CALLBACK_1(HelloWorld::menuEndTurnCallback, this);
+    menu_callback["Move"] = CC_CALLBACK_1(HelloWorld::menuMoveCallback, this);
+    menu_callback["Abfluss"] = CC_CALLBACK_1(HelloWorld::menuAbflussCallback, this);
+    menu_callback["Exit"] = CC_CALLBACK_1(HelloWorld::menuExitCallback, this);
+
+    float topOffset = this->getContentSize().height - 30;
+    const std::string btnBackPng[2] = {"back_off.png", "back_on.png"}
+    const std::string fontTTF = "fonts/Marker Felt.ttf";
+
+    //create menu
+    Vector<MenuItem*> MenuItems;
+    int num = 0;
+    cocos2d::Vec2 itemPosition;
+    for (auto it = menu_callback.begin(); it != menu_callback.end(); it++) {
+        MenuItemImageExt* memuItem = MenuItemImageExt::create(btnBackPng[0], btnBackPng[1], "", it->second);
+        itemPosition = Vec2(memuItem->getContentSize().width / 2, topOffset - num * memuItem->getContentSize().height);
+        memuItem->setPosition(itemPosition);
+        MenuItems.pushBack(memuItem);
+        cocos2d::Label* itemLabel = Label::createWithTTF(it->first, fontTTF, 24);
+        itemLabel->setPosition(itemPosition);
+        this->addChild(itemLabel, 2);
+        num ++;
+    }
+    cocos2d::Menu* menu = Menu::createWithArray(MenuItems);
+    menu->setPosition(Vec2::ZERO);
+    this->addChild(menu, 1);
 }

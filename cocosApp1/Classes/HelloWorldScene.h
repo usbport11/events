@@ -25,12 +25,17 @@ private:
     void createCells(int x, int y);
 
     bool createAnimSpriteFromPlist(const std::string& fileName, const std::string& spriteName, const std::string& prefix, int count, float step);
+    void createMenu();
+
+    void menuEndTurnCallback(cocos2d::Ref* pSender);
+    void menuMoveCallback(cocos2d::Ref* pSender);
+    void menuAbflussCallback(cocos2d::Ref* pSender);
+    void menuExitCallback(cocos2d::Ref* pSender);
 
 public:
     static cocos2d::Scene* createScene();
     virtual bool init();
     void update(float delta);
-    void menuCloseCallback(cocos2d::Ref* pSender);
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);
     CREATE_FUNC(HelloWorld);
