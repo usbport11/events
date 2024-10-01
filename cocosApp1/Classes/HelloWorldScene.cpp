@@ -62,23 +62,37 @@ bool HelloWorld::init() {
     gridRect = cocos2d::Rect(0, 0, cellSize.x * cellsCount.x, cellSize.y * cellsCount.y);
     moving = false;
 
-    auto listener = EventListenerMouse::create(); 
-    listener->onMouseMove = CC_CALLBACK_1(HelloWorld::onMouseMove, this);
-    listener->onMouseDown = CC_CALLBACK_1(HelloWorld::onMouseDown, this);
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+    cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
+    mouseListener->onMouseMove = CC_CALLBACK_1(HelloWorld::onMouseMove, this);
+    mouseListener->onMouseDown = CC_CALLBACK_1(HelloWorld::onMouseDown, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 
-    createAnimSpriteFromPlist("anim/out.plist", "selection", "pt", 4, 0.2f);
+    cocos2d::EventListenerKeyboard* keybordListener = EventListenerKeyboard::create();
+    keybordListener->onKeyPressed = CC_CALLBACK_2(HelloWorld::onKeyPressed, this);
+    keybordListener->onKeyReleased = CC_CALLBACK_2(HelloWorld::onKeyReleased, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
+
+    if (!createAnimSpriteFromPlist("anim/out.plist", "selection", "pt", 4, 0.2f)) {
+        return false;
+    }
     this->getChildByName("selection")->setPosition(0, 0);
     this->getChildByName("selection")->setScale(1.0);
     this->getChildByName("selection")->setVisible(false);
-    createAnimSpriteFromPlist("anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f);
+    if (!createAnimSpriteFromPlist("anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
+        return false;
+    }
     this->getChildByName("anim_fox")->setPosition(32, 32);
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
     createMenu();
+    if (!createDeck()) {
+        return false;
+    }
 
-    createCells((int)cellsCount.x, (int)cellsCount.y);
+    if (!createCells((int)cellsCount.x, (int)cellsCount.y)) {
+        return false;
+    }
     pg.setWorldSize(NVector2((int)cellsCount.x, (int)cellsCount.y));
     pg.setDiagonalMovement(false);
 
@@ -87,13 +101,13 @@ bool HelloWorld::init() {
     return true;
 }
 
-void HelloWorld::createCells(int countX, int countY) {
+bool HelloWorld::createCells(int countX, int countY) {
     if (countX < 0 || countY < 0) {
-        return;
+        return false;
     }
     auto cache = SpriteFrameCache::getInstance();
     if (!cache) {
-        return;
+        return false;
     }
     cache->addSpriteFramesWithFile("anim/cell.plist");
 
@@ -110,7 +124,7 @@ void HelloWorld::createCells(int countX, int countY) {
             cellName = buffer;
             auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(cellName));
             if (!sp) {
-                return;
+                return false;
             }
             sp->setScale(1.0);
             sp->getTexture()->setAliasTexParameters();
@@ -118,6 +132,82 @@ void HelloWorld::createCells(int countX, int countY) {
             this->addChild(sp, 0, key);
         }
     }
+    return true;
+}
+
+bool HelloWorld::createSpiteForDeck(const std::string& sectionName, int num, cocos2d::Vec2 pos, const std::string& spriteName, int zOrder, bool visible) {
+    if (sectionName.empty() || spriteName.empty() || num < 0) {
+        return false;
+    }
+    auto cache = SpriteFrameCache::getInstance();
+    auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(sectionName));
+    if (!sp) {
+        return false;
+    }
+    sp->getTexture()->setAliasTexParameters();
+    sp->setPosition(pos);
+    sp->setVisible(visible);
+    this->addChild(sp, zOrder, spriteName);
+    return true;
+}
+
+bool HelloWorld::createDeck() {
+    //left - back/nocard
+    //right - nocard/face
+    //no card - z 1
+    //back, face - z 2
+    auto cache = SpriteFrameCache::getInstance();
+    if (!cache) {
+        return false;
+    }
+    cache->addSpriteFramesWithFile("anim/cards.plist");
+
+    char buffer[16];
+    char buffer2[16];
+    cocos2d::Vec2 leftPos = cocos2d::Vec2(600, 640);
+    cocos2d::Vec2 rightPos = cocos2d::Vec2(700, 640);
+    cocos2d::Vec2 pos;
+    bool visible;
+    int zOrder;
+    for (int i = 0; i<5; i++) {
+        visible = true;
+        zOrder = 1;
+        if (i == 1) {
+            for (int j = 0; j < 2; j++) {
+                if (j == 0) {
+                    pos = leftPos;
+                }
+                else {
+                    pos = rightPos;
+                }
+                memset(buffer, 0, 16);
+                snprintf(buffer, 16, "card%d", i);
+                memset(buffer2, 0, 16);
+                snprintf(buffer2, 16, "card%d_%d", i, j);
+                if (!createSpiteForDeck(buffer, i, pos, buffer2, zOrder, visible)) {
+                    return false;
+                }
+            }
+        }
+        else {
+            if (i == 0) {
+                pos = leftPos;
+            }
+            else {
+                pos = rightPos;
+                visible = false;
+            }
+            zOrder = 2;
+            memset(buffer, 0, 16);
+            snprintf(buffer, 16, "card%d", i);
+            if (!createSpiteForDeck(buffer, i, pos, buffer, zOrder, visible)) {
+                return false;
+            }
+        }
+    }
+    lastCard = 1;
+    
+    return true;
 }
 
 void HelloWorld::update(float delta) {
@@ -202,7 +292,7 @@ void HelloWorld::onMouseMove(cocos2d::Event* event) {
     selectCell(getCellUnderMouse(event), "selection");
 }
 
-void HelloWorld::onMouseDown(Event* event) {
+void HelloWorld::onMouseDown(cocos2d::Event* event) {
     if (moving) {
         return;
     }
@@ -220,6 +310,28 @@ void HelloWorld::onMouseDown(Event* event) {
     moving = true;
 }
 
+void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
+    if (keyCode == EventKeyboard::KeyCode::KEY_N) {
+        char buffer[16] = { 0 };
+        lastCard = lastCard + 1;
+        if (lastCard > 4) {
+            lastCard = 4;
+            snprintf(buffer, 16, "card%d", 0);
+            this->getChildByName(buffer)->setVisible(false);
+            return;
+        }
+        snprintf(buffer, 16, "card%d", lastCard);
+        this->getChildByName(buffer)->setVisible(true);
+        if (lastCard > 2) {
+            snprintf(buffer, 16, "card%d", lastCard - 1);
+            this->getChildByName(buffer)->setVisible(false);
+        }
+    }
+}
+
+void HelloWorld::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
+}
+
 void HelloWorld::createMenu() {
     //prepare
     std::unordered_map<std::string, ccMenuCallback> menu_callback;
@@ -229,7 +341,7 @@ void HelloWorld::createMenu() {
     menu_callback["Exit"] = CC_CALLBACK_1(HelloWorld::menuExitCallback, this);
 
     float topOffset = this->getContentSize().height - 30;
-    const std::string btnBackPng[2] = {"back_off.png", "back_on.png"}
+    const std::string btnBackPng[2] = { "back_off.png", "back_on.png" };
     const std::string fontTTF = "fonts/Marker Felt.ttf";
 
     //create menu

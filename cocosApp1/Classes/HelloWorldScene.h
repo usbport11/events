@@ -16,16 +16,19 @@ private:
     bool moving;
     MPathGenerator pg;
     std::vector<NVector2> path;
+    int lastCard;
 
     cocos2d::Vec2 getCellUnderMouse(cocos2d::Event* event);
     void selectCell(cocos2d::Vec2 cell, std::string name);
     cocos2d::Vec2 getCoordsByCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 HelloWorld::sign(cocos2d::Vec2 vec);
     void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
-    void createCells(int x, int y);
+    bool createCells(int x, int y);
+    bool createSpiteForDeck(const std::string& sectionName, int num, cocos2d::Vec2 pos, const std::string& spriteName, int zOrder, bool visible);
+    bool createDeck();
+    void createMenu();
 
     bool createAnimSpriteFromPlist(const std::string& fileName, const std::string& spriteName, const std::string& prefix, int count, float step);
-    void createMenu();
 
     void menuEndTurnCallback(cocos2d::Ref* pSender);
     void menuMoveCallback(cocos2d::Ref* pSender);
@@ -38,6 +41,8 @@ public:
     void update(float delta);
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);
+    void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
+    void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     CREATE_FUNC(HelloWorld);
 };
 
