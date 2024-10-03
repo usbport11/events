@@ -85,11 +85,12 @@ bool HelloWorld::init() {
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
-    createMenu();
+    if (!createMenu()) {
+        return false;
+    }
     if (!createDeck()) {
         return false;
     }
-
     if (!createCells((int)cellsCount.x, (int)cellsCount.y)) {
         return false;
     }
@@ -302,13 +303,13 @@ void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
 void HelloWorld::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
 }
 
-void HelloWorld::createMenu() {
+bool HelloWorld::createMenu() {
     //prepare
-    std::unordered_map<std::string, ccMenuCallback> menu_callback;
-    menu_callback["End Turn"] = CC_CALLBACK_1(HelloWorld::menuEndTurnCallback, this);
-    menu_callback["Move"] = CC_CALLBACK_1(HelloWorld::menuMoveCallback, this);
-    menu_callback["Abfluss"] = CC_CALLBACK_1(HelloWorld::menuAbflussCallback, this);
-    menu_callback["Exit"] = CC_CALLBACK_1(HelloWorld::menuExitCallback, this);
+    std::unordered_map<std::string, ccMenuCallback> menuCallback;
+    menuCallback["End Turn"] = CC_CALLBACK_1(HelloWorld::menuEndTurnCallback, this);
+    menuCallback["Move"] = CC_CALLBACK_1(HelloWorld::menuMoveCallback, this);
+    menuCallback["Abfluss"] = CC_CALLBACK_1(HelloWorld::menuAbflussCallback, this);
+    menuCallback["Exit"] = CC_CALLBACK_1(HelloWorld::menuExitCallback, this);
 
     float topOffset = this->getContentSize().height - 30;
     const std::string btnBackPng[2] = { "back_off.png", "back_on.png" };
@@ -318,18 +319,28 @@ void HelloWorld::createMenu() {
     cocos2d::Vector<MenuItem*> MenuItems;
     int num = 0;
     cocos2d::Vec2 itemPosition;
-    for (auto it = menu_callback.begin(); it != menu_callback.end(); it++) {
+    for (auto it = menuCallback.begin(); it != menuCallback.end(); it++) {
         MenuItemImageExt* memuItem = MenuItemImageExt::create(btnBackPng[0], btnBackPng[1], "", it->second);
+        if(!memuItem) {
+            return false;
+        }
         itemPosition = Vec2(memuItem->getContentSize().width / 2, topOffset - num * memuItem->getContentSize().height);
         memuItem->setPosition(itemPosition);
         MenuItems.pushBack(memuItem);
         cocos2d::Label* itemLabel = Label::createWithTTF(it->first, fontTTF, 24);
+        if (!itemLabel) {
+            return false;
+        }
         itemLabel->setPosition(itemPosition);
         this->addChild(itemLabel, 2);
         num ++;
     }
     cocos2d::Menu* menu = Menu::createWithArray(MenuItems);
+    if (!menu) {
+        return false;
+    }
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
-    menu_callback.clear();
+    menuCallback.clear();
+    return true;
 }

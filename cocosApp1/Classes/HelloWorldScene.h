@@ -26,7 +26,7 @@ private:
     bool createCells(int x, int y);
     bool createDeck();
     void nextCard();
-    void createMenu();
+    bool createMenu();
 
     bool createAnimSpriteFromPlist(const std::string& fileName, const std::string& spriteName, const std::string& prefix, int count, float step);
 
