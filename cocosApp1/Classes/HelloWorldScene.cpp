@@ -135,78 +135,44 @@ bool HelloWorld::createCells(int countX, int countY) {
     return true;
 }
 
-bool HelloWorld::createSpiteForDeck(const std::string& sectionName, int num, cocos2d::Vec2 pos, const std::string& spriteName, int zOrder, bool visible) {
-    if (sectionName.empty() || spriteName.empty() || num < 0) {
-        return false;
-    }
-    auto cache = SpriteFrameCache::getInstance();
-    auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(sectionName));
-    if (!sp) {
-        return false;
-    }
-    sp->getTexture()->setAliasTexParameters();
-    sp->setPosition(pos);
-    sp->setVisible(visible);
-    this->addChild(sp, zOrder, spriteName);
-    return true;
-}
-
 bool HelloWorld::createDeck() {
-    //left - back/nocard
-    //right - nocard/face
-    //no card - z 1
-    //back, face - z 2
+    std::map<std::string, std::map<std::string, std::string>> cards = {
+        {"back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
+        {"no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"no_right", {{"listName", "card1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"card0", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"card1", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"card2", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+    };
+
     auto cache = SpriteFrameCache::getInstance();
     if (!cache) {
         return false;
     }
     cache->addSpriteFramesWithFile("anim/cards.plist");
 
-    char buffer[16];
-    char buffer2[16];
-    cocos2d::Vec2 leftPos = cocos2d::Vec2(600, 640);
-    cocos2d::Vec2 rightPos = cocos2d::Vec2(700, 640);
     cocos2d::Vec2 pos;
-    bool visible;
-    int zOrder;
-    for (int i = 0; i<5; i++) {
-        visible = true;
-        zOrder = 1;
-        if (i == 1) {
-            for (int j = 0; j < 2; j++) {
-                if (j == 0) {
-                    pos = leftPos;
-                }
-                else {
-                    pos = rightPos;
-                }
-                memset(buffer, 0, 16);
-                snprintf(buffer, 16, "card%d", i);
-                memset(buffer2, 0, 16);
-                snprintf(buffer2, 16, "card%d_%d", i, j);
-                if (!createSpiteForDeck(buffer, i, pos, buffer2, zOrder, visible)) {
-                    return false;
-                }
-            }
+    for (auto it = cards.begin(); it != cards.end(); it ++ ) {
+        auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(cards[it->first]["listName"]));
+        if (!sp) {
+            return false;
+        }
+        sp->getTexture()->setAliasTexParameters();
+        if (cards[it->first]["pos"] == "left") {
+            pos = cocos2d::Vec2(600, 640);
+        }
+        else if (cards[it->first]["pos"] == "right") {
+            pos = cocos2d::Vec2(700, 640);
         }
         else {
-            if (i == 0) {
-                pos = leftPos;
-            }
-            else {
-                pos = rightPos;
-                visible = false;
-            }
-            zOrder = 2;
-            memset(buffer, 0, 16);
-            snprintf(buffer, 16, "card%d", i);
-            if (!createSpiteForDeck(buffer, i, pos, buffer, zOrder, visible)) {
-                return false;
-            }
+            return false;
         }
+        sp->setPosition(pos);
+        sp->setVisible((bool)std::stoi(cards[it->first]["visible"]));
+        this->addChild(sp, std::stoi(cards[it->first]["zOrder"]), it->first);
     }
-    lastCard = 1;
-    
+    lastCard = 0;
+
     return true;
 }
 
@@ -310,22 +276,26 @@ void HelloWorld::onMouseDown(cocos2d::Event* event) {
     moving = true;
 }
 
+void HelloWorld::nextCard() {
+    if (lastCard > 2) {
+        return;
+    }
+    char buffer[16] = { 0 };
+    snprintf(buffer, 16, "card%d", lastCard);
+    this->getChildByName(buffer)->setVisible(true);
+    if (lastCard >= 1) {
+        snprintf(buffer, 16, "card%d", lastCard - 1);
+        this->getChildByName(buffer)->setVisible(false);
+    }
+    lastCard = lastCard + 1;
+    if (lastCard == 3) {
+        this->getChildByName("back")->setVisible(false);
+    }
+}
+
 void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (keyCode == EventKeyboard::KeyCode::KEY_N) {
-        char buffer[16] = { 0 };
-        lastCard = lastCard + 1;
-        if (lastCard > 4) {
-            lastCard = 4;
-            snprintf(buffer, 16, "card%d", 0);
-            this->getChildByName(buffer)->setVisible(false);
-            return;
-        }
-        snprintf(buffer, 16, "card%d", lastCard);
-        this->getChildByName(buffer)->setVisible(true);
-        if (lastCard > 2) {
-            snprintf(buffer, 16, "card%d", lastCard - 1);
-            this->getChildByName(buffer)->setVisible(false);
-        }
+        nextCard();
     }
 }
 
@@ -345,7 +315,7 @@ void HelloWorld::createMenu() {
     const std::string fontTTF = "fonts/Marker Felt.ttf";
 
     //create menu
-    Vector<MenuItem*> MenuItems;
+    cocos2d::Vector<MenuItem*> MenuItems;
     int num = 0;
     cocos2d::Vec2 itemPosition;
     for (auto it = menu_callback.begin(); it != menu_callback.end(); it++) {
@@ -361,4 +331,5 @@ void HelloWorld::createMenu() {
     cocos2d::Menu* menu = Menu::createWithArray(MenuItems);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
+    menu_callback.clear();
 }
