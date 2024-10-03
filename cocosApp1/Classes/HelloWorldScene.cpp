@@ -298,6 +298,13 @@ void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
     if (keyCode == EventKeyboard::KeyCode::KEY_N) {
         nextCard();
     }
+    if (keyCode == EventKeyboard::KeyCode::KEY_R) {
+        this->getChildByName("back")->setVisible(true);
+        this->getChildByName("card0")->setVisible(false);
+        this->getChildByName("card1")->setVisible(false);
+        this->getChildByName("card2")->setVisible(false);
+        lastCard = 0;
+    }
 }
 
 void HelloWorld::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
