@@ -3,32 +3,25 @@
 
 #include "cocos2d.h"
 #include "PathGenerator.h"
+#include "gridMap.h"
 
-class HelloWorld : public cocos2d::Scene {
+class HelloWorld: public cocos2d::Scene {
 private:
-    cocos2d::Vec2 offset;
-    cocos2d::Rect gridRect;
-    cocos2d::Vec2 cellsCount;
-    cocos2d::Vec2 cellSize;
-    cocos2d::Vec2 halfSize;
-    cocos2d::Vec2 speed;
-    cocos2d::Vec2 currentCell;
-    bool moving;
+    MGridMap gridMap;
     MPathGenerator pg;
     std::vector<NVector2> path;
+    cocos2d::Vec2 speed;
+    bool moving;
     int lastCard;
+    int waterCurrent;
+    int waterLimit;
+    cocos2d::Vec2 waterPos;
 
-    cocos2d::Vec2 getCellUnderMouse(cocos2d::Event* event);
-    void selectCell(cocos2d::Vec2 cell, std::string name);
-    cocos2d::Vec2 getCoordsByCell(cocos2d::Vec2 cell);
-    cocos2d::Vec2 HelloWorld::sign(cocos2d::Vec2 vec);
     void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
-    bool createCells(int x, int y);
+
     bool createDeck();
     void nextCard();
     bool createMenu();
-
-    bool createAnimSpriteFromPlist(const std::string& fileName, const std::string& spriteName, const std::string& prefix, int count, float step);
 
     void menuEndTurnCallback(cocos2d::Ref* pSender);
     void menuMoveCallback(cocos2d::Ref* pSender);

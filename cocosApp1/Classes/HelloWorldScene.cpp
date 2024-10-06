@@ -1,48 +1,11 @@
 #include "HelloWorldScene.h"
 #include "MenuItemImageExt.h"
+#include "utils.h"
 
 USING_NS_CC;
 
 Scene* HelloWorld::createScene() {
     return HelloWorld::create();
-}
-
-static void problemLoading(const char* filename) {
-    printf("Error while loading: %s\n", filename);
-    printf("Depending on how you compiled you might have to add 'Resources/' in front of filenames in HelloWorldScene.cpp\n");
-}
-
-bool HelloWorld::createAnimSpriteFromPlist(const std::string& fileName, const std::string& spriteName, const std::string& prefix, int count, float step) {
-    if (fileName.empty() || spriteName.empty() || prefix.empty() || count <= 0) {
-        return false;
-    }
-
-    auto spritecache = SpriteFrameCache::getInstance();
-    if (!spritecache) {
-        return false;
-    }
-
-    Vector<SpriteFrame*> animFrames;
-    spritecache->addSpriteFramesWithFile(fileName);
-    std::string key;
-    char buffer[10];
-    for (int i = 0; i < count; i++) {
-        memset(buffer, 0, 10);
-        snprintf(buffer, 10, "%d", i);
-        key = prefix + buffer;
-        animFrames.pushBack(spritecache->getSpriteFrameByName(key));
-    }
-
-    cocos2d::Sprite* animSprite_fox = Sprite::createWithSpriteFrame(animFrames.front());
-    animSprite_fox->setName(spriteName);
-    animSprite_fox->getTexture()->setAliasTexParameters();
-    cocos2d::Animation* animation_fox = Animation::createWithSpriteFrames(animFrames, step);
-    cocos2d::Animate* animate_fox = Animate::create(animation_fox);
-    animSprite_fox->runAction(RepeatForever::create(animate_fox));
-    this->addChild(animSprite_fox, 1);
-    animFrames.clear();
-
-    return true;
 }
 
 bool HelloWorld::init() {
@@ -53,13 +16,7 @@ bool HelloWorld::init() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-    offset = cocos2d::Vec2(0, 0);
-    cellSize = cocos2d::Vec2(64, 64);
-    halfSize = cocos2d::Vec2(32, 32);
-    cellsCount = cocos2d::Vec2(4, 4);
     speed = cocos2d::Vec2(2, 2);
-    currentCell = cocos2d::Vec2(0, 0);
-    gridRect = cocos2d::Rect(0, 0, cellSize.x * cellsCount.x, cellSize.y * cellsCount.y);
     moving = false;
 
     cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
@@ -72,18 +29,38 @@ bool HelloWorld::init() {
     keybordListener->onKeyReleased = CC_CALLBACK_2(HelloWorld::onKeyReleased, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
 
-    if (!createAnimSpriteFromPlist("anim/out.plist", "selection", "pt", 4, 0.2f)) {
+    if (!createAnimSpriteFromPlist(this, "anim/out.plist", "selection", "pt", 4, 0.2f)) {
         return false;
     }
     this->getChildByName("selection")->setPosition(0, 0);
     this->getChildByName("selection")->setScale(1.0);
     this->getChildByName("selection")->setVisible(false);
-    if (!createAnimSpriteFromPlist("anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
+    if (!createAnimSpriteFromPlist(this, "anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
         return false;
     }
     this->getChildByName("anim_fox")->setPosition(32, 32);
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
+
+    if (!createAnimSpriteFromPlist(this, "anim/water.plist", "anim_water", "water", 4, 0.1f)) {
+        return false;
+    }
+    this->getChildByName("anim_water")->setVisible(false);
+    cocos2d::Sprite* waterBack = Sprite::create("water_back.png");
+    waterBack->setVisible(false);
+    this->addChild(waterBack, 0, "water_back");
+
+    waterCurrent = 0;
+    waterLimit = 5;
+    waterPos = cocos2d::Vec2(464, 464);
+    char buffer[10];
+    for (int i = 1; i <= waterLimit; i++) {
+        memset(buffer, 0, 10);
+        snprintf(buffer, 10, "Level %d", i);
+        auto labelLevel = Label::createWithTTF(buffer, "fonts/Marker Felt.ttf", 24);
+        labelLevel->setPosition(cocos2d::Vec2(waterPos.x - 70, (waterPos.y - 64) + 64 * i - 1));
+        this->addChild(labelLevel);
+    }
 
     if (!createMenu()) {
         return false;
@@ -91,48 +68,14 @@ bool HelloWorld::init() {
     if (!createDeck()) {
         return false;
     }
-    if (!createCells((int)cellsCount.x, (int)cellsCount.y)) {
+    if (!gridMap.createCells(this, 4, 4)) {
         return false;
     }
-    pg.setWorldSize(NVector2((int)cellsCount.x, (int)cellsCount.y));
+    pg.setWorldSize(NVector2((int)gridMap.getCellsCount().x, (int)gridMap.getCellsCount().y));
     pg.setDiagonalMovement(false);
 
     this->scheduleUpdate();
 
-    return true;
-}
-
-bool HelloWorld::createCells(int countX, int countY) {
-    if (countX < 0 || countY < 0) {
-        return false;
-    }
-    auto cache = SpriteFrameCache::getInstance();
-    if (!cache) {
-        return false;
-    }
-    cache->addSpriteFramesWithFile("anim/cell.plist");
-
-    std::string key;
-    std::string cellName;
-    char buffer[16];
-    for (int i = 0; i < countX; i++) {
-        for (int j = 0; j < countY; j++) {
-            memset(buffer, 0, 16);
-            snprintf(buffer, 16, "cell_%d_%d", i, j);
-            key = buffer;
-            memset(buffer, 0, 16);
-            snprintf(buffer, 16, "cell%d", i* countX  + j);
-            cellName = buffer;
-            auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(cellName));
-            if (!sp) {
-                return false;
-            }
-            sp->setScale(1.0);
-            sp->getTexture()->setAliasTexParameters();
-            sp->setPosition(Vec2(offset.x + i * cellSize.x + halfSize.x, offset.y + j * cellSize.y + halfSize.y));
-            this->addChild(sp, 0, key);
-        }
-    }
     return true;
 }
 
@@ -184,8 +127,8 @@ void HelloWorld::update(float delta) {
         }
         else {
             NVector2 nv2 = path.front();
-            currentCell = cocos2d::Vec2((float)nv2.x, (float)nv2.y);
-            cocos2d::Vec2 destination = cocos2d::Vec2(offset.x + nv2.x * cellSize.x + halfSize.x, offset.y + nv2.y * cellSize.y + halfSize.y);
+            gridMap.setCurrentCell(cocos2d::Vec2((float)nv2.x, (float)nv2.y));
+            cocos2d::Vec2 destination = gridMap.getNewPoint(nv2.x, nv2.y);
             if (this->getChildByName("anim_fox")->getPosition() == destination) {
                 path.erase(path.begin());
             }
@@ -212,37 +155,8 @@ void HelloWorld::menuExitCallback(Ref* pSender) {
     Director::getInstance()->end();
 }
 
-cocos2d::Vec2 HelloWorld::getCellUnderMouse(cocos2d::Event* event) {
-    cocos2d::EventMouse* e = (EventMouse*)event;
-    cocos2d::Vec2 cell = cocos2d::Vec2(e->getCursorX(), e->getCursorY());
-    if (gridRect.containsPoint(cell)) {
-        cell = cocos2d::Vec2((int)(cell.x / cellSize.x), (int)(cell.y / cellSize.y));
-    }
-    else {
-        cell = cocos2d::Vec2(-1, -1);
-    }
-    return cell;
-}
-
-void HelloWorld::selectCell(cocos2d::Vec2 cell, std::string name) {
-    if (cell.x < 0 || cell.y < 0 || cell.x >= cellsCount.x || cell.y >= cellsCount.y) {
-        this->getChildByName(name)->setVisible(false);
-        return;
-    }
-    this->getChildByName(name)->setPosition(getCoordsByCell(cell));
-    this->getChildByName(name)->setVisible(true);
-}
-
-cocos2d::Vec2 HelloWorld::getCoordsByCell(cocos2d::Vec2 cell) {
-    return cocos2d::Vec2(offset.x + cell.x * cellSize.x + halfSize.x, offset.y + cell.y * cellSize.y + halfSize.y);
-}
-
-cocos2d::Vec2 HelloWorld::sign(cocos2d::Vec2 vec) {
-    return cocos2d::Vec2((0 < vec.x) - (vec.x < 0), (0 < vec.y) - (vec.y < 0));
-}
-
 void HelloWorld::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
-    cocos2d::Vec2 direction = sign(destination - sprite->getPosition());
+    cocos2d::Vec2 direction = gridMap.sign(destination - sprite->getPosition());
     cocos2d::Vec2 step = cocos2d::Vec2(speed.x * direction.x, speed.y * direction.y);
     cocos2d::Vec2 nextPos = sprite->getPosition() + step;
     float cur_length = sprite->getPosition().distance(destination);
@@ -256,24 +170,28 @@ void HelloWorld::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) 
 }
 
 void HelloWorld::onMouseMove(cocos2d::Event* event) {
-    selectCell(getCellUnderMouse(event), "selection");
+    cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
+    if (!gridMap.cellCheck(cell)) {
+        this->getChildByName("selection")->setVisible(false);
+        return;
+    }
+    this->getChildByName("selection")->setPosition(gridMap.getCoordsByCell(cell));
+    this->getChildByName("selection")->setVisible(true);
 }
 
 void HelloWorld::onMouseDown(cocos2d::Event* event) {
     if (moving) {
         return;
     }
-    cocos2d::Vec2 cell = getCellUnderMouse(event);
-
-    if (cell.x < 0 || cell.y < 0 || cell.x >= cellsCount.x || cell.y >= cellsCount.y) {
+    cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
+    if (!gridMap.cellCheck(cell)) {
         return;
     }
-    if (cell == currentCell) {
+    if (cell == gridMap.getCurrentCell()) {
         return;
     }
-
     path.clear(); 
-    path = pg.findPath(NVector2(currentCell.x, currentCell.y), NVector2(cell.x, cell.y));
+    path = pg.findPath(NVector2(gridMap.getCurrentCell().x, gridMap.getCurrentCell().y), NVector2(cell.x, cell.y));
     moving = true;
 }
 
@@ -304,6 +222,22 @@ void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         this->getChildByName("card1")->setVisible(false);
         this->getChildByName("card2")->setVisible(false);
         lastCard = 0;
+
+        waterCurrent = 0;
+        this->getChildByName("anim_water")->setVisible(false);
+        this->getChildByName("water_back")->setVisible(false);
+    }
+    if (keyCode == EventKeyboard::KeyCode::KEY_W) {
+        if (waterCurrent < waterLimit) {
+            waterCurrent ++;
+            this->getChildByName("anim_water")->setPosition(cocos2d::Vec2(waterPos.x, waterPos.y + 64 * (waterCurrent - 1)));
+            this->getChildByName("anim_water")->setVisible(true);
+            if (waterCurrent > 1) {
+                this->getChildByName("water_back")->setPosition(cocos2d::Vec2(waterPos.x, waterPos.y + 32 * (waterCurrent - 2)));
+                this->getChildByName("water_back")->setScaleY(waterCurrent - 1);
+                this->getChildByName("water_back")->setVisible(true);
+            }
+        }
     }
 }
 
