@@ -1,7 +1,7 @@
 #include "gridmap.h"
 
 MGridMap::MGridMap() {
-    offset = cocos2d::Vec2(0, 0);
+    offset = cocos2d::Size(300, 300);
     cellSize = cocos2d::Size(64, 64);
     halfSize = cocos2d::Size(32, 32);
     cellsCount = cocos2d::Vec2(0, 0);
@@ -20,7 +20,7 @@ bool MGridMap::createCells(cocos2d::Scene* scene, int countX, int countY) {
     cache->addSpriteFramesWithFile("anim/cell.plist");
 
     cellsCount = cocos2d::Vec2(countX, countY);
-    gridRect = cocos2d::Rect(0, 0, cellSize.width * cellsCount.x, cellSize.height * cellsCount.y);
+    gridRect = cocos2d::Rect(offset.width, offset.height, cellSize.width * cellsCount.x, cellSize.height * cellsCount.y);
 
     std::string key;
     std::string cellName;
@@ -50,7 +50,7 @@ cocos2d::Vec2 MGridMap::getCellUnderMouse(cocos2d::Event* event) {
     cocos2d::EventMouse* e = (cocos2d::EventMouse*)event;
     cocos2d::Vec2 cell = cocos2d::Vec2(e->getCursorX(), e->getCursorY());
     if (gridRect.containsPoint(cell)) {
-        cell = cocos2d::Vec2((int)(cell.x / cellSize.width), (int)(cell.y / cellSize.height));
+        cell = cocos2d::Vec2((int)((cell.x - offset.width) / cellSize.width), (int)((cell.y - offset.height) / cellSize.height));
     }
     else {
         cell = cocos2d::Vec2(-1, -1);

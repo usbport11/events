@@ -38,7 +38,7 @@ bool HelloWorld::init() {
     if (!createAnimSpriteFromPlist(this, "anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
         return false;
     }
-    this->getChildByName("anim_fox")->setPosition(32, 32);
+    this->getChildByName("anim_fox")->setPosition(332, 332);//300 + 32
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
@@ -50,27 +50,29 @@ bool HelloWorld::init() {
     waterBack->setVisible(false);
     this->addChild(waterBack, 0, "water_back");
 
-    waterCurrent = 0;
-    waterLimit = 5;
-    waterPos = cocos2d::Vec2(464, 464);
-    char buffer[10];
-    for (int i = 1; i <= waterLimit; i++) {
-        memset(buffer, 0, 10);
-        snprintf(buffer, 10, "Level %d", i);
-        auto labelLevel = Label::createWithTTF(buffer, "fonts/Marker Felt.ttf", 24);
-        labelLevel->setPosition(cocos2d::Vec2(waterPos.x - 70, (waterPos.y - 64) + 64 * i - 1));
-        this->addChild(labelLevel);
-    }
-
-    if (!createMenu()) {
-        return false;
-    }
-    if (!createDeck()) {
-        return false;
-    }
-    if (!gridMap.createCells(this, 4, 4)) {
-        return false;
-    }
+    if (!createMenu()) return false;
+    if (!createWaterState()) return false;
+    tCardsMap itemCards = {
+        {"itm_back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
+        {"itm_no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"itm_no_right", {{"listName", "card1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"itm_card0", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card1", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card2", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+    };
+    tCardsMap floodCards = {
+        {"fld_back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
+        {"fld_no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"fld_no_right", {{"listName", "card1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"fld_card0", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card1", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card2", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+    };
+    if (!itemDeck.create(this, "anim/cards.plist", "Item deck", cocos2d::Vec2(850, 170), itemCards)) return false;
+    if (!itemDeck.setCardNames("itm_card%d", "itm_back")) return false;
+    if (!floodDeck.create(this, "anim/cards.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards)) return false;
+    if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
+    if (!gridMap.createCells(this, 4, 4)) return false;
     pg.setWorldSize(NVector2((int)gridMap.getCellsCount().x, (int)gridMap.getCellsCount().y));
     pg.setDiagonalMovement(false);
 
@@ -79,44 +81,19 @@ bool HelloWorld::init() {
     return true;
 }
 
-bool HelloWorld::createDeck() {
-    std::map<std::string, std::map<std::string, std::string>> cards = {
-        {"back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
-        {"no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"no_right", {{"listName", "card1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"card0", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"card1", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"card2", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-    };
-
-    auto cache = SpriteFrameCache::getInstance();
-    if (!cache) {
-        return false;
+bool HelloWorld::createWaterState() {
+    waterCurrent = 0;
+    waterLimit = 5;
+    waterPos = cocos2d::Vec2(964, 464);
+    char buffer[10];
+    for (int i = 1; i <= waterLimit; i++) {
+        memset(buffer, 0, 10);
+        snprintf(buffer, 10, "Level %d", i);
+        cocos2d::Label* labelLevel = Label::createWithTTF(buffer, "fonts/Marker Felt.ttf", 24);
+        if (!labelLevel) return false;
+        labelLevel->setPosition(cocos2d::Vec2(waterPos.x - 70, (waterPos.y - 64) + 64 * i - 1));
+        this->addChild(labelLevel);
     }
-    cache->addSpriteFramesWithFile("anim/cards.plist");
-
-    cocos2d::Vec2 pos;
-    for (auto it = cards.begin(); it != cards.end(); it ++ ) {
-        auto sp = Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(cards[it->first]["listName"]));
-        if (!sp) {
-            return false;
-        }
-        sp->getTexture()->setAliasTexParameters();
-        if (cards[it->first]["pos"] == "left") {
-            pos = cocos2d::Vec2(600, 640);
-        }
-        else if (cards[it->first]["pos"] == "right") {
-            pos = cocos2d::Vec2(700, 640);
-        }
-        else {
-            return false;
-        }
-        sp->setPosition(pos);
-        sp->setVisible((bool)std::stoi(cards[it->first]["visible"]));
-        this->addChild(sp, std::stoi(cards[it->first]["zOrder"]), it->first);
-    }
-    lastCard = 0;
-
     return true;
 }
 
@@ -195,33 +172,14 @@ void HelloWorld::onMouseDown(cocos2d::Event* event) {
     moving = true;
 }
 
-void HelloWorld::nextCard() {
-    if (lastCard > 2) {
-        return;
-    }
-    char buffer[16] = { 0 };
-    snprintf(buffer, 16, "card%d", lastCard);
-    this->getChildByName(buffer)->setVisible(true);
-    if (lastCard >= 1) {
-        snprintf(buffer, 16, "card%d", lastCard - 1);
-        this->getChildByName(buffer)->setVisible(false);
-    }
-    lastCard = lastCard + 1;
-    if (lastCard == 3) {
-        this->getChildByName("back")->setVisible(false);
-    }
-}
-
 void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (keyCode == EventKeyboard::KeyCode::KEY_N) {
-        nextCard();
+        itemDeck.nextCard();
+        floodDeck.nextCard();
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
-        this->getChildByName("back")->setVisible(true);
-        this->getChildByName("card0")->setVisible(false);
-        this->getChildByName("card1")->setVisible(false);
-        this->getChildByName("card2")->setVisible(false);
-        lastCard = 0;
+        itemDeck.reset();
+        floodDeck.reset();
 
         waterCurrent = 0;
         this->getChildByName("anim_water")->setVisible(false);
