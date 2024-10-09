@@ -16,7 +16,7 @@ public:
     cocos2d::Vec2 getCellUnderMouse(cocos2d::Event* event);
     cocos2d::Vec2 getCoordsByCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 sign(cocos2d::Vec2 vec);
-    bool createCells(cocos2d::Scene* scene, int countX, int countY);
+    bool create(cocos2d::Scene* scene, const std::string& plistFile, cocos2d::Size _cellsCount, cocos2d::Size _offset, cocos2d::Size _cellSize);
     bool cellCheck(cocos2d::Vec2 cell);
     cocos2d::Vec2 getCellsCount();
     cocos2d::Vec2 getNewPoint(int x, int y);

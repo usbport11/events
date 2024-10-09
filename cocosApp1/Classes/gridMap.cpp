@@ -9,35 +9,37 @@ MGridMap::MGridMap() {
     gridRect = cocos2d::Rect(0, 0, 0, 0);
 }
 
-bool MGridMap::createCells(cocos2d::Scene* scene, int countX, int countY) {
-    if (countX < 0 || countY < 0) {
-        return false;
-    }
+bool MGridMap::create(cocos2d::Scene* scene, const std::string& plistFile, cocos2d::Size _cellsCount, cocos2d::Size _offset, cocos2d::Size _cellSize) {
     cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
     if (!cache) {
         return false;
     }
-    cache->addSpriteFramesWithFile("anim/cell.plist");
+    cache->addSpriteFramesWithFile(plistFile);
 
-    cellsCount = cocos2d::Vec2(countX, countY);
+    cellsCount = cocos2d::Vec2((int)_cellsCount.width, (int)_cellsCount.height);
+    if (cellsCount.x < 0 || cellsCount.y < 0) {
+        return false;
+    }
+    cellSize = _cellSize;
+    halfSize = _cellSize/2;
+    offset = _offset;
     gridRect = cocos2d::Rect(offset.width, offset.height, cellSize.width * cellsCount.x, cellSize.height * cellsCount.y);
 
     std::string key;
     std::string cellName;
     char buffer[16];
-    for (int i = 0; i < countX; i++) {
-        for (int j = 0; j < countY; j++) {
+    for (int i = 0; i < cellsCount.x; i++) {
+        for (int j = 0; j < cellsCount.y; j++) {
             memset(buffer, 0, 16);
             snprintf(buffer, 16, "cell_%d_%d", i, j);
             key = buffer;
             memset(buffer, 0, 16);
-            snprintf(buffer, 16, "cell%d", i* countX  + j);
+            snprintf(buffer, 16, "cell%d", i * (int)cellsCount.x + j);
             cellName = buffer;
             cocos2d::Sprite* sp = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(cellName));
             if (!sp) {
                 return false;
             }
-            sp->setScale(1.0);
             sp->getTexture()->setAliasTexParameters();
             sp->setPosition(cocos2d::Vec2(offset.width + i * cellSize.width + halfSize.width, offset.height + j * cellSize.height + halfSize.height));
             scene->addChild(sp, 0, key);

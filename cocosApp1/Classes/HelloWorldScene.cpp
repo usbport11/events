@@ -49,9 +49,14 @@ bool HelloWorld::init() {
     cocos2d::Sprite* waterBack = Sprite::create("water_back.png");
     waterBack->setVisible(false);
     this->addChild(waterBack, 0, "water_back");
+    cocos2d::Sprite* glass = Sprite::create("glass.png");
+    glass->setPosition(cocos2d::Vec2(964, 592));//464
+    glass->setScaleY(5.0);
+    this->addChild(glass, 2);
+
+    if (!waterLevel.create(this, "anim_water", "water_back", cocos2d::Vec2(964, 464), cocos2d::Size(64, 64), 5)) return false;
 
     if (!createMenu()) return false;
-    if (!createWaterState()) return false;
     tCardsMap itemCards = {
         {"itm_back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
         {"itm_no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
@@ -59,41 +64,65 @@ bool HelloWorld::init() {
         {"itm_card0", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
         {"itm_card1", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
         {"itm_card2", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card3", {{"listName", "card5"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card4", {{"listName", "card6"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card5", {{"listName", "card7"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card6", {{"listName", "card8"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
     };
     tCardsMap floodCards = {
-        {"fld_back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
-        {"fld_no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"fld_no_right", {{"listName", "card1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"fld_card0", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card1", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card2", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_back", {{"listName", "flood0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
+        {"fld_no_left", {{"listName", "flood1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"fld_no_right", {{"listName", "flood1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
+        {"fld_card0", {{"listName", "flood2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card1", {{"listName", "flood3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card2", {{"listName", "flood4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card3", {{"listName", "flood5"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card4", {{"listName", "flood6"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card5", {{"listName", "flood7"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card6", {{"listName", "flood8"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card7", {{"listName", "flood9"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card8", {{"listName", "flood10"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card9", {{"listName", "flood11"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card10", {{"listName", "flood12"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card11", {{"listName", "flood13"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card12", {{"listName", "flood14"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card13", {{"listName", "flood15"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card14", {{"listName", "flood16"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card15", {{"listName", "flood17"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card16", {{"listName", "flood18"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card17", {{"listName", "flood19"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card18", {{"listName", "flood20"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card19", {{"listName", "flood21"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card20", {{"listName", "flood22"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card21", {{"listName", "flood23"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card22", {{"listName", "flood24"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"fld_card23", {{"listName", "flood25"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
     };
     if (!itemDeck.create(this, "anim/cards.plist", "Item deck", cocos2d::Vec2(850, 170), itemCards)) return false;
     if (!itemDeck.setCardNames("itm_card%d", "itm_back")) return false;
-    if (!floodDeck.create(this, "anim/cards.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards)) return false;
+    if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards)) return false;
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
-    if (!gridMap.createCells(this, 4, 4)) return false;
+
+    if (!gridMap.create(this, "anim/cells.plist", cocos2d::Size(4, 4), cocos2d::Size(300, 300), cocos2d::Size(64, 64))) return false;
     pg.setWorldSize(NVector2((int)gridMap.getCellsCount().x, (int)gridMap.getCellsCount().y));
     pg.setDiagonalMovement(false);
 
+    cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+    if (!cache) return false;
+    cocos2d::Label* labelHand = cocos2d::Label::createWithTTF("Hand", "fonts/Marker Felt.ttf", 24);
+    if (!labelHand) return false;
+    labelHand->setPosition(cocos2d::Vec2(230, 170));
+    this->addChild(labelHand);
+    cocos2d::Sprite* hand;
+    for (int i = 0; i < 5; i++) {
+        hand = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName("card1"));
+        if (!hand) return false;
+        hand->setPosition(cocos2d::Vec2(90 + 70 * i, 100));
+        this->addChild(hand);
+    }
+
     this->scheduleUpdate();
 
-    return true;
-}
-
-bool HelloWorld::createWaterState() {
-    waterCurrent = 0;
-    waterLimit = 5;
-    waterPos = cocos2d::Vec2(964, 464);
-    char buffer[10];
-    for (int i = 1; i <= waterLimit; i++) {
-        memset(buffer, 0, 10);
-        snprintf(buffer, 10, "Level %d", i);
-        cocos2d::Label* labelLevel = Label::createWithTTF(buffer, "fonts/Marker Felt.ttf", 24);
-        if (!labelLevel) return false;
-        labelLevel->setPosition(cocos2d::Vec2(waterPos.x - 70, (waterPos.y - 64) + 64 * i - 1));
-        this->addChild(labelLevel);
-    }
     return true;
 }
 
@@ -180,22 +209,10 @@ void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
         itemDeck.reset();
         floodDeck.reset();
-
-        waterCurrent = 0;
-        this->getChildByName("anim_water")->setVisible(false);
-        this->getChildByName("water_back")->setVisible(false);
+        waterLevel.reset();
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_W) {
-        if (waterCurrent < waterLimit) {
-            waterCurrent ++;
-            this->getChildByName("anim_water")->setPosition(cocos2d::Vec2(waterPos.x, waterPos.y + 64 * (waterCurrent - 1)));
-            this->getChildByName("anim_water")->setVisible(true);
-            if (waterCurrent > 1) {
-                this->getChildByName("water_back")->setPosition(cocos2d::Vec2(waterPos.x, waterPos.y + 32 * (waterCurrent - 2)));
-                this->getChildByName("water_back")->setScaleY(waterCurrent - 1);
-                this->getChildByName("water_back")->setVisible(true);
-            }
-        }
+        waterLevel.increase();
     }
 }
 

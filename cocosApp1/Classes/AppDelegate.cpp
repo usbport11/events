@@ -47,7 +47,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
         director->setOpenGLView(glview);
     }
 
-    director->setDisplayStats(true);
+    director->setDisplayStats(false);//true
     director->setAnimationInterval(1.0f / 60);
 
     glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::NO_BORDER);
@@ -65,6 +65,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     auto scene = HelloWorld::createScene();
+    if (!scene) return false;
     director->runWithScene(scene);
 
     return true;

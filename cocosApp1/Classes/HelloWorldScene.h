@@ -5,26 +5,22 @@
 #include "PathGenerator.h"
 #include "gridMap.h"
 #include "deck.h"
+#include "waterLevel.h"
 
 class HelloWorld: public cocos2d::Scene {
 private:
     MGridMap gridMap;
     MDeck itemDeck;
     MDeck floodDeck;
+    MWaterLevel waterLevel;
     MPathGenerator pg;
     std::vector<NVector2> path;
+
     cocos2d::Vec2 speed;
     bool moving;
-    int lastCard;
-    int waterCurrent;
-    int waterLimit;
-    cocos2d::Vec2 waterPos;
-
     void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
 
-    bool createWaterState();
     bool createMenu();
-
     void menuEndTurnCallback(cocos2d::Ref* pSender);
     void menuMoveCallback(cocos2d::Ref* pSender);
     void menuAbflussCallback(cocos2d::Ref* pSender);
