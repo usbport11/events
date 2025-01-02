@@ -33,7 +33,7 @@ bool HelloWorld::init() {
         return false;
     }
     this->getChildByName("selection")->setPosition(0, 0);
-    this->getChildByName("selection")->setScale(1.0);
+    this->getChildByName("selection")->setScale(1.5);//1.0
     this->getChildByName("selection")->setVisible(false);
     if (!createAnimSpriteFromPlist(this, "anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
         return false;
@@ -103,7 +103,7 @@ bool HelloWorld::init() {
     if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards)) return false;
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
 
-    if (!gridMap.create(this, "anim/cells.plist", cocos2d::Size(4, 4), cocos2d::Size(300, 300), cocos2d::Size(64, 64))) return false;
+    if (!gridMap.create(this, "anim/cells.plist", cocos2d::Size(4, 4), cocos2d::Size(300, 300), cocos2d::Size(96, 96))) return false;//64/64
     pg.setWorldSize(NVector2((int)gridMap.getCellsCount().x, (int)gridMap.getCellsCount().y));
     pg.setDiagonalMovement(false);
 
@@ -114,12 +114,17 @@ bool HelloWorld::init() {
     labelHand->setPosition(cocos2d::Vec2(230, 170));
     this->addChild(labelHand);
     cocos2d::Sprite* hand;
+    char buffer[16];
     for (int i = 0; i < 5; i++) {
+        memset(buffer, 0, 16);
+        sprintf(buffer, "hand%d", i);
         hand = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName("card1"));
         if (!hand) return false;
         hand->setPosition(cocos2d::Vec2(90 + 70 * i, 100));
-        this->addChild(hand);
+        this->addChild(hand, 0, buffer);
     }
+    cocos2d::Sprite* spA = (cocos2d::Sprite*)this->getChildByName("hand0");
+    spA->setSpriteFrame(cache->getSpriteFrameByName("flood2"));
 
     this->scheduleUpdate();
 
@@ -145,21 +150,48 @@ void HelloWorld::update(float delta) {
     }
 }
 
+void HelloWorld::menuAbflussCallback(cocos2d::Ref* pSender) {
+    selectMenuItem(pSender);
+}
+
 void HelloWorld::menuEndTurnCallback(cocos2d::Ref* pSender) {
-    //todo
+    selectMenuItem(pSender);
 }
 
 void HelloWorld::menuMoveCallback(cocos2d::Ref* pSender) {
-    //todo
+    selectMenuItem(pSender);
+    //highlight available cells
+    char buffer[16] = {0};
+    cocos2d::Vec2 curr = gridMap.getCurrentCell();
+
+    //clear alredy higlighted
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            snprintf(buffer, 16, "cell_%d_%d", i, j);
+            cocos2d::Sprite* sp = (cocos2d::Sprite*)this->getChildByName(buffer);
+            if (!sp) continue;
+            sp->setColor(cocos2d::Color3B(255, 255, 255));
+        }
+    }
+
+    //hightlight needed
+    int ind[4][2] = { {-1,0},{1,0},{0,-1},{0, 1} };
+    for (int i = 0; i<4; i++) {
+        memset(buffer, 0, 16);
+        cocos2d::Vec2 neigh = curr + cocos2d::Vec2(ind[i][0], ind[i][1]);
+        if (neigh.x < 0 || neigh.y < 0 || neigh.x >= 4 || neigh.y >= 4) continue;
+        snprintf(buffer, 16, "cell_%d_%d", (int)neigh.x, (int)neigh.y);
+        cocos2d::Sprite* sp = (cocos2d::Sprite*) this->getChildByName(buffer);
+        if (!sp) continue;
+        sp->setColor(cocos2d::Color3B(0, 255, 0));
+    }
 }
 
-void HelloWorld::menuAbflussCallback(cocos2d::Ref* pSender) {
-    //todo
-}
-
+/*
 void HelloWorld::menuExitCallback(Ref* pSender) {
     Director::getInstance()->end();
 }
+*/
 
 void HelloWorld::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
     cocos2d::Vec2 direction = gridMap.sign(destination - sprite->getPosition());
@@ -220,30 +252,30 @@ void HelloWorld::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d:
 }
 
 bool HelloWorld::createMenu() {
-    //prepare
-    std::unordered_map<std::string, ccMenuCallback> menuCallback;
-    menuCallback["End Turn"] = CC_CALLBACK_1(HelloWorld::menuEndTurnCallback, this);
+    const std::string nameList[3] = {"EndTurn", "Move", "Abfluss"};
+    std::map<std::string, ccMenuCallback> menuCallback;
+    menuCallback["EndTurn"] = CC_CALLBACK_1(HelloWorld::menuEndTurnCallback, this);
     menuCallback["Move"] = CC_CALLBACK_1(HelloWorld::menuMoveCallback, this);
     menuCallback["Abfluss"] = CC_CALLBACK_1(HelloWorld::menuAbflussCallback, this);
-    menuCallback["Exit"] = CC_CALLBACK_1(HelloWorld::menuExitCallback, this);
+    //menuCallback["Exit"] = CC_CALLBACK_1(HelloWorld::menuExitCallback, this);
 
     float topOffset = this->getContentSize().height - 30;
     const std::string btnBackPng[2] = { "back_off.png", "back_on.png" };
     const std::string fontTTF = "fonts/Marker Felt.ttf";
 
     //create menu
-    cocos2d::Vector<MenuItem*> MenuItems;
     int num = 0;
-    cocos2d::Vec2 itemPosition;
-    for (auto it = menuCallback.begin(); it != menuCallback.end(); it++) {
-        MenuItemImageExt* memuItem = MenuItemImageExt::create(btnBackPng[0], btnBackPng[1], "", it->second);
-        if(!memuItem) {
+    cocos2d::Vector<cocos2d::MenuItem*> menuItems;
+    for (int i = 0; i < sizeof(nameList) / sizeof(std::string); i++) {
+        MenuItemImageExt* menuItem = MenuItemImageExt::create(btnBackPng[0], btnBackPng[1], "", menuCallback[nameList[i]]);
+        if(!menuItem) {
             return false;
         }
-        itemPosition = Vec2(memuItem->getContentSize().width / 2, topOffset - num * memuItem->getContentSize().height);
-        memuItem->setPosition(itemPosition);
-        MenuItems.pushBack(memuItem);
-        cocos2d::Label* itemLabel = Label::createWithTTF(it->first, fontTTF, 24);
+        cocos2d::Vec2 itemPosition = Vec2(menuItem->getContentSize().width / 2, topOffset - num * menuItem->getContentSize().height);
+        menuItem->setPosition(itemPosition);
+        menuItem->setName(nameList[i]);
+        menuItems.pushBack(menuItem);
+        cocos2d::Label* itemLabel = Label::createWithTTF(nameList[i], fontTTF, 24);
         if (!itemLabel) {
             return false;
         }
@@ -251,12 +283,30 @@ bool HelloWorld::createMenu() {
         this->addChild(itemLabel, 2);
         num ++;
     }
-    cocos2d::Menu* menu = Menu::createWithArray(MenuItems);
-    if (!menu) {
+    cocos2d::Menu* menu = Menu::createWithArray(menuItems);
+    if(!menu) {
         return false;
     }
     menu->setPosition(Vec2::ZERO);
+    menu->setName("MainMenu");
     this->addChild(menu, 1);
     menuCallback.clear();
+
     return true;
+}
+
+void HelloWorld::unselectMenuAll() {
+    cocos2d::Node* node = this->getChildByName("MainMenu");
+    cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
+    for (int i = 0; i < items.size(); i++) {
+        items.at(i)->setColor(cocos2d::Color3B(255, 255, 255));
+    }
+}
+
+void HelloWorld::selectMenuItem(cocos2d::Ref* pSender) {
+    unselectMenuAll();
+    MenuItemImageExt* menuItem = (MenuItemImageExt*)pSender;
+    menuItem->setColor(cocos2d::Color3B(255, 0, 0));
+    menuItem->selected();
+    log(menuItem->getName().c_str());
 }

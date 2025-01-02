@@ -5,6 +5,7 @@
 
 class MGridMap {
 private:
+    float scale;
     cocos2d::Size offset;
     cocos2d::Rect gridRect;
     cocos2d::Vec2 cellsCount;

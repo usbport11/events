@@ -42,6 +42,7 @@ bool MGridMap::create(cocos2d::Scene* scene, const std::string& plistFile, cocos
             }
             sp->getTexture()->setAliasTexParameters();
             sp->setPosition(cocos2d::Vec2(offset.width + i * cellSize.width + halfSize.width, offset.height + j * cellSize.height + halfSize.height));
+            sp->setScale(1.5);
             scene->addChild(sp, 0, key);
         }
     }

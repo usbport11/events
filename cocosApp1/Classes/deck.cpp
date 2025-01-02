@@ -8,23 +8,6 @@ MDeck::MDeck() {
     lastCard = 0;
 }
 
-void MDeck::nextCard() {
-    if (lastCard > cardsNumber - 1) {
-        return;
-    }
-    char buffer[16] = { 0 };
-    snprintf(buffer, 16, card.c_str(), lastCard);
-    scene->getChildByName(buffer)->setVisible(true);
-    if (lastCard >= 1) {
-        snprintf(buffer, 16, card.c_str(), lastCard - 1);
-        scene->getChildByName(buffer)->setVisible(false);
-    }
-    lastCard = lastCard + 1;
-    if (lastCard == cardsNumber) {
-        scene->getChildByName(cardBack)->setVisible(false);
-    }
-}
-
 bool MDeck::create(cocos2d::Scene* _scene, const std::string& plistFile, const std::string& deckName, cocos2d::Vec2 position, tCardsMap& cardsMap) {
 	if(!_scene) return false;
 	scene = _scene;
@@ -72,6 +55,23 @@ bool MDeck::setCardNames(const std::string& _card, const std::string& _cardBack)
     return true;
 }
 
+void MDeck::nextCard() {
+    if (lastCard > cardsNumber - 1) {
+        return;
+    }
+    char buffer[16] = { 0 };
+    snprintf(buffer, 16, card.c_str(), lastCard);
+    scene->getChildByName(buffer)->setVisible(true);
+    if (lastCard >= 1) {
+        snprintf(buffer, 16, card.c_str(), lastCard - 1);
+        scene->getChildByName(buffer)->setVisible(false);
+    }
+    lastCard = lastCard + 1;
+    if (lastCard == cardsNumber) {
+        scene->getChildByName(cardBack)->setVisible(false);
+    }
+}
+
 void MDeck::reset() {
 	scene->getChildByName(cardBack)->setVisible(true);
     char buffer[16];
@@ -81,4 +81,11 @@ void MDeck::reset() {
         scene->getChildByName(buffer)->setVisible(false);
 	}
     lastCard = 0;
+}
+
+std::string MDeck::getCard(int number) {
+    char buffer[16];
+    memset(buffer, 0, 16);
+    snprintf(buffer, 16, card.c_str(), number);
+    return buffer;
 }

@@ -21,10 +21,12 @@ private:
     void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
 
     bool createMenu();
+    void unselectMenuAll();
+    void selectMenuItem(cocos2d::Ref* pSender);
     void menuEndTurnCallback(cocos2d::Ref* pSender);
     void menuMoveCallback(cocos2d::Ref* pSender);
     void menuAbflussCallback(cocos2d::Ref* pSender);
-    void menuExitCallback(cocos2d::Ref* pSender);
+    //void menuExitCallback(cocos2d::Ref* pSender);
 
 public:
     static cocos2d::Scene* createScene();
