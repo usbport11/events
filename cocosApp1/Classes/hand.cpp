@@ -17,7 +17,7 @@ int MHand::getSize() {
 }
 bool MHand::create(cocos2d::Scene* _scene, int _limit, const std::string& _prefix, const std::string& _noneCard, cocos2d::Vec2 position) {
 	if (!_scene) return false;
-	if (limit <= 0) return false;
+	if (_limit <= 0) return false;
 	if (_noneCard.empty()) return false;
 	scene = _scene;
 	limit = _limit;
@@ -81,6 +81,6 @@ void MHand::removeCard(const std::string& name) {
 void MHand::reset() {
 	cards.clear();
 	for(int i=0; i<limit; i++) {
-		cards[i] = noneCard;
+		cards.push_back(noneCard);
 	}
 }

@@ -5,7 +5,9 @@
 #include "PathGenerator.h"
 #include "gridMap.h"
 #include "deck.h"
+#include "hand.h"
 #include "waterLevel.h"
+#include "menu.h"
 
 class HelloWorld: public cocos2d::Scene {
 private:
@@ -14,19 +16,13 @@ private:
     MDeck floodDeck;
     MWaterLevel waterLevel;
     MPathGenerator pg;
+    MHand hand;
+    MMenu menu;
     std::vector<NVector2> path;
 
     cocos2d::Vec2 speed;
     bool moving;
     void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
-
-    bool createMenu();
-    void unselectMenuAll();
-    void selectMenuItem(cocos2d::Ref* pSender);
-    void menuEndTurnCallback(cocos2d::Ref* pSender);
-    void menuMoveCallback(cocos2d::Ref* pSender);
-    void menuAbflussCallback(cocos2d::Ref* pSender);
-    //void menuExitCallback(cocos2d::Ref* pSender);
 
 public:
     static cocos2d::Scene* createScene();
