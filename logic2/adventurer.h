@@ -14,6 +14,7 @@ private:
   std::vector<MArtifact*> artifacts;
   std::vector<MCard*> cards;
   MArea* area;
+  std::string color;
 public:
   MAdventurer();
   MAdventurer(const std::string& _name);

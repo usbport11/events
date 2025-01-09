@@ -28,7 +28,7 @@ private:
   std::mt19937 rng;
   std::uniform_int_distribution<int> distribute;
 
-  std::map<std::string, bptr> m;
+  std::map<std::string, bptr> functions;
   std::vector<std::string> vargs;
   std::string sargs;
 
@@ -88,6 +88,9 @@ private:
   std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
   std::string getActionParams(MAdventurer* adventurer, std::string action);
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
+
+  void createConsole();
+
 public:
   MProcessor();
   ~MProcessor();

@@ -6,7 +6,9 @@
 #include "artifact.h"
 #include "ui.h"
 
-#include <ctime>
+#include <windows.h> //AllocConsole FreeConsole
+
+#include <chrono>
 #include <iostream>
 #include <cstring>
 #include <algorithm>
@@ -43,7 +45,7 @@ void MProcessor::parseArgs(const std::string& _sargs) {
   vargs.push_back(arg);
 }
 bool MProcessor::call(const std::string& name) {
-  return (*this.*m[name])();
+  return (*this.*functions[name])();
 }
 MObject* MProcessor::findObject(std::map<std::string, MObject*>& objects, const std::string& name) {
   moi moit = objects.find(name);
@@ -306,27 +308,18 @@ bool MProcessor::useCard() {
   if(argsLessLimit(2)) return false;
   std::cout<<"Use card: "<<vargs[1]<<" by "<<vargs[0]<<std::endl;
 
-  std::vector<std::string> names;
-  names.push_back("helicopter");
-  names.push_back("sandbag");
   MAdventurer* adventurer = findAdventurer(vargs[0]);
   MCard* card = findItemCard(vargs[1]);
   if(!adventurer) return false;
   if(!card) return false;
   if(card->getType() == "item") {
-    for(int i=0; i<names.size(); i++) {
-      if(names[i] == card->getName().substr(0, names[i].length())) {
-        if(names[i] == "helicopter") {
-          if(argsLessLimit(4)) return false;
-          if(!execFunction("move", vargs[2] + " " + vargs[3])) return false;
-          break;
-        }
-        if(names[i] == "sandbag") {
-          if(argsLessLimit(3)) return false;
-          if(!execFunction("abfluss", vargs[2])) return false;
-          break;
-        }
-      }
+    if(card->getName().find("helicopter") != std::string::npos) {
+      if (argsLessLimit(4)) return false;
+      if (!execFunction("move", vargs[2] + " " + vargs[3])) return false;
+    }
+    if (card->getName().find("sandbag") != std::string::npos) {
+      if (argsLessLimit(3)) return false;
+      if (!execFunction("abfluss", vargs[2])) return false;
     }
   }
   else {
@@ -392,29 +385,17 @@ void MProcessor::createItemCards(const std::string& _name, const std::string& ty
   }
 }
 bool MProcessor::initAreas() {
-  int num;
+  const int rows = 6, cols = 6;
+  bool areaMap[rows][cols] = {
+    {0,0,1,1,0,0},
+    {0,1,1,1,1,0},
+    {1,1,1,1,1,1},
+    {1,1,1,1,1,1},
+    {0,1,1,1,1,0},
+    {0,0,1,1,0,0}
+  };
 
-  //simple type
-  int rows = 4, cols = 4;
-  bool areaMap[rows][cols] = {
-    {1,1,1,1},
-    {1,1,1,1},
-    {1,1,1,1},
-    {1,1,1,1}
-  };
-  /*
-  //more complex
-  int rows = 6, cols = 6;
-  bool areaMap[rows][cols] = {
-    {0,0,0,0,0,0},
-    {0,1,1,1,1,0},
-    {0,1,1,1,1,0},
-    {0,1,1,1,1,0},
-    {0,1,1,1,1,0},
-    {0,0,0,0,0,0}
-  };
-  */
-  num = 0;
+  int num = 0;
   for(int i=0; i<rows; i++) {
     for(int j=0; j<cols; j++) {
       if(areaMap[i][j]) num ++;
@@ -449,7 +430,6 @@ bool MProcessor::initAreas() {
     rndBase.push_back(moit->first);
   }
   if(areaChecks < 1 + artifacts.size() * 2) {
-    std::cout<<"Extraction point or some artefact area not created"<<std::endl;
     return false;
   }
 
@@ -492,57 +472,67 @@ bool MProcessor::initAreas() {
 
   return true;
 }
-MProcessor::MProcessor():extractionArea("plato") {
-  struct timespec tm;
-  clock_gettime(CLOCK_REALTIME, &tm);
-  rng.seed(tm.tv_nsec);
+MProcessor::MProcessor():extractionArea("adventurers_circle") {
+  createConsole();
+
+  std::chrono::steady_clock::time_point tp = std::chrono::steady_clock::now();
+  long nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).time_since_epoch().count();
+  rng.seed(nsec);
 
   ui = new MUI;
 
-  m["start"] = MProcessor::start;
-  m["move"] = MProcessor::move;
-  m["abfluss"] = MProcessor::abfluss;
-  m["flood"] = MProcessor::flood;
-  m["skip"] = MProcessor::skip;
-  m["handover"] = MProcessor::handOver;
-  m["getitemcard"] = MProcessor::getItemCard;
-  m["getfloodcard"] = MProcessor::getFloodCard;
-  m["discard"] = MProcessor::discard;
-  m["usecard"] = MProcessor::useCard;
-  m["getartifact"] = MProcessor::getArtifact;
-  m["fly"] = MProcessor::fly;
-  m["moveother"] = MProcessor::moveOther;
-  m["swim"] = MProcessor::swim;
-  m["extract"] = MProcessor::extract;
+  functions = {{"start", &MProcessor::start},
+    {"move", &MProcessor::move},
+    {"abfluss", &MProcessor::abfluss},
+    {"flood", &MProcessor::flood},
+    {"skip", &MProcessor::skip},
+    {"handover", &MProcessor::handOver},
+    {"getitemcard", &MProcessor::getItemCard},
+    {"getfloodcard", &MProcessor::getFloodCard},
+    {"discard", &MProcessor::discard},
+    {"usecard", &MProcessor::useCard},
+    {"getartifact", &MProcessor::getArtifact},
+    {"fly", &MProcessor::fly},
+    {"moveother", &MProcessor::moveOther},
+    {"swim", &MProcessor::swim},
+    {"extract", &MProcessor::extract}};
 
-  areas["gate"] = new MArea("gate");
-  areas["castle"] = new MArea("castle");
-  areas["house"] = new MArea("house");
-  areas["swamp"] = new MArea("swamp");
-  areas["monastary"] = new MArea("monastary");
-  areas["factory"] = new MArea("factory");
-  areas["river"] = new MArea("river");
-  areas["hole"] = new MArea("hole");
-  areas["lake"] = new MArea("lake");
-  areas["port"] = new MArea("port");
-  areas["cavern"] = new MArea("cavern");
-  areas["libary"] = new MArea("libary");
-  areas["swimpool"] = new MArea("swimpool");
-  areas["shop"] = new MArea("shop");
-  areas["crossroad"] = new MArea("crossroad");
-  areas["plato"] = new MArea("plato");
+  areas = {{"tidal_castle", new MArea("tidal_castle")},
+    {"coral_castle", new MArea("coral_castle")},
+    {"treacherous_dunes", new MArea("treacherous_dunes")},
+    {"watchtower", new MArea("watchtower")},
+    {"scarlet_forest", new MArea("scarlet_forest")},
+    {"temple_of_the_sun", new MArea("temple_of_the_sun")},
+    {"observatory", new MArea("observatory")},
+    {"temple_of_the_moon", new MArea("temple_of_the_moon")},
+    {"adventurers_circle", new MArea("adventurers_circle")},
+    {"golden_gate", new MArea("golden_gate")},
+    {"bronze_gate", new MArea("bronze_gate")},
+    {"ghost_rock", new MArea("ghost_rock")},
+    {"foggy_marshes", new MArea("foggy_marshes")},
+    {"whispering_garden", new MArea("whispering_garden")},
+    {"silver_gate", new MArea("silver_gate")},
+    {"iron_gate", new MArea("iron_gate")},
+    {"bridge_of_the_brave", new MArea("bridge_of_the_brave")},
+    {"twilight_hollow", new MArea("twilight_hollow")}, 
+    {"abandoned_cliffs", new MArea("abandoned_cliffs")}, 
+    {"lost_lagoon", new MArea("lost_lagoon")}, 
+    {"fire_cave", new MArea("fire_cave")},
+    {"cave_of_shadows", new MArea("cave_of_shadows")},
+    {"howling_garden", new MArea("howling_garden")},
+    {"copper_gate", new MArea("copper_gate")}};
 
-  adventurers["explorer"] = new MAdventurer("explorer", "gate");//can diag move or abfluss
-  adventurers["pilot"] = new MAdventurer("pilot", "plato");//one time can move anywhere
-  adventurers["engineer"] = new MAdventurer("engineer", "factory");//can abluss one or two areas
-  adventurers["liaison"] = new MAdventurer("liaison", "shop");//can handover on any distance
-  adventurers["navigator"] = new MAdventurer("navigator", "castle");//can move other adventurer on one or two areas
-  adventurers["diver"] = new MAdventurer("diver", "lake");//can move on any number abfluss or none areas
+  adventurers = {{"explorer", new MAdventurer("explorer", "copper_gate")},//can diag move or abfluss - green
+    {"pilot", new MAdventurer("pilot", "adventurers_circle")},//one time can move anywhere - blue
+    {"engineer", new MAdventurer("engineer", "bronze_gate")},//can abluss one or two areas - red
+    {"liaison", new MAdventurer("liaison", "silver_gate")},//can handover on any distance - grey
+    {"navigator", new MAdventurer("navigator", "golden_gate")},//can move other adventurer on one or two areas - yellow
+    {"diver", new MAdventurer("diver", "iron_gate")}};//can move on any number abfluss or none areas - black
 
-  artifacts["crystall"] = new MArtifact("crystall", "gate", "house");
-  artifacts["sphere"] = new MArtifact("sphere", "monastary", "cavern");
-  artifacts["cube"] = new MArtifact("cube", "plato", "port");
-  artifacts["key"] = new MArtifact("key", "hole", "factory");
+  artifacts = {{"crystal", new MArtifact("crystal", "fire_cave", "cave_of_shadows")},
+    {"sphere", new MArtifact("sphere", "temple_of_the_sun", "temple_of_the_moon")},
+    {"lion", new MArtifact("lion", "whispering_garden", "howling_garden")},
+    {"bowl", new MArtifact("bowl", "tidal_castle", "coral_castle")}};
 
   //artifact cards
   for(moi moit = artifacts.begin(); moit != artifacts.end(); moit++) {
@@ -558,15 +548,54 @@ MProcessor::MProcessor():extractionArea("plato") {
     floodCards[moit->first] = new MCard(moit->first);
   }
 
-  actionsSwitches["move"] = ACT_MOVE;
-  actionsSwitches["abfluss"] = ACT_ABFLUSS;
-  actionsSwitches["skip"] = ACT_SKIP;
-  actionsSwitches["handover"] = ACT_HANDOVER;
-  actionsSwitches["getartifact"] = ACT_GETARTIFACT;
-  actionsSwitches["fly"] = ACT_FLY;
-  actionsSwitches["moveother"] = ACT_MOVEOTHER;
-  actionsSwitches["swim"] = ACT_SWIM;
-  actionsSwitches["extract"] = ACT_EXTRACT;
+  actionsSwitches = {{"move", ACT_MOVE},
+    {"abfluss", ACT_ABFLUSS},
+    {"skip", ACT_SKIP},
+    {"handover", ACT_HANDOVER},
+    {"getartifact", ACT_GETARTIFACT},
+    {"fly", ACT_FLY},
+    {"moveother", ACT_MOVEOTHER},
+    {"swim", ACT_SWIM},
+    {"extract", ACT_EXTRACT}};
+}
+MProcessor::~MProcessor() {
+    FreeConsole();
+
+    functions.clear();
+    vargs.clear();
+    sargs.clear();
+    for (moi moit = areas.begin(); moit != areas.end(); moit++) {
+        if (moit->second) delete moit->second;
+    }
+    areas.clear();
+    for (moi moit = adventurers.begin(); moit != adventurers.end(); moit++) {
+        if (moit->second) delete moit->second;
+    }
+    adventurers.clear();
+    for (moi moit = itemCards.begin(); moit != itemCards.end(); moit++) {
+        if (moit->second) delete moit->second;
+    }
+    itemCards.clear();
+    for (moi moit = floodCards.begin(); moit != floodCards.end(); moit++) {
+        if (moit->second) delete moit->second;
+    }
+    floodCards.clear();
+    for (moi moit = artifacts.begin(); moit != artifacts.end(); moit++) {
+        if (moit->second) delete moit->second;
+    }
+    artifacts.clear();
+
+    if (ui) delete ui;
+
+    itemDeck.clear();
+    itemDropDeck.clear();
+    floodDeck.clear();
+    floodDropDeck.clear();
+    floodOutDeck.clear();
+    activeAdventurers.clear();
+    collectedArtifacts.clear();
+    usedActions.clear();
+    actionsSwitches.clear();
 }
 bool MProcessor::looseCheck() {
   int num;
@@ -604,47 +633,10 @@ bool MProcessor::looseCheck() {
 
   return false;
 }
-MProcessor::~MProcessor() {
-  m.clear();
-  vargs.clear();
-  sargs.clear();
-  for(moi moit = areas.begin(); moit != areas.end(); moit++) {
-    if(moit->second) delete moit->second;
-  }
-  areas.clear();
-  for(moi moit = adventurers.begin(); moit != adventurers.end(); moit++) {
-    if(moit->second) delete moit->second;
-  }
-  adventurers.clear();
-  for(moi moit = itemCards.begin(); moit != itemCards.end(); moit++) {
-    if(moit->second) delete moit->second;
-  }
-  itemCards.clear();
-  for(moi moit = floodCards.begin(); moit != floodCards.end(); moit++) {
-    if(moit->second) delete moit->second;
-  }
-  floodCards.clear();
-  for(moi moit = artifacts.begin(); moit != artifacts.end(); moit++) {
-    if(moit->second) delete moit->second;
-  }
-  artifacts.clear();
-
-  if(ui) delete ui;
-
-  itemDeck.clear();
-  itemDropDeck.clear();
-  floodDeck.clear();
-  floodDropDeck.clear();
-  floodOutDeck.clear();
-  activeAdventurers.clear();
-  collectedArtifacts.clear();
-  usedActions.clear();
-  actionsSwitches.clear();
-}
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {
   parseArgs(_sargs);
-  std::map<std::string, bptr>::iterator mit = m.find(name);
-  if(mit == m.end()) {
+  std::map<std::string, bptr>::iterator mit = functions.find(name);
+  if(mit == functions.end()) {
     std::cout<<"Function ["<<name<<"] not found!"<<std::endl;
     return false;
   }
@@ -652,14 +644,15 @@ bool MProcessor::execFunction(const std::string& name, const std::string& _sargs
 }
 bool MProcessor::tryMomentCard(MAdventurer* adventurer) {
   MCard* card;
+  bool used = false;
   std::vector<MCard*> cards = adventurer->getMomentCards();
-  if(!cards.empty()) {
-    while(ui->askQuestion("Whould you like to use moment card?") == true) {
-	  card = ui->selectCard(cards);
-      return execFunction("usecard", adventurer->getName() + " " + card->getName());
-    }
+  if(cards.empty()) return false;
+  while(ui->askQuestion("Whould you like to use moment card?") == true) {
+    used = true;
+	card = ui->selectCard(cards);
+    execFunction("usecard", adventurer->getName() + " " + card->getName());
   }
-  return false;
+  return used;
 }
 void MProcessor::getSwimAreas(MArea* area, std::vector<std::string>& result, int level) {
   level ++;
@@ -873,6 +866,7 @@ bool MProcessor::run() {
 	  std::cout<<"[Adventurer] "<<adventurer->getName()<<" 3 actions"<<std::endl;
 	  std::cout<<"  "<<adventurer->getArea()->getName()<<std::endl;
 	  for(int j=0; j < 3; j++) {
+        tryMomentCard(adventurer);//in theory here any adventurer can use moment items
         std::cout<<"Select action:"<<std::endl;
 	    action = ui->select(getAvailableActions(adventurer));
 	    param = getActionParams(adventurer, action);
@@ -896,4 +890,18 @@ bool MProcessor::run() {
     }
     i ++;
   }
+}
+
+void MProcessor::createConsole() {
+  if (!AllocConsole()) {
+    return;
+  }
+  FILE* fDummy;
+  freopen_s(&fDummy, "CONOUT$", "w", stdout);
+  freopen_s(&fDummy, "CONOUT$", "w", stderr);
+  freopen_s(&fDummy, "CONIN$", "r", stdin);
+  std::cout.clear();
+  std::clog.clear();
+  std::cerr.clear();
+  std::cin.clear();
 }
