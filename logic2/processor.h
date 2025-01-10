@@ -96,6 +96,7 @@ public:
   ~MProcessor();
   bool execFunction(const std::string& name, const std::string& _sargs="");
   bool run();
+  std::map<std::string, MObject*> getAreas();
 };
 
 #endif

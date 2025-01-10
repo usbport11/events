@@ -905,3 +905,7 @@ void MProcessor::createConsole() {
   std::cerr.clear();
   std::cin.clear();
 }
+
+std::map<std::string, MObject*> MProcessor::getAreas() {
+    return areas;
+}
