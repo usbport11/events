@@ -3,23 +3,31 @@
 
 #include "cocos2d.h"
 
+class MMainScene;
+
 class MGridMap {
 private:
     float scale;
+    MMainScene* pMainScene;
     cocos2d::Size offset;
     cocos2d::Rect gridRect;
-    cocos2d::Vec2 cellsCount;
+    int gridSize;
+    int spritesNumber;
     cocos2d::Size cellSize;
     cocos2d::Size halfSize;
     cocos2d::Vec2 currentCell;
+    std::map<std::string, std::string> areaSprite;
+    std::map<int, cocos2d::Sprite*> cellSprite;
 public:
     MGridMap();
+    ~MGridMap();
     cocos2d::Vec2 getCellUnderMouse(cocos2d::Event* event);
     cocos2d::Vec2 getCoordsByCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 sign(cocos2d::Vec2 vec);
-    bool create(cocos2d::Scene* scene, const std::string& plistFile, cocos2d::Size _cellsCount, cocos2d::Size _offset, cocos2d::Size _cellSize);
+    bool create(MMainScene* _pMainScene, const std::string& plistFile, int gridSize, int spritesNumber, cocos2d::Size _offset, cocos2d::Size _cellSize);
+    bool init();
     bool cellCheck(cocos2d::Vec2 cell);
-    cocos2d::Vec2 getCellsCount();
+    int getGridSize();
     cocos2d::Vec2 getNewPoint(int x, int y);
     void setCurrentCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 getCurrentCell();

@@ -1,5 +1,5 @@
 #include "AppDelegate.h"
-#include "HelloWorldScene.h"
+#include "MainScene.h"
 
 // #define USE_AUDIO_ENGINE 1
 
@@ -60,7 +60,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     register_all_packages();
 
-    auto scene = HelloWorld::createScene();
+    auto scene = MMainScene::createScene();
     if (!scene) return false;
     director->runWithScene(scene);
 

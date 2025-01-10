@@ -9,6 +9,8 @@ class MMenu {
 private:
 	cocos2d::Scene* pScene;
 	MGridMap* pGridMap;
+	const std::string mask;
+	const std::string name;
 	void menuAbflussCallback(cocos2d::Ref* pSender);
 	void menuEndTurnCallback(cocos2d::Ref* pSender);
 	void menuMoveCallback(cocos2d::Ref* pSender);

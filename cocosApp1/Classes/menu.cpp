@@ -2,7 +2,7 @@
 #include "gridMap.h"
 #include "MenuItemImageExt.h"
 
-MMenu::MMenu() {
+MMenu::MMenu():mask("cell%d"),name("MainMenu") {//cell_%d_%d
 	pScene = nullptr;
 	pGridMap = nullptr;
 }
@@ -20,14 +20,16 @@ void MMenu::menuEndTurnCallback(cocos2d::Ref* pSender) {
 
 void MMenu::menuMoveCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
+    /*
     //highlight available cells
     char buffer[16] = {0};
     cocos2d::Vec2 curr = pGridMap->getCurrentCell();
 
     //clear alredy higlighted
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            snprintf(buffer, 16, "cell_%d_%d", i, j);
+    for (int i = 0; i < (int)pGridMap->getCellsCount().x; i++) {
+        for (int j = 0; j < (int)pGridMap->getCellsCount().y; j++) {
+            //snprintf(buffer, 16, mask.c_str(), i, j);
+            snprintf(buffer, 16, mask.c_str(), i * (int)pGridMap->getCellsCount().x + j);
             cocos2d::Sprite* sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
             if (!sp) continue;
             sp->setColor(cocos2d::Color3B(255, 255, 255));
@@ -35,16 +37,18 @@ void MMenu::menuMoveCallback(cocos2d::Ref* pSender) {
     }
 
     //hightlight needed
-    int ind[4][2] = { {-1,0},{1,0},{0,-1},{0, 1} };
+    const int ind[4][2] = {{-1,0},{1,0},{0,-1},{0, 1}};
     for (int i = 0; i<4; i++) {
         memset(buffer, 0, 16);
         cocos2d::Vec2 neigh = curr + cocos2d::Vec2(ind[i][0], ind[i][1]);
         if (neigh.x < 0 || neigh.y < 0 || neigh.x >= 4 || neigh.y >= 4) continue;
-        snprintf(buffer, 16, "cell_%d_%d", (int)neigh.x, (int)neigh.y);
+        //snprintf(buffer, 16, mask.c_str(), (int)neigh.x, (int)neigh.y);
+        snprintf(buffer, 16, mask.c_str(), (int)neigh.x * (int)pGridMap->getCellsCount().x + (int)neigh.y);
         cocos2d::Sprite* sp = (cocos2d::Sprite*) pScene->getChildByName(buffer);
         if (!sp) continue;
         sp->setColor(cocos2d::Color3B(0, 255, 0));
     }
+    */
 }
 
 void MMenu::menuHandOverCallback(cocos2d::Ref* pSender) {
@@ -100,7 +104,7 @@ bool MMenu::create(cocos2d::Scene* _pScene, MGridMap* _pGridMap) {
         return false;
     }
     menu->setPosition(Vec2::ZERO);
-    menu->setName("MainMenu");
+    menu->setName(name);
     pScene->addChild(menu, 1);
     menuCallback.clear();
 
@@ -108,7 +112,7 @@ bool MMenu::create(cocos2d::Scene* _pScene, MGridMap* _pGridMap) {
 }
 
 void MMenu::unselectMenuAll() {
-    cocos2d::Node* node = pScene->getChildByName("MainMenu");
+    cocos2d::Node* node = pScene->getChildByName(name);
     cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
     for (int i = 0; i < items.size(); i++) {
         items.at(i)->setColor(cocos2d::Color3B(255, 255, 255));
