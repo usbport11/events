@@ -22,13 +22,20 @@ private:
     MHand hand;
     MMenu menu;
     std::vector<NVector2> path;
+    int gridSize;
+    std::map<std::string, std::string> cardFrame;
 
     cocos2d::Vec2 speed;
     bool moving;
     void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
 
+    bool initVisual();
+
 public:
     MProcessor* getProcessor();
+    bool initAreas();
+    bool initAdventurers();
+    bool initHand();
 
     static cocos2d::Scene* createScene();
     virtual bool init();

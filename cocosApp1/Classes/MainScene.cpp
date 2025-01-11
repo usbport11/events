@@ -1,6 +1,10 @@
 #include "MainScene.h"
 #include "MenuItemImageExt.h"
 #include "utils.h"
+#include "logic/area.h"
+#include "logic/adventurer.h"
+#include "logic/card.h"
+#include <iostream>
 
 USING_NS_CC;
 
@@ -12,31 +16,89 @@ MProcessor* MMainScene::getProcessor() {
     return &processor;
 }
 
-bool MMainScene::init() {
-    if(!Scene::init()) {
-        return false;
+bool MMainScene::initAreas() {
+    MArea* area;
+    cocos2d::Sprite* sp;
+    std::map<std::string, MObject*> areas = processor.getAreas();
+    cocos2d::Color3B blue = cocos2d::Color3B(96, 96, 255);
+    cocos2d::Color3B white = cocos2d::Color3B(255, 255, 255);
+    cocos2d::Color3B black = cocos2d::Color3B(0, 0, 0);
+    for (std::map<std::string, MObject*>::iterator it = areas.begin(); it != areas.end(); it++) {
+        area = (MArea*)it->second;
+        if (!area) {
+            return false;
+        }
+        sp = gridMap.getSpriteByCell(area->getIndex()[0], area->getIndex()[1]);
+        if (!sp) {
+            return false;
+        }
+        switch (area->getFloodLevel()) {
+        case 0:
+            sp->setVisible(true);
+            sp->setColor(white);
+            pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
+            break;
+        case 1:
+            sp->setVisible(true);
+            sp->setColor(blue);
+            pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
+            break;
+        case 2:
+            sp->setVisible(false);
+            pg.addCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
+            break;
+        }
+    }
+}
+
+bool MMainScene::initAdventurers() {
+    std::vector<std::string> adventurers = processor.getActiveAdventurers();
+    for (int i = 0; i < adventurers.size(); i++) {
+        MAdventurer* adventurer = processor.findAdventurer(adventurers[i]);
+        if (!adventurer) return false;
+        MArea* area = processor.findArea(adventurer->getStartArea());
+        if (!area) return false;
+        cocos2d::Sprite* sp = gridMap.getSpriteByCell(area->getIndex()[0], area->getIndex()[1]);
+        if (!sp) return false;
+        this->getChildByName("anim_fox")->setPosition(sp->getPosition());
+        this->getChildByName("anim_fox")->setVisible(true);
+        gridMap.setCurrentCell(gridMap.getCellByCoordinates(sp->getPosition()));
+        break;
+    }
+    return true;
+}
+
+bool MMainScene::initHand() {
+    cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+    if (!cache) return false;
+
+    std::string handMask = "hand%d";
+    char buffer[16];
+    cocos2d::Sprite* sp;
+
+    //clear hand
+    for (int i = 0; i < 5; i++) {
+        memset(buffer, 0, 16);
+        sprintf(buffer, handMask.c_str(), i);
+        sp = (cocos2d::Sprite*)this->getChildByName(buffer);
+        cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName("card1");
+        if (sp && frame) sp->setSpriteFrame(frame);
     }
 
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+    //fill hand
+    std::vector<std::string> adventurers = processor.getActiveAdventurers();
+    MAdventurer* adventurer = processor.findAdventurer(adventurers[0]);
+    std::vector<MCard*> cards = adventurer->getAllCards();
+    for (int i = 0; i < cards.size(); i++) {
+        memset(buffer, 0, 16);
+        sprintf(buffer, handMask.c_str(), i);
+        sp = (cocos2d::Sprite*)this->getChildByName(buffer);
+        cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName(cardFrame[cards[i]->getName()]);
+        if (sp && frame) sp->setSpriteFrame(frame);
+    }
+}
 
-    speed = cocos2d::Vec2(2, 2);
-    moving = false;
-
-    cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
-    mouseListener->onMouseMove = CC_CALLBACK_1(MMainScene::onMouseMove, this);
-    mouseListener->onMouseDown = CC_CALLBACK_1(MMainScene::onMouseDown, this);
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
-
-    cocos2d::EventListenerKeyboard* keybordListener = EventListenerKeyboard::create();
-    keybordListener->onKeyPressed = CC_CALLBACK_2(MMainScene::onKeyPressed, this);
-    keybordListener->onKeyReleased = CC_CALLBACK_2(MMainScene::onKeyReleased, this);
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
-
-    //logic
-    if (!processor.execFunction("start")) return false;
-
-    //graphic
+bool MMainScene::initVisual() {
     if (!createAnimSpriteFromPlist(this, "anim/out.plist", "selection", "pt", 4, 0.2f)) {
         return false;
     }
@@ -46,7 +108,8 @@ bool MMainScene::init() {
     if (!createAnimSpriteFromPlist(this, "anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
         return false;
     }
-    this->getChildByName("anim_fox")->setPosition(332, 332);//300 + 32
+    this->getChildByName("anim_fox")->setPosition(394, 332);//200 + 48*3
+    this->getChildByName("anim_fox")->setVisible(false);
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
@@ -110,24 +173,91 @@ bool MMainScene::init() {
     if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards)) return false;
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
 
-    if (!gridMap.create(this, "anim/cells.plist", 6, 24, cocos2d::Size(200, 200), cocos2d::Size(96, 96))) return false;
-    if (!gridMap.init()) return false;
-    gridMap.setCurrentCell(cocos2d::Vec2(1, 1));//need make nicer
-    pg.setWorldSize(NVector2(gridMap.getGridSize(), gridMap.getGridSize()));
+    pg.setWorldSize(NVector2(gridSize, gridSize));
     pg.setDiagonalMovement(false);
+    //need make nicer (in sitaution when map is not standard type)
     for (int i = 0; i < 2; i++) {
         //x
-        pg.addCollision(NVector2(5 * i - 0, 0));
-        pg.addCollision(NVector2(5 * i - 0, 1));
-        pg.addCollision(NVector2(5 * i - 1, 0));
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, 0));
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, 1));
+        pg.addCollision(NVector2((gridSize - 1) * i - 1, 0));
         //y
-        pg.addCollision(NVector2(5 * i - 0, 5));
-        pg.addCollision(NVector2(5 * i - 1, 5));
-        pg.addCollision(NVector2(5 * i - 0, 4));
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 1)));
+        pg.addCollision(NVector2((gridSize - 1) * i - 1, (gridSize - 1)));
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 2)));
     }
 
-    if(!hand.create(this, 5, "hand%d", "card1", cocos2d::Vec2(160, 100))) return false;
-    //if(!menu.create(this, &gridMap)) return false;
+    if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
+
+    if (!hand.create(this, 5, "hand%d", "card1", cocos2d::Vec2(160, 100))) return false;
+    if (!menu.create(this, &gridMap)) return false;
+
+    cardFrame = { {"crystal0", "card5"},
+        {"crystal1", "card5"},
+        {"crystal2", "card5"},
+        {"crystal3", "card5"},
+        {"crystal4", "card5"},
+        {"sphere0", "card3"},
+        {"sphere1", "card3"},
+        {"sphere2", "card3"},
+        {"sphere3", "card3"},
+        {"sphere4", "card3"},
+        {"lion0", "card4"},
+        {"lion1", "card4"},
+        {"lion2", "card4"},
+        {"lion3", "card4"},
+        {"lion4", "card4"},
+        {"bowl0", "card2"},
+        {"bowl1", "card2"},
+        {"bowl2", "card2"},
+        {"bowl3", "card2"},
+        {"bowl4", "card2"},
+        {"helicopter0", "card8"},
+        {"helicopter1", "card8"},
+        {"sandbag0", "card7"},
+        {"sandbag1", "card7"},
+        {"flood0", "card6"},
+        {"flood1", "card6"},
+        {"flood2", "card6"} };
+
+    return true;
+}
+
+bool MMainScene::init() {
+    if(!Scene::init()) {
+        return false;
+    }
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+    speed = cocos2d::Vec2(2, 2);
+    moving = false;
+    gridSize = 6;
+
+    cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
+    mouseListener->onMouseMove = CC_CALLBACK_1(MMainScene::onMouseMove, this);
+    mouseListener->onMouseDown = CC_CALLBACK_1(MMainScene::onMouseDown, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
+
+    cocos2d::EventListenerKeyboard* keybordListener = EventListenerKeyboard::create();
+    keybordListener->onKeyPressed = CC_CALLBACK_2(MMainScene::onKeyPressed, this);
+    keybordListener->onKeyReleased = CC_CALLBACK_2(MMainScene::onKeyReleased, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
+
+    //logic
+    if (!processor.execFunction("start")) return false;
+    //visual
+    if (!initVisual()) return false;
+
+    //start
+    if (!gridMap.init()) return false;
+    initAreas();
+    initAdventurers();
+    initHand();
+    //set flood deck - show last top card
+    std::deque<std::string> floodDropDeck = processor.getFloodDropDeck();
+    std::cout << "Top card at flood drop deck: "<< floodDropDeck.front() <<std::endl;
 
     this->scheduleUpdate();
 
@@ -195,8 +325,8 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
 
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (keyCode == EventKeyboard::KeyCode::KEY_N) {
-        itemDeck.nextCard();
-        floodDeck.nextCard();
+        //itemDeck.nextCard();
+        //floodDeck.nextCard();
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
         itemDeck.reset();
@@ -204,6 +334,12 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         waterLevel.reset();
         if(!processor.execFunction("start")) return;
         if(!gridMap.init()) return;
+        initAreas();
+        initAdventurers();
+        initHand();
+        //set flood deck - show last top card
+        std::deque<std::string> floodDropDeck = processor.getFloodDropDeck();
+        std::cout << "Top card at flood drop deck: " << floodDropDeck.front() << std::endl;
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_W) {
         waterLevel.increase();

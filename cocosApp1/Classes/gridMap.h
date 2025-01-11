@@ -22,6 +22,7 @@ public:
     MGridMap();
     ~MGridMap();
     cocos2d::Vec2 getCellUnderMouse(cocos2d::Event* event);
+    cocos2d::Vec2 getCellByCoordinates(cocos2d::Vec2 coordinates);
     cocos2d::Vec2 getCoordsByCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 sign(cocos2d::Vec2 vec);
     bool create(MMainScene* _pMainScene, const std::string& plistFile, int gridSize, int spritesNumber, cocos2d::Size _offset, cocos2d::Size _cellSize);
@@ -31,6 +32,7 @@ public:
     cocos2d::Vec2 getNewPoint(int x, int y);
     void setCurrentCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 getCurrentCell();
+    cocos2d::Sprite* getSpriteByCell(int x, int y);
 };
 
 #endif

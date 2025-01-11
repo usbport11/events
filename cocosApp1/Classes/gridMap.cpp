@@ -125,7 +125,11 @@ bool MGridMap::init() {
 
 cocos2d::Vec2 MGridMap::getCellUnderMouse(cocos2d::Event* event) {
     cocos2d::EventMouse* e = (cocos2d::EventMouse*)event;
-    cocos2d::Vec2 cell = cocos2d::Vec2(e->getCursorX(), e->getCursorY());
+    return getCellByCoordinates(cocos2d::Vec2(e->getCursorX(), e->getCursorY()));
+}
+
+cocos2d::Vec2 MGridMap::getCellByCoordinates(cocos2d::Vec2 coordinates) {
+    cocos2d::Vec2 cell = coordinates;
     int pos;
     if (gridRect.containsPoint(cell)) {
         cell = cocos2d::Vec2((int)((cell.x - offset.width) / cellSize.width), (int)((cell.y - offset.height) / cellSize.height));
@@ -166,4 +170,12 @@ void MGridMap::setCurrentCell(cocos2d::Vec2 cell) {
 
 cocos2d::Vec2 MGridMap::getCurrentCell() {
     return currentCell;
+}
+
+cocos2d::Sprite* MGridMap::getSpriteByCell(int x, int y) {
+    int pos = x * gridSize + y;
+    if (cellSprite.find(pos) != cellSprite.end()) {
+        return cellSprite[pos];
+    }
+    return nullptr;
 }
