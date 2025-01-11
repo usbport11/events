@@ -21,6 +21,7 @@ private:
   typedef bool (MProcessor::*bptr)();
   typedef std::map<std::string, MObject*>::iterator moi;
 
+  bool adventureStarted;
   float floodLevel;
   int adventurerNumber;
   MCard* lastItemCard;
@@ -53,13 +54,6 @@ private:
   bool argsLessLimit(int num);
   void parseArgs(const std::string& _sargs);
   bool call(const std::string& name);
-
-  MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
-  MArea* findArea(const std::string& name);
-  MAdventurer* findAdventurer(const std::string& name);
-  MCard* findItemCard(const std::string& name);
-  MCard* findFloodCard(const std::string& name);
-  MArtifact* findActifact(const std::string& name);
 
   void randStartDeck(std::map<std::string, MObject*> cards, std::deque<std::string>& deck);
   void randDeck(std::deque<std::string>& deck);
@@ -96,7 +90,18 @@ public:
   ~MProcessor();
   bool execFunction(const std::string& name, const std::string& _sargs="");
   bool run();
+
+  MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
+  MArea* findArea(const std::string& name);
+  MAdventurer* findAdventurer(const std::string& name);
+  MCard* findItemCard(const std::string& name);
+  MCard* findFloodCard(const std::string& name);
+  MArtifact* findActifact(const std::string& name);
+
   std::map<std::string, MObject*> getAreas();
+  std::vector<std::string> getActiveAdventurers();
+  std::deque<std::string> getItemDropDeck();
+  std::deque<std::string> getFloodDropDeck();
 };
 
 #endif

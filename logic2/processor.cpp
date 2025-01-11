@@ -97,13 +97,15 @@ void MProcessor::randDeck(std::deque<std::string>& deck) {
 }
 void MProcessor::moveDeck(std::deque<std::string>& src, std::deque<std::string>& dest) {
   while(!src.empty()) {
-    dest.push_back(src.front());
+    //dest.push_back(src.front());
+    dest.push_front(src.front());
     src.pop_front();
   }
 }
 bool MProcessor::start() {
+  adventureStarted = false;
   floodLevel = 0;
-  adventurerNumber = 2;
+  adventurerNumber = 1;//2
   lastItemCard = nullptr;
 
   int startFloods = 6;
@@ -152,6 +154,7 @@ bool MProcessor::start() {
     }
     adv->setArea(area);
 	activeAdventurers.push_back(adv->getName());
+    std::cout << " Adventurer added: " << adv->getName() << " Main area: " << adv->getStartArea() << std::endl;
 	rndBaseStr.erase(rndBaseStr.begin() + rnd);
 	num ++;
   }
@@ -168,11 +171,14 @@ bool MProcessor::start() {
     if(!execFunction("getfloodcard", "")) return false;
   }
 
+  //at start there is peculiarity: flood card returened to deck
   std::cout<<"Get two cards by each adventurer"<<std::endl;
   for(int i=0; i<adventurerNumber; i++) {
     if(!execFunction("getitemcard", activeAdventurers[i])) return false;
     if(!execFunction("getitemcard", activeAdventurers[i])) return false;
   }
+  adventureStarted = true;
+
   return true;
 }
 bool MProcessor::move() {
@@ -222,9 +228,11 @@ bool MProcessor::flood() {
         if(!execFunction("move", adventurer->getName() + " " + (*neighbors.begin())->getName())) return false;
       }
     }
+    std::cout << "  Area " << area->getName() << " fully flooded. Moved to flood out deck" << std::endl;
     floodOutDeck.push_back(floodDeck.front());
   }
   else {
+    std::cout << "  Area " << area->getName() << " partly flooded. Moved to flood drop deck" << std::endl;
     floodDropDeck.push_back(floodDeck.front());
   }
   floodDeck.pop_front();
@@ -258,29 +266,42 @@ bool MProcessor::getItemCard() {
     moveDeck(itemDropDeck, itemDeck);
   }
 
+  //get card
   MCard* card = findItemCard(itemDeck.front());
   if(!card) return false;
+  //pop card
+  itemDeck.pop_front();
   std::cout<<"Get item card "<<card->getName()<<" by "<<vargs[0]<<std::endl;
+
   if(card->getType() == "item" || card->getType() == "artifact") {
     adventurer->addCard(card);
   }
 
   if(card->getType() == "flood") {
-    floodLevel += 0.5;
-    std::cout<<"  Flood level increase: "<<floodLevel<<std::endl;
-    if(lastItemCard) {
-      if(lastItemCard->getType() != "flood") {
-        randDeck(floodDropDeck);
-        moveDeck(floodDropDeck, floodDeck);
+      if (adventureStarted) {
+          floodLevel += 0.5;
+          std::cout << "  Flood level increase: " << floodLevel << std::endl;
+          if (lastItemCard) {
+              if (lastItemCard->getType() != "flood") {
+                  randDeck(floodDropDeck);
+                  moveDeck(floodDropDeck, floodDeck);
+              }
+          }
+          else {
+              randDeck(floodDropDeck);
+              moveDeck(floodDropDeck, floodDeck);
+          }
+          itemDropDeck.push_front(itemDeck.front());
       }
-    }
-    else {
-      randDeck(floodDropDeck);
-      moveDeck(floodDropDeck, floodDeck);
-    }
+      else {
+          std::cout << "  Found flood card at start game"<< std::endl;
+          std::cout << "  Get next card" << std::endl;
+          if (!execFunction("getitemcard", vargs[0])) return false;
+          std::cout << "  Return flood card (" << card->getName() << ") randomly back to items card" << std::endl;
+          itemDeck.push_back(card->getName());
+          randDeck(itemDeck);
+      }
   }
-  itemDropDeck.push_front(itemDeck.front());
-  itemDeck.pop_front();
 
   lastItemCard = card;
   return true;
@@ -539,7 +560,7 @@ MProcessor::MProcessor():extractionArea("adventurers_circle") {
     createItemCards(moit->first, "artifact", 5);
   }
   //ext cards
-  createItemCards("helicopter", "item", 2);
+  createItemCards("helicopter", "item", 2);//3?
   createItemCards("sandbag", "item", 2);
   createItemCards("flood", "flood", 3);
 
@@ -908,4 +929,16 @@ void MProcessor::createConsole() {
 
 std::map<std::string, MObject*> MProcessor::getAreas() {
     return areas;
+}
+
+std::vector<std::string> MProcessor::getActiveAdventurers() {
+    return activeAdventurers;
+}
+
+std::deque<std::string> MProcessor::getItemDropDeck() {
+    return itemDropDeck;
+}
+
+std::deque<std::string> MProcessor::getFloodDropDeck() {
+    return floodDropDeck;
 }
