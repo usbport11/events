@@ -229,11 +229,11 @@ bool MProcessor::flood() {
       }
     }
     std::cout << "  Area " << area->getName() << " fully flooded. Moved to flood out deck" << std::endl;
-    floodOutDeck.push_back(floodDeck.front());
+    floodOutDeck.push_front(floodDeck.front());
   }
   else {
     std::cout << "  Area " << area->getName() << " partly flooded. Moved to flood drop deck" << std::endl;
-    floodDropDeck.push_back(floodDeck.front());
+    floodDropDeck.push_front(floodDeck.front());
   }
   floodDeck.pop_front();
   std::cout<<"Flood: "<<vargs[0]<<std::endl;
