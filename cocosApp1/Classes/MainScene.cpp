@@ -117,15 +117,16 @@ bool MMainScene::initVisual() {
         return false;
     }
     this->getChildByName("anim_water")->setVisible(false);
+    //this->getChildByName("anim_water")->setPositionZ(1);
     cocos2d::Sprite* waterBack = Sprite::create("water_back.png");
     waterBack->setVisible(false);
     this->addChild(waterBack, 0, "water_back");
     cocos2d::Sprite* glass = Sprite::create("glass.png");
-    glass->setPosition(cocos2d::Vec2(964, 592));//464
-    glass->setScaleY(5.0);
+    //bad realization (must be calculated)
+    glass->setPosition(cocos2d::Vec2(964, 592));//592//624
+    glass->setScaleY(5);//5
     this->addChild(glass, 2);
-
-    if (!waterLevel.create(this, "anim_water", "water_back", cocos2d::Vec2(964, 464), cocos2d::Size(64, 64), 5)) return false;
+    if (!waterLevel.create(this, "anim_water", "water_back", cocos2d::Vec2(964, 464), cocos2d::Size(64, 64))) return false;//464 -> 592//496 -> 624
 
     tCardsMap itemCards = {
         {"itm_back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
@@ -219,6 +220,31 @@ bool MMainScene::initVisual() {
         {"flood0", "card6"},
         {"flood1", "card6"},
         {"flood2", "card6"} };
+    floodSprite = {
+        {"temple_of_the_moon", "fld_card0"},
+        {"temple_of_the_sun", "fld_card1"},
+        {"ghost_rock", "fld_card2"},
+        {"bridge_of_the_brave", "fld_card3"},
+        {"treacherous_dunes", "fld_card4"},
+        {"lost_lagoon", "fld_card5"},
+        {"fire_cave", "fld_card6"},
+        {"cave_of_shadows", "fld_card7"},
+        {"observatory", "fld_card8"},
+        {"twilight_hollow", "fld_card9"},
+        {"watchtower", "fld_card10"},
+        {"abandoned_cliffs", "fld_card11"},
+        {"whispering_garden", "fld_card12"},
+        {"howling_garden", "fld_card13"},
+        {"golden_gate", "fld_card14"},
+        {"adventurers_circle", "fld_card15"},
+        {"iron_gate", "fld_card16"},
+        {"scarlet_forest", "fld_card17"},
+        {"tidal_castle", "fld_card18"},
+        {"coral_castle", "fld_card19"},
+        {"bronze_gate", "fld_card20"},
+        {"silver_gate", "fld_card21"},
+        {"copper_gate", "fld_card22"},
+        {"foggy_marshes", "fld_card23"}};
 
     return true;
 }
@@ -258,6 +284,7 @@ bool MMainScene::init() {
     //set flood deck - show last top card
     std::deque<std::string> floodDropDeck = processor.getFloodDropDeck();
     std::cout << "Top card at flood drop deck: "<< floodDropDeck.front() <<std::endl;
+    floodDeck.setTopCard(floodSprite[floodDropDeck.front()]);
 
     this->scheduleUpdate();
 
@@ -340,6 +367,7 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         //set flood deck - show last top card
         std::deque<std::string> floodDropDeck = processor.getFloodDropDeck();
         std::cout << "Top card at flood drop deck: " << floodDropDeck.front() << std::endl;
+        floodDeck.setTopCard(floodSprite[floodDropDeck.front()]);
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_W) {
         waterLevel.increase();

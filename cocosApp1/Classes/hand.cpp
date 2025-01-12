@@ -30,7 +30,7 @@ bool MHand::create(cocos2d::Scene* _scene, int _limit, const std::string& _prefi
 
 	cocos2d::Label* labelHand = cocos2d::Label::createWithTTF("Hand", "fonts/Marker Felt.ttf", 24);
 	if (!labelHand) return false;
-	labelHand->setPosition(cocos2d::Vec2(position.x + 70 * limit/2, position.y + 70));
+	labelHand->setPosition(cocos2d::Vec2(position.x + 70 * limit/2 - 30, position.y + 70));
 	scene->addChild(labelHand);
 
 	cocos2d::Sprite* hand;
