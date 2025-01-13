@@ -104,8 +104,8 @@ void MProcessor::moveDeck(std::deque<std::string>& src, std::deque<std::string>&
 }
 bool MProcessor::start() {
   adventureStarted = false;
-  floodLevel = 0;
-  adventurerNumber = 1;//2
+  floodLevel = 2.1;
+  adventurersNumber = 1;//2
   lastItemCard = nullptr;
 
   int startFloods = 6;
@@ -139,7 +139,7 @@ bool MProcessor::start() {
   for(moi moit=adventurers.begin(); moit!=adventurers.end(); moit++) {
     rndBaseStr.push_back(moit->first);
   }
-  while(!rndBaseStr.empty() && num < adventurerNumber) {
+  while(!rndBaseStr.empty() && num < adventurersNumber) {
     distribute = std::uniform_int_distribution<int>(0, rndBaseStr.size()-1);
     rnd = distribute(rng);
     adv = findAdventurer(rndBaseStr[rnd]);
@@ -158,6 +158,8 @@ bool MProcessor::start() {
 	rndBaseStr.erase(rndBaseStr.begin() + rnd);
 	num ++;
   }
+  currentAdventurer = findAdventurer(activeAdventurers[0]);
+  if (!currentAdventurer) return false;
 
   std::cout<<"Random item deck and flood deck"<<std::endl;
   itemDropDeck.clear();
@@ -173,7 +175,7 @@ bool MProcessor::start() {
 
   //at start there is peculiarity: flood card returened to deck
   std::cout<<"Get two cards by each adventurer"<<std::endl;
-  for(int i=0; i<adventurerNumber; i++) {
+  for(int i=0; i< adventurersNumber; i++) {
     if(!execFunction("getitemcard", activeAdventurers[i])) return false;
     if(!execFunction("getitemcard", activeAdventurers[i])) return false;
   }
@@ -394,6 +396,21 @@ bool MProcessor::extract() {
   std::cout<<"extract!"<<std::endl;
   return true;
 }
+bool MProcessor::endTurn() {
+    if (argsLessLimit(1)) return false;
+    MAdventurer* adventurer = findAdventurer(vargs[0]);
+    if (!adventurer) return false;
+    for (int j = 0; j < 2; j++) {
+        if (!execFunction("getitemcard", vargs[0])) return false;
+    }
+    for (int j = 0; j < 2; j++) {
+        if (!execFunction("getfloodcard", vargs[0])) return false;
+    }
+    std::cout << "End turn by: " << vargs[0] << (int)currentAdventurer << std::endl;
+    changeCurrentAdventurer();
+    std::cout << "Next adventurer: " << currentAdventurer->getName() << (int)currentAdventurer << std::endl;
+    return true;
+}
 void MProcessor::createItemCards(const std::string& _name, const std::string& type, int number) {
   std::string name;
   char buff[4];
@@ -516,7 +533,8 @@ MProcessor::MProcessor():extractionArea("adventurers_circle") {
     {"fly", &MProcessor::fly},
     {"moveother", &MProcessor::moveOther},
     {"swim", &MProcessor::swim},
-    {"extract", &MProcessor::extract}};
+    {"extract", &MProcessor::extract},
+    {"endTurn", &MProcessor::endTurn}};
 
   areas = {{"tidal_castle", new MArea("tidal_castle")},
     {"coral_castle", new MArea("coral_castle")},
@@ -941,4 +959,24 @@ std::deque<std::string> MProcessor::getItemDropDeck() {
 
 std::deque<std::string> MProcessor::getFloodDropDeck() {
     return floodDropDeck;
+}
+
+MAdventurer* MProcessor::getCurrentAdventurer() {
+    return currentAdventurer;
+}
+
+float MProcessor::getFloodLevel() {
+    return floodLevel;
+}
+
+void MProcessor::changeCurrentAdventurer() {
+    int pos = 0;
+    for (int i = 0; i < activeAdventurers.size(); i++) {
+        if (activeAdventurers[i] == currentAdventurer->getName()) {
+            pos = i + 1;
+            break;
+        }
+    }
+    if (pos >= activeAdventurers.size()) pos = 0;
+    currentAdventurer = findAdventurer(activeAdventurers[pos]);
 }

@@ -23,8 +23,9 @@ private:
 
   bool adventureStarted;
   float floodLevel;
-  int adventurerNumber;
+  int adventurersNumber;
   MCard* lastItemCard;
+  MAdventurer* currentAdventurer;
 
   std::mt19937 rng;
   std::uniform_int_distribution<int> distribute;
@@ -74,6 +75,13 @@ private:
   bool moveOther();
   bool swim();
   bool extract();
+  bool endTurn();
+
+  MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
+  MCard* findItemCard(const std::string& name);
+  MCard* findFloodCard(const std::string& name);
+  MArtifact* findActifact(const std::string& name);
+  std::deque<std::string> getItemDropDeck();
 
   void createItemCards(const std::string& _name, const std::string& type, int number);
   bool initAreas();
@@ -84,6 +92,7 @@ private:
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
 
   void createConsole();
+  void changeCurrentAdventurer();
 
 public:
   MProcessor();
@@ -91,17 +100,14 @@ public:
   bool execFunction(const std::string& name, const std::string& _sargs="");
   bool run();
 
-  MObject* findObject(std::map<std::string, MObject*>& objects, const std::string& name);
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
-  MCard* findItemCard(const std::string& name);
-  MCard* findFloodCard(const std::string& name);
-  MArtifact* findActifact(const std::string& name);
 
   std::map<std::string, MObject*> getAreas();
   std::vector<std::string> getActiveAdventurers();
-  std::deque<std::string> getItemDropDeck();
   std::deque<std::string> getFloodDropDeck();
+  MAdventurer* getCurrentAdventurer();
+  float getFloodLevel();
 };
 
 #endif
