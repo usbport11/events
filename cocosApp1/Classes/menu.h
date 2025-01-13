@@ -3,11 +3,12 @@
 
 #include "cocos2d.h"
 
+class MMainScene;
 class MGridMap;
 
 class MMenu {
 private:
-	cocos2d::Scene* pScene;
+	MMainScene* pMainScene;
 	MGridMap* pGridMap;
 	const std::string mask;
 	const std::string name;
@@ -20,7 +21,7 @@ private:
 	void selectMenuItem(cocos2d::Ref* pSender);
 public:
 	MMenu();
-	bool create(cocos2d::Scene* _pScene, MGridMap* _pGrid);
+	bool create(MMainScene* _pMainScene, MGridMap* _pGrid);
 	~MMenu();
 };
 

@@ -54,8 +54,6 @@ bool MDeck::setCardNames(const std::string& _card, const std::string& _cardBack)
     return true;
 }
 
-
-
 void MDeck::setTopCard(const std::string& name) {
     cocos2d::Sprite* sp;
     if (lastName != "itm_no_right") {

@@ -16,7 +16,39 @@ MProcessor* MMainScene::getProcessor() {
     return &processor;
 }
 
-bool MMainScene::initAreas() {
+bool MMainScene::endTurn() {
+    //exec function
+    if(!processor.execFunction("endTurn", processor.getCurrentAdventurer()->getName())) return false;
+    //add two new item cards to hand
+    std::string handMask = "hand%d";
+    char buffer[16];
+    cocos2d::Sprite* sp;
+    cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+    cocos2d::SpriteFrame* frame;
+    if (!cache) return false;
+    std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
+    for (int i = 0; i < cards.size(); i++) {
+        frame = nullptr;
+        memset(buffer, 0, 16);
+        sprintf(buffer, handMask.c_str(), i);
+        sp = (cocos2d::Sprite*)this->getChildByName(buffer);
+        if(cardFrame.find(cards[i]->getName()) != cardFrame.end()) frame = cache->getSpriteFrameByName(cardFrame[cards[i]->getName()]);
+        if (sp && frame) sp->setSpriteFrame(frame);
+    }
+    //display top card at flood drop deck
+    if (!processor.getFloodDropDeck().empty()) floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
+    else floodDeck.reset();
+    //update areas
+    updateAreas();
+    //display name of next adventurer
+    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+    //update wather level (need to be in other place)
+    waterLevel.setCurrent(processor.getFloodLevel());
+    return true;
+}
+
+bool MMainScene::updateAreas() {
     MArea* area;
     cocos2d::Sprite* sp;
     std::map<std::string, MObject*> areas = processor.getAreas();
@@ -75,6 +107,7 @@ bool MMainScene::initHand() {
     std::string handMask = "hand%d";
     char buffer[16];
     cocos2d::Sprite* sp;
+    cocos2d::SpriteFrame* frame;
 
     //clear hand
     for (int i = 0; i < 5; i++) {
@@ -86,14 +119,14 @@ bool MMainScene::initHand() {
     }
 
     //fill hand
-    std::vector<std::string> adventurers = processor.getActiveAdventurers();
-    MAdventurer* adventurer = processor.findAdventurer(adventurers[0]);
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
     std::vector<MCard*> cards = adventurer->getAllCards();
     for (int i = 0; i < cards.size(); i++) {
+        frame = nullptr;
         memset(buffer, 0, 16);
         sprintf(buffer, handMask.c_str(), i);
         sp = (cocos2d::Sprite*)this->getChildByName(buffer);
-        cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName(cardFrame[cards[i]->getName()]);
+        if (cardFrame.find(cards[i]->getName()) != cardFrame.end()) frame = cache->getSpriteFrameByName(cardFrame[cards[i]->getName()]);
         if (sp && frame) sp->setSpriteFrame(frame);
     }
 }
@@ -117,7 +150,6 @@ bool MMainScene::initVisual() {
         return false;
     }
     this->getChildByName("anim_water")->setVisible(false);
-    //this->getChildByName("anim_water")->setPositionZ(1);
     cocos2d::Sprite* waterBack = Sprite::create("water_back.png");
     waterBack->setVisible(false);
     this->addChild(waterBack, 0, "water_back");
@@ -246,6 +278,12 @@ bool MMainScene::initVisual() {
         {"copper_gate", "fld_card22"},
         {"foggy_marshes", "fld_card23"}};
 
+    cocos2d::Label* advLabel = Label::createWithTTF("some_name", "fonts/Marker Felt.ttf", 24);
+    if (!advLabel) return false;
+    advLabel->setName("lblAdventurerName");
+    advLabel->setPosition(cocos2d::Vec2(100, 25));
+    this->addChild(advLabel);
+
     return true;
 }
 
@@ -278,13 +316,14 @@ bool MMainScene::init() {
 
     //start
     if (!gridMap.init()) return false;
-    initAreas();
+    updateAreas();
     initAdventurers();
     initHand();
-    //set flood deck - show last top card
-    std::deque<std::string> floodDropDeck = processor.getFloodDropDeck();
-    std::cout << "Top card at flood drop deck: "<< floodDropDeck.front() <<std::endl;
-    floodDeck.setTopCard(floodSprite[floodDropDeck.front()]);
+    floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
+
+    //show adventurer name
+    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
 
     this->scheduleUpdate();
 
@@ -361,13 +400,13 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         waterLevel.reset();
         if(!processor.execFunction("start")) return;
         if(!gridMap.init()) return;
-        initAreas();
+        updateAreas();
         initAdventurers();
         initHand();
-        //set flood deck - show last top card
-        std::deque<std::string> floodDropDeck = processor.getFloodDropDeck();
-        std::cout << "Top card at flood drop deck: " << floodDropDeck.front() << std::endl;
-        floodDeck.setTopCard(floodSprite[floodDropDeck.front()]);
+        floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
+        //show adventurer name
+        cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+        if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_W) {
         waterLevel.increase();

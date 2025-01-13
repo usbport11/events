@@ -31,12 +31,13 @@ private:
     void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
 
     bool initVisual();
-    bool initAreas();
+    bool updateAreas();
     bool initAdventurers();
     bool initHand();
 
 public:
     MProcessor* getProcessor();
+    bool endTurn();
 
     static cocos2d::Scene* createScene();
     virtual bool init();
