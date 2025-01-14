@@ -22,6 +22,7 @@
 #define ACT_MOVEOTHER 107
 #define ACT_SWIM 108
 #define ACT_EXTRACT 109
+#define ACT_ENDTURN 110
 
 bool MProcessor::argsLessLimit(int num) {
   return (vargs.size() < num);
@@ -152,9 +153,11 @@ bool MProcessor::start() {
       std::cout<<"Base area for adventurer not found"<<std::endl;
       return false;
     }
-    adv->setArea(area);
-	activeAdventurers.push_back(adv->getName());
-    std::cout << " Adventurer added: " << adv->getName() << " Main area: " << adv->getStartArea() << std::endl;
+    if(!execFunction("move", adv->getName() + " " + area->getName())) return false;
+    //adv->setArea(area);
+    //std::cout << " Adventurer added: " << adv->getName() << " Main area: " << adv->getStartArea() << std::endl;
+    activeAdventurers.push_back(adv->getName());
+    std::cout << " Adventurer " << adv->getName() << " added to active adventurers" << std::endl;
 	rndBaseStr.erase(rndBaseStr.begin() + rnd);
 	num ++;
   }
@@ -406,9 +409,9 @@ bool MProcessor::endTurn() {
     for (int j = 0; j < 2; j++) {
         if (!execFunction("getfloodcard", vargs[0])) return false;
     }
-    std::cout << "End turn by: " << vargs[0] << (int)currentAdventurer << std::endl;
+    std::cout << "End turn by: " << vargs[0] << std::endl;
     changeCurrentAdventurer();
-    std::cout << "Next adventurer: " << currentAdventurer->getName() << (int)currentAdventurer << std::endl;
+    std::cout << "Next adventurer: " << currentAdventurer->getName() << std::endl;
     return true;
 }
 void MProcessor::createItemCards(const std::string& _name, const std::string& type, int number) {
@@ -485,6 +488,7 @@ bool MProcessor::initAreas() {
       area = (MArea*)areas[rndBase[rnd]];
       area->setIndex(x, y);
 	  area->setFloodLevel(0);
+      area->removeAllNeighbors();
       rndBase.erase(rndBase.begin() + rnd);
       temp[num] = area;
     }
@@ -595,7 +599,8 @@ MProcessor::MProcessor():extractionArea("adventurers_circle") {
     {"fly", ACT_FLY},
     {"moveother", ACT_MOVEOTHER},
     {"swim", ACT_SWIM},
-    {"extract", ACT_EXTRACT}};
+    {"extract", ACT_EXTRACT},
+    {"endturn", ACT_ENDTURN}};
 }
 MProcessor::~MProcessor() {
     FreeConsole();
@@ -822,6 +827,7 @@ std::string MProcessor::getActionParams(MAdventurer* adventurer, std::string act
       return result;
     }
 	break;
+  case ACT_ENDTURN:
   case ACT_SKIP:
   case ACT_EXTRACT:
     return "";
@@ -979,4 +985,13 @@ void MProcessor::changeCurrentAdventurer() {
     }
     if (pos >= activeAdventurers.size()) pos = 0;
     currentAdventurer = findAdventurer(activeAdventurers[pos]);
+}
+
+MArea* MProcessor::getAreaByIndex(int x, int y) {
+    MArea* area;
+    for (std::map<std::string, MObject*>::iterator it = areas.begin(); it != areas.end(); it++) {
+        area = (MArea*)it->second;
+        if (area->getIndex()[0] == x && area->getIndex()[1] == y) return area;
+    }
+    return nullptr;
 }

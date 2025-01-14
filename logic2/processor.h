@@ -88,7 +88,7 @@ private:
   bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
   std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
-  std::string getActionParams(MAdventurer* adventurer, std::string action);
+  std::string getActionParams(MAdventurer* adventurer, std::string action);//console logic?
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
 
   void createConsole();
@@ -98,7 +98,7 @@ public:
   MProcessor();
   ~MProcessor();
   bool execFunction(const std::string& name, const std::string& _sargs="");
-  bool run();
+  bool run();//console logic
 
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
@@ -107,6 +107,7 @@ public:
   std::vector<std::string> getActiveAdventurers();
   std::deque<std::string> getFloodDropDeck();
   MAdventurer* getCurrentAdventurer();
+  MArea* getAreaByIndex(int x, int y);
   float getFloodLevel();
 };
 

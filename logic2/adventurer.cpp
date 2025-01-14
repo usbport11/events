@@ -85,3 +85,6 @@ std::vector<MCard*> MAdventurer::getArtifactCards(const std::string& name) {
   }
   return resCards;
 }
+bool MAdventurer::canUseDiagonal() {
+    return (getName() == "explorer");
+}

@@ -34,6 +34,7 @@ public:
   std::vector<MCard*> getAllCards();
   std::vector<MCard*> getMomentCards();
   std::vector<MCard*> getArtifactCards(const std::string& name="");
+  bool canUseDiagonal();
 };
 
 #endif
