@@ -131,11 +131,17 @@ cocos2d::Vec2 MGridMap::getCellUnderMouse(cocos2d::Event* event) {
 cocos2d::Vec2 MGridMap::getCellByCoordinates(cocos2d::Vec2 coordinates) {
     cocos2d::Vec2 cell = coordinates;
     int pos;
+    cocos2d::Sprite* sp;
     if (gridRect.containsPoint(cell)) {
         cell = cocos2d::Vec2((int)((cell.x - offset.width) / cellSize.width), (int)((cell.y - offset.height) / cellSize.height));
         pos = cell.x * gridSize + cell.y;
         if (cellSprite.find(pos) == cellSprite.end()) {
             cell = cocos2d::Vec2(-1, -1);
+        }
+        else {
+            if (!cellSprite.find(pos)->second->isVisible()) {
+                cell = cocos2d::Vec2(-1, -1);
+            }
         }
     }
     else {
@@ -176,6 +182,13 @@ cocos2d::Sprite* MGridMap::getSpriteByCell(int x, int y) {
     int pos = x * gridSize + y;
     if (cellSprite.find(pos) != cellSprite.end()) {
         return cellSprite[pos];
+    }
+    return nullptr;
+}
+
+cocos2d::Sprite* MGridMap::getSpriteByAreaName(const std::string& areaName) {
+    if (areaSprite.find(areaName) != areaSprite.end()) {
+       return (cocos2d::Sprite*)pMainScene->getChildByName(areaSprite[areaName]);
     }
     return nullptr;
 }

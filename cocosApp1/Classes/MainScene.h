@@ -13,6 +13,7 @@
 class MMainScene: public cocos2d::Scene {
 private:
     MProcessor processor;
+    std::string currentAction;
 
     MGridMap gridMap;
     MDeck itemDeck;
@@ -34,10 +35,13 @@ private:
     bool updateAreas();
     bool initAdventurers();
     bool initHand();
+    bool initPathGenerator();
 
 public:
     MProcessor* getProcessor();
+
     bool endTurn();
+    bool startMove();//start move instead move because it complex
 
     static cocos2d::Scene* createScene();
     virtual bool init();

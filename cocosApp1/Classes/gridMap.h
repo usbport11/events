@@ -33,6 +33,7 @@ public:
     void setCurrentCell(cocos2d::Vec2 cell);
     cocos2d::Vec2 getCurrentCell();
     cocos2d::Sprite* getSpriteByCell(int x, int y);
+    cocos2d::Sprite* getSpriteByAreaName(const std::string& areaName);
 };
 
 #endif

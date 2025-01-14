@@ -5,9 +5,8 @@
 #include "MenuItemImageExt.h"
 #include <iostream>
 
-MMenu::MMenu():mask("cell%d"),name("MainMenu") {//cell_%d_%d
+MMenu::MMenu():mask("cell%d"),name("MainMenu") {
 	pMainScene = nullptr;
-	pGridMap = nullptr;
 }
 
 MMenu::~MMenu() {
@@ -15,39 +14,41 @@ MMenu::~MMenu() {
 
 void MMenu::menuAbflussCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
-    std::cout << ">>Menu item 'abflus' selected" << std::endl;
+    std::cout << " [Menu] item 'abflus' selected" << std::endl;
 }
 
 void MMenu::menuEndTurnCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
-    std::cout << ">>Menu item 'endTurn' selected" << std::endl;
+    std::cout << " [Menu] item 'endTurn' selected" << std::endl;
     if (!pMainScene->endTurn()) {
-        std::cout << "Menu item 'endTurn' failed!" << std::endl;
+        std::cout << " [Menu] item 'endTurn' failed!" << std::endl;
     }
 }
 
 void MMenu::menuMoveCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
-    std::cout << ">>Menu item 'move' selected" << std::endl;
+    std::cout << " [Menu] item 'move' selected" << std::endl;
+    if (!pMainScene->startMove()) {
+        std::cout << " [Menu] item 'move' failed!" << std::endl;
+    }
 }
 
 void MMenu::menuHandOverCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
-    std::cout << ">>Menu item 'handOver' selected" << std::endl;
+    std::cout << " [Menu] item 'handOver' selected" << std::endl;
 }
 
 void MMenu::menuGetArtifactCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
-    std::cout << ">>Menu item 'getArtifact' selected" << std::endl;
+    std::cout << " [v] Menu item 'getArtifact' selected" << std::endl;
 }
 
-bool MMenu::create(MMainScene* _pMainScene, MGridMap* _pGridMap) {
-    if (!_pMainScene || !_pGridMap) {
+bool MMenu::create(MMainScene* _pMainScene) {
+    if (!_pMainScene) {
         return false;
     }
 
     pMainScene = _pMainScene;
-    pGridMap = _pGridMap;
 
     const std::string nameList[5] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact"};
     std::map<std::string, ccMenuCallback> menuCallback;

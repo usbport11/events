@@ -48,6 +48,24 @@ bool MMainScene::endTurn() {
     return true;
 }
 
+bool MMainScene::startMove() {
+    updateAreas();
+
+    cocos2d::Sprite* sp;
+    std::list<MArea*> areas = processor.getCurrentAdventurer()->getArea()->getDirectActiveNeighbors();
+    if (areas.empty()) return false;
+    for (std::list<MArea*>::iterator it = areas.begin(); it!= areas.end(); it++) {
+        sp = gridMap.getSpriteByAreaName((*it)->getName());
+        if (!sp) return false;
+        //coloring flooded area we are loosing flood status of area
+        sp->setColor(cocos2d::Color3B(128,255,128));
+    }
+    std::cout << " [MainScene] hightligh availble areas" << std::endl;
+    //set current action move
+    currentAction = "move";
+    return true;
+}
+
 bool MMainScene::updateAreas() {
     MArea* area;
     cocos2d::Sprite* sp;
@@ -131,6 +149,22 @@ bool MMainScene::initHand() {
     }
 }
 
+bool MMainScene::initPathGenerator() {
+    pg.clearCollisions();
+    //need make nicer (in sitaution when map is not standard type)
+    for (int i = 0; i < 2; i++) {
+        //x
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, 0));
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, 1));
+        pg.addCollision(NVector2((gridSize - 1) * i - 1, 0));
+        //y
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 1)));
+        pg.addCollision(NVector2((gridSize - 1) * i - 1, (gridSize - 1)));
+        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 2)));
+    }
+    return true;
+}
+
 bool MMainScene::initVisual() {
     if (!createAnimSpriteFromPlist(this, "anim/out.plist", "selection", "pt", 4, 0.2f)) {
         return false;
@@ -141,7 +175,7 @@ bool MMainScene::initVisual() {
     if (!createAnimSpriteFromPlist(this, "anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
         return false;
     }
-    this->getChildByName("anim_fox")->setPosition(394, 332);//200 + 48*3
+    this->getChildByName("anim_fox")->setPosition(0, 0);//(394, 332);//200 + 48*3
     this->getChildByName("anim_fox")->setVisible(false);
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
@@ -208,22 +242,11 @@ bool MMainScene::initVisual() {
 
     pg.setWorldSize(NVector2(gridSize, gridSize));
     pg.setDiagonalMovement(false);
-    //need make nicer (in sitaution when map is not standard type)
-    for (int i = 0; i < 2; i++) {
-        //x
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, 0));
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, 1));
-        pg.addCollision(NVector2((gridSize - 1) * i - 1, 0));
-        //y
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 1)));
-        pg.addCollision(NVector2((gridSize - 1) * i - 1, (gridSize - 1)));
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 2)));
-    }
 
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
     if (!hand.create(this, 5, "hand%d", "card1", cocos2d::Vec2(160, 100))) return false;
-    if (!menu.create(this, &gridMap)) return false;
+    if (!menu.create(this)) return false;
 
     cardFrame = { {"crystal0", "card5"},
         {"crystal1", "card5"},
@@ -297,7 +320,7 @@ bool MMainScene::init() {
 
     speed = cocos2d::Vec2(2, 2);
     moving = false;
-    gridSize = 6;
+    gridSize = 6;//need get from processor
 
     cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
     mouseListener->onMouseMove = CC_CALLBACK_1(MMainScene::onMouseMove, this);
@@ -309,21 +332,21 @@ bool MMainScene::init() {
     keybordListener->onKeyReleased = CC_CALLBACK_2(MMainScene::onKeyReleased, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
 
-    //logic
-    if (!processor.execFunction("start")) return false;
     //visual
-    if (!initVisual()) return false;
+    if (!initVisual()) return false; //need check this for some reasons
 
-    //start
+    if (!processor.execFunction("start")) return false;
     if (!gridMap.init()) return false;
+    initPathGenerator();
     updateAreas();
     initAdventurers();
     initHand();
     floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
-
+    //clear all collisions except standard one
     //show adventurer name
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+    currentAction = "";
 
     this->scheduleUpdate();
 
@@ -374,39 +397,46 @@ void MMainScene::onMouseMove(cocos2d::Event* event) {
 }
 
 void MMainScene::onMouseDown(cocos2d::Event* event) {
-    if (moving) {
-        return;
+    if (currentAction == "move") {
+        if (moving) {
+            return;
+        }
+        cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
+        if (!gridMap.cellCheck(cell)) {
+            return;
+        }
+        if (cell == gridMap.getCurrentCell()) {
+            return;
+        }
+        path.clear();
+        path = pg.findPath(NVector2(gridMap.getCurrentCell().x, gridMap.getCurrentCell().y), NVector2(cell.x, cell.y));
+        if (!processor.execFunction(currentAction, processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+            std::cout<<"[MainScene] failed to move adventurer!"<< std::endl;
+            return;
+        }
+        moving = true;
+        currentAction = "";//?
     }
-    cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
-    if (!gridMap.cellCheck(cell)) {
-        return;
-    }
-    if (cell == gridMap.getCurrentCell()) {
-        return;
-    }
-    path.clear(); 
-    path = pg.findPath(NVector2(gridMap.getCurrentCell().x, gridMap.getCurrentCell().y), NVector2(cell.x, cell.y));
-    moving = true;
 }
 
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
-    if (keyCode == EventKeyboard::KeyCode::KEY_N) {
-        //itemDeck.nextCard();
-        //floodDeck.nextCard();
-    }
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
         itemDeck.reset();
         floodDeck.reset();
         waterLevel.reset();
+
         if(!processor.execFunction("start")) return;
         if(!gridMap.init()) return;
+        initPathGenerator();
         updateAreas();
         initAdventurers();
         initHand();
         floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
+        //clear all collisions except standard one
         //show adventurer name
         cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
         if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+        currentAction = "";
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_W) {
         waterLevel.increase();

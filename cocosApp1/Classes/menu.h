@@ -9,7 +9,6 @@ class MGridMap;
 class MMenu {
 private:
 	MMainScene* pMainScene;
-	MGridMap* pGridMap;
 	const std::string mask;
 	const std::string name;
 	void menuAbflussCallback(cocos2d::Ref* pSender);
@@ -21,7 +20,7 @@ private:
 	void selectMenuItem(cocos2d::Ref* pSender);
 public:
 	MMenu();
-	bool create(MMainScene* _pMainScene, MGridMap* _pGrid);
+	bool create(MMainScene* _pMainScene);
 	~MMenu();
 };
 
