@@ -42,6 +42,7 @@ public:
 
     bool endTurn();
     bool startMove();//start move instead move because it complex
+    bool startAbfluss();//start abluss instead abluss because it complex
 
     static cocos2d::Scene* createScene();
     virtual bool init();

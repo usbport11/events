@@ -135,17 +135,25 @@ cocos2d::Vec2 MGridMap::getCellByCoordinates(cocos2d::Vec2 coordinates) {
     if (gridRect.containsPoint(cell)) {
         cell = cocos2d::Vec2((int)((cell.x - offset.width) / cellSize.width), (int)((cell.y - offset.height) / cellSize.height));
         pos = cell.x * gridSize + cell.y;
+        if (!areaLimit.empty()) {
+            for (int i = 0; i < areaLimit.size(); i++) {
+                if (areaLimit[i] == pos) {
+                    return cell;
+                }
+            }
+            return cocos2d::Vec2(-1, -1);
+        }
         if (cellSprite.find(pos) == cellSprite.end()) {
-            cell = cocos2d::Vec2(-1, -1);
+            return cocos2d::Vec2(-1, -1);
         }
         else {
             if (!cellSprite.find(pos)->second->isVisible()) {
-                cell = cocos2d::Vec2(-1, -1);
+                return cocos2d::Vec2(-1, -1);
             }
         }
     }
     else {
-        cell = cocos2d::Vec2(-1, -1);
+        return cocos2d::Vec2(-1, -1);
     }
     return cell;
 }
@@ -191,4 +199,12 @@ cocos2d::Sprite* MGridMap::getSpriteByAreaName(const std::string& areaName) {
        return (cocos2d::Sprite*)pMainScene->getChildByName(areaSprite[areaName]);
     }
     return nullptr;
+}
+
+void MGridMap::addAreaLimit(int pos) {
+    if (std::find(areaLimit.begin(), areaLimit.end(), pos) != areaLimit.end()) return;
+    areaLimit.push_back(pos);
+}
+void MGridMap::clearAreaLimit() {
+    areaLimit.clear();
 }

@@ -15,6 +15,9 @@ MMenu::~MMenu() {
 void MMenu::menuAbflussCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
     std::cout << " [Menu] item 'abflus' selected" << std::endl;
+    if (!pMainScene->startAbfluss()) {
+        std::cout << " [Menu] item 'abluss' failed!" << std::endl;
+    }
 }
 
 void MMenu::menuEndTurnCallback(cocos2d::Ref* pSender) {

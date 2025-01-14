@@ -18,6 +18,7 @@ private:
     cocos2d::Vec2 currentCell;
     std::map<std::string, std::string> areaSprite;
     std::map<int, cocos2d::Sprite*> cellSprite;
+    std::vector<int> areaLimit;
 public:
     MGridMap();
     ~MGridMap();
@@ -34,6 +35,8 @@ public:
     cocos2d::Vec2 getCurrentCell();
     cocos2d::Sprite* getSpriteByCell(int x, int y);
     cocos2d::Sprite* getSpriteByAreaName(const std::string& areaName);
+    void addAreaLimit(int pos);
+    void clearAreaLimit();
 };
 
 #endif

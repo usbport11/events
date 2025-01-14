@@ -49,20 +49,66 @@ bool MMainScene::endTurn() {
 }
 
 bool MMainScene::startMove() {
+    pg.setDiagonalMovement(false);
+
     updateAreas();
+    gridMap.clearAreaLimit();
 
     cocos2d::Sprite* sp;
-    std::list<MArea*> areas = processor.getCurrentAdventurer()->getArea()->getDirectActiveNeighbors();
-    if (areas.empty()) return false;
+    std::list<MArea*> areas;
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return false;
+    if (adventurer->canUseDiagonal()) {
+        areas = adventurer->getArea()->getAllActiveNeighbors();
+        pg.setDiagonalMovement(true);
+    }
+    else areas = adventurer->getArea()->getDirectActiveNeighbors();
+    if (areas.empty()) {
+        currentAction = "";
+        std::cout << " [MainScene] no available to move areas" << std::endl;
+        return false;
+    }
     for (std::list<MArea*>::iterator it = areas.begin(); it!= areas.end(); it++) {
+        gridMap.addAreaLimit((*it)->getIndex()[0] * gridSize + (*it)->getIndex()[1]);
         sp = gridMap.getSpriteByAreaName((*it)->getName());
         if (!sp) return false;
         //coloring flooded area we are loosing flood status of area
         sp->setColor(cocos2d::Color3B(128,255,128));
     }
-    std::cout << " [MainScene] hightligh availble areas" << std::endl;
+    std::cout << " [MainScene] hightlight available to move areas" << std::endl;
     //set current action move
     currentAction = "move";
+    return true;
+}
+
+bool MMainScene::startAbfluss() {
+    updateAreas();
+    gridMap.clearAreaLimit();
+
+    cocos2d::Sprite* sp;
+    std::list<MArea*> areas;
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return false;
+    if (adventurer->canUseDiagonal()) {
+        areas = adventurer->getArea()->getAllFloodedNeighbors();
+    }
+    else areas = adventurer->getArea()->getDirectFloodedNeighbors();
+    if (areas.empty()) {
+        currentAction = "";
+        std::cout << " [MainScene] no available to abfluss areas" << std::endl;
+        return false;
+    }
+    for (std::list<MArea*>::iterator it = areas.begin(); it != areas.end(); it++) {
+        gridMap.addAreaLimit((*it)->getIndex()[0] * gridSize + (*it)->getIndex()[1]);
+        sp = gridMap.getSpriteByAreaName((*it)->getName());
+        if (!sp) return false;
+        //coloring flooded area we are loosing flood status of area
+        sp->setColor(cocos2d::Color3B(128, 255, 128));
+    }
+    std::cout << " [MainScene] hightlight available to abfluss areas" << std::endl;
+    //set current action move
+    currentAction = "abfluss";
+
     return true;
 }
 
@@ -397,10 +443,11 @@ void MMainScene::onMouseMove(cocos2d::Event* event) {
 }
 
 void MMainScene::onMouseDown(cocos2d::Event* event) {
-    if (currentAction == "move") {
-        if (moving) {
-            return;
-        }
+    cocos2d::EventMouse* mouseEvent = dynamic_cast<EventMouse*>(event);
+    if (!mouseEvent) return;
+
+    if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_LEFT) {
+        //prepare
         cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
         if (!gridMap.cellCheck(cell)) {
             return;
@@ -408,15 +455,33 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         if (cell == gridMap.getCurrentCell()) {
             return;
         }
-        path.clear();
-        path = pg.findPath(NVector2(gridMap.getCurrentCell().x, gridMap.getCurrentCell().y), NVector2(cell.x, cell.y));
-        if (!processor.execFunction(currentAction, processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
-            std::cout<<"[MainScene] failed to move adventurer!"<< std::endl;
-            return;
+        //actions
+        if (currentAction == "move") {
+            if (moving) {
+                return;
+            }
+            path.clear();
+            path = pg.findPath(NVector2(gridMap.getCurrentCell().x, gridMap.getCurrentCell().y), NVector2(cell.x, cell.y));
+            if (!processor.execFunction("move", processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+                std::cout << "[MainScene] failed to move adventurer!" << std::endl;
+                return;
+            }
+            moving = true;
         }
-        moving = true;
-        currentAction = "";//?
+        if (currentAction == "abfluss") {
+            if (!processor.execFunction("abfluss", processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+                std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
+                return;
+            }
+        }
     }
+    if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
+        pg.setDiagonalMovement(false);
+        updateAreas();
+        gridMap.clearAreaLimit();
+        menu.unselectMenuAll();
+    }
+    currentAction = "";//?
 }
 
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
@@ -429,6 +494,7 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         if(!gridMap.init()) return;
         initPathGenerator();
         updateAreas();
+        gridMap.clearAreaLimit();
         initAdventurers();
         initHand();
         floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);

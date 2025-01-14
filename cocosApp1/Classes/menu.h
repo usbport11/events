@@ -16,12 +16,12 @@ private:
 	void menuMoveCallback(cocos2d::Ref* pSender);
 	void menuHandOverCallback(cocos2d::Ref* pSender);
 	void menuGetArtifactCallback(cocos2d::Ref* pSender);
-	void unselectMenuAll();
 	void selectMenuItem(cocos2d::Ref* pSender);
 public:
 	MMenu();
-	bool create(MMainScene* _pMainScene);
 	~MMenu();
+	bool create(MMainScene* _pMainScene);
+	void unselectMenuAll();
 };
 
 #endif
