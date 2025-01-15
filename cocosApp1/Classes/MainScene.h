@@ -19,7 +19,7 @@ private:
     MDeck itemDeck;
     MDeck floodDeck;
     MWaterLevel waterLevel;
-    MPathGenerator pg;
+    //MPathGenerator pg;
     MHand hand;
     MMenu menu;
     std::vector<NVector2> path;
@@ -33,9 +33,10 @@ private:
 
     bool initVisual();
     bool updateAreas();
+    bool updateActionNumber();
     bool initAdventurers();
     bool initHand();
-    bool initPathGenerator();
+    //bool initPathGenerator();
 
 public:
     MProcessor* getProcessor();
@@ -43,6 +44,8 @@ public:
     bool endTurn();
     bool startMove();//start move instead move because it complex
     bool startAbfluss();//start abluss instead abluss because it complex
+    bool extrart();
+    bool skip();
 
     static cocos2d::Scene* createScene();
     virtual bool init();

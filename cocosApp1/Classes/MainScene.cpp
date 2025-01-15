@@ -18,7 +18,7 @@ MProcessor* MMainScene::getProcessor() {
 
 bool MMainScene::endTurn() {
     //exec function
-    if(!processor.execFunction("endTurn", processor.getCurrentAdventurer()->getName())) return false;
+    if(!processor.execFunction("endturn", processor.getCurrentAdventurer()->getName())) return false;
     //add two new item cards to hand
     std::string handMask = "hand%d";
     char buffer[16];
@@ -43,13 +43,23 @@ bool MMainScene::endTurn() {
     //display name of next adventurer
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
-    //update wather level (need to be in other place)
-    waterLevel.setCurrent(processor.getFloodLevel());
+
+    currentAction = "";
+   
     return true;
 }
 
 bool MMainScene::startMove() {
-    pg.setDiagonalMovement(false);
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
+    if (currentAction == "move") {
+        std::cout << "Can't action. Alredy selected" << std::endl;
+        return false;
+    }
+
+    //pg.setDiagonalMovement(false);
 
     updateAreas();
     gridMap.clearAreaLimit();
@@ -60,11 +70,11 @@ bool MMainScene::startMove() {
     if (!adventurer) return false;
     if (adventurer->canUseDiagonal()) {
         areas = adventurer->getArea()->getAllActiveNeighbors();
-        pg.setDiagonalMovement(true);
+        //pg.setDiagonalMovement(true);
     }
     else areas = adventurer->getArea()->getDirectActiveNeighbors();
     if (areas.empty()) {
-        currentAction = "";
+        //currentAction = "";
         std::cout << " [MainScene] no available to move areas" << std::endl;
         return false;
     }
@@ -76,12 +86,21 @@ bool MMainScene::startMove() {
         sp->setColor(cocos2d::Color3B(128,255,128));
     }
     std::cout << " [MainScene] hightlight available to move areas" << std::endl;
-    //set current action move
     currentAction = "move";
+
     return true;
 }
 
 bool MMainScene::startAbfluss() {
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
+    if (currentAction == "abfluss") {
+        std::cout << "Can't action. Alredy selected" << std::endl;
+        return false;
+    }
+
     updateAreas();
     gridMap.clearAreaLimit();
 
@@ -94,7 +113,7 @@ bool MMainScene::startAbfluss() {
     }
     else areas = adventurer->getArea()->getDirectFloodedNeighbors();
     if (areas.empty()) {
-        currentAction = "";
+        //currentAction = "";
         std::cout << " [MainScene] no available to abfluss areas" << std::endl;
         return false;
     }
@@ -106,8 +125,30 @@ bool MMainScene::startAbfluss() {
         sp->setColor(cocos2d::Color3B(128, 255, 128));
     }
     std::cout << " [MainScene] hightlight available to abfluss areas" << std::endl;
-    //set current action move
     currentAction = "abfluss";
+
+    return true;
+}
+
+bool MMainScene::extrart() {
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
+    //check extract can be used
+    //if (!processor.execFunction("extract")) return false;
+    currentAction = "";
+
+    return true;
+}
+bool MMainScene::skip() {
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
+
+    if (!processor.execFunction("skip", processor.getCurrentAdventurer()->getName())) return false;
+    currentAction = "";
 
     return true;
 }
@@ -132,19 +173,28 @@ bool MMainScene::updateAreas() {
         case 0:
             sp->setVisible(true);
             sp->setColor(white);
-            pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
+            //pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
             break;
         case 1:
             sp->setVisible(true);
             sp->setColor(blue);
-            pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
+            //pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
             break;
         case 2:
             sp->setVisible(false);
-            pg.addCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
+            //pg.addCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
             break;
         }
     }
+}
+
+bool MMainScene::updateActionNumber() {
+    cocos2d::Label* actLabel = (cocos2d::Label*)this->getChildByName("lblActionNumber");
+    if (!actLabel) return false;
+    char buffer[24] = { 0 };
+    sprintf(buffer, "Action: %d", processor.getCurrentActionNumber());
+    actLabel->setString(buffer);
+    return true;
 }
 
 bool MMainScene::initAdventurers() {
@@ -195,6 +245,7 @@ bool MMainScene::initHand() {
     }
 }
 
+/*
 bool MMainScene::initPathGenerator() {
     pg.clearCollisions();
     //need make nicer (in sitaution when map is not standard type)
@@ -210,6 +261,7 @@ bool MMainScene::initPathGenerator() {
     }
     return true;
 }
+*/
 
 bool MMainScene::initVisual() {
     if (!createAnimSpriteFromPlist(this, "anim/out.plist", "selection", "pt", 4, 0.2f)) {
@@ -286,8 +338,8 @@ bool MMainScene::initVisual() {
     if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards)) return false;
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
 
-    pg.setWorldSize(NVector2(gridSize, gridSize));
-    pg.setDiagonalMovement(false);
+    //pg.setWorldSize(NVector2(gridSize, gridSize));
+    //pg.setDiagonalMovement(false);
 
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
@@ -350,8 +402,14 @@ bool MMainScene::initVisual() {
     cocos2d::Label* advLabel = Label::createWithTTF("some_name", "fonts/Marker Felt.ttf", 24);
     if (!advLabel) return false;
     advLabel->setName("lblAdventurerName");
-    advLabel->setPosition(cocos2d::Vec2(100, 25));
+    advLabel->setPosition(100, 25);
     this->addChild(advLabel);
+
+    cocos2d::Label* actLabel = Label::createWithTTF("Action: 0", "fonts/Marker Felt.ttf", 24);
+    if (!actLabel) return false;
+    actLabel->setName("lblActionNumber");
+    actLabel->setPosition(250, 25);
+    this->addChild(actLabel);
 
     return true;
 }
@@ -383,7 +441,7 @@ bool MMainScene::init() {
 
     if (!processor.execFunction("start")) return false;
     if (!gridMap.init()) return false;
-    initPathGenerator();
+    //initPathGenerator();
     updateAreas();
     initAdventurers();
     initHand();
@@ -400,22 +458,9 @@ bool MMainScene::init() {
 }
 
 void MMainScene::update(float delta) {
-    if (moving) {
-        if (path.empty()) {
-            moving = false;
-        }
-        else {
-            NVector2 nv2 = path.front();
-            gridMap.setCurrentCell(cocos2d::Vec2((float)nv2.x, (float)nv2.y));
-            cocos2d::Vec2 destination = gridMap.getNewPoint(nv2.x, nv2.y);
-            if (this->getChildByName("anim_fox")->getPosition() == destination) {
-                path.erase(path.begin());
-            }
-            else {
-                moveSprite((cocos2d::Sprite*)this->getChildByName("anim_fox"), destination);
-            }
-        }
-    }
+    //is it good to be here?
+    waterLevel.setCurrent(processor.getFloodLevel());
+    updateActionNumber();
 }
 
 void MMainScene::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
@@ -447,7 +492,6 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
     if (!mouseEvent) return;
 
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_LEFT) {
-        //prepare
         cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
         if (!gridMap.cellCheck(cell)) {
             return;
@@ -455,33 +499,29 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         if (cell == gridMap.getCurrentCell()) {
             return;
         }
-        //actions
         if (currentAction == "move") {
-            if (moving) {
-                return;
-            }
-            path.clear();
-            path = pg.findPath(NVector2(gridMap.getCurrentCell().x, gridMap.getCurrentCell().y), NVector2(cell.x, cell.y));
             if (!processor.execFunction("move", processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
                 std::cout << "[MainScene] failed to move adventurer!" << std::endl;
                 return;
             }
-            moving = true;
+            getChildByName("anim_fox")->setPosition(gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
+            currentAction = "";
         }
         if (currentAction == "abfluss") {
             if (!processor.execFunction("abfluss", processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
                 std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
                 return;
             }
+            currentAction = "";
         }
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-        pg.setDiagonalMovement(false);
+        //pg.setDiagonalMovement(false);
         updateAreas();
         gridMap.clearAreaLimit();
         menu.unselectMenuAll();
+        currentAction = "";
     }
-    currentAction = "";//?
 }
 
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
@@ -492,7 +532,7 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
 
         if(!processor.execFunction("start")) return;
         if(!gridMap.init()) return;
-        initPathGenerator();
+        //initPathGenerator();
         updateAreas();
         gridMap.clearAreaLimit();
         initAdventurers();
@@ -503,9 +543,6 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
         if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
         currentAction = "";
-    }
-    if (keyCode == EventKeyboard::KeyCode::KEY_W) {
-        waterLevel.increase();
     }
 }
 

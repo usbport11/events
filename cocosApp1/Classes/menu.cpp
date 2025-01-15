@@ -43,7 +43,20 @@ void MMenu::menuHandOverCallback(cocos2d::Ref* pSender) {
 
 void MMenu::menuGetArtifactCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
-    std::cout << " [v] Menu item 'getArtifact' selected" << std::endl;
+    std::cout << " [Menu] Menu item 'getArtifact' selected" << std::endl;
+}
+
+void MMenu::menuExtractCallback(cocos2d::Ref* pSender) {
+    selectMenuItem(pSender);
+    std::cout << " [Menu] Menu item 'extract' selected" << std::endl;
+}
+
+void MMenu::menuSkipCallback(cocos2d::Ref* pSender) {
+    selectMenuItem(pSender);
+    std::cout << " [Menu] Menu item 'skip' selected" << std::endl;
+    if (!pMainScene->skip()) {
+        std::cout << " [Menu] item 'skip' failed!" << std::endl;
+    }
 }
 
 bool MMenu::create(MMainScene* _pMainScene) {
@@ -53,13 +66,15 @@ bool MMenu::create(MMainScene* _pMainScene) {
 
     pMainScene = _pMainScene;
 
-    const std::string nameList[5] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact"};
+    const std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract", "Skip"};
     std::map<std::string, ccMenuCallback> menuCallback;
     menuCallback["EndTurn"] = CC_CALLBACK_1(MMenu::menuEndTurnCallback, this);
     menuCallback["Move"] = CC_CALLBACK_1(MMenu::menuMoveCallback, this);
     menuCallback["Abfluss"] = CC_CALLBACK_1(MMenu::menuAbflussCallback, this);
     menuCallback["HandOver"] = CC_CALLBACK_1(MMenu::menuHandOverCallback, this);
     menuCallback["GetArtifact"] = CC_CALLBACK_1(MMenu::menuGetArtifactCallback, this);
+    menuCallback["Extract"] = CC_CALLBACK_1(MMenu::menuExtractCallback, this);
+    menuCallback["Skip"] = CC_CALLBACK_1(MMenu::menuSkipCallback, this);
 
     float topOffset = pMainScene->getContentSize().height - 30;
     const std::string btnBackPng[2] = { "back_off.png", "back_on.png" };
@@ -68,6 +83,9 @@ bool MMenu::create(MMainScene* _pMainScene) {
     int num = 0;
     cocos2d::Vector<cocos2d::MenuItem*> menuItems;
     for (int i = 0; i < sizeof(nameList) / sizeof(std::string); i++) {
+        if (menuCallback.find(nameList[i]) == menuCallback.end()) {
+            std::cout << " [Menu] Can't find item with name " << nameList[i] << std::endl;
+        }
         MenuItemImageExt* menuItem = MenuItemImageExt::create(btnBackPng[0], btnBackPng[1], "", menuCallback[nameList[i]]);
         if(!menuItem) {
             return false;
