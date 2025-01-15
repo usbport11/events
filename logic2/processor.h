@@ -24,6 +24,8 @@ private:
   bool adventureStarted;
   float floodLevel;
   int adventurersNumber;
+  int actionsLimit;
+  int currentActionNumber;
   MCard* lastItemCard;
   MAdventurer* currentAdventurer;
 
@@ -87,8 +89,7 @@ private:
   bool initAreas();
   bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
-  std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
-  std::string getActionParams(MAdventurer* adventurer, std::string action);//console logic?
+  
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
 
   void createConsole();
@@ -98,7 +99,6 @@ public:
   MProcessor();
   ~MProcessor();
   bool execFunction(const std::string& name, const std::string& _sargs="");
-  bool run();//console logic
 
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
@@ -109,6 +109,8 @@ public:
   MAdventurer* getCurrentAdventurer();
   MArea* getAreaByIndex(int x, int y);
   float getFloodLevel();
+  int getCurrentActionNumber();
+  bool actionNumberLimitReached();
 };
 
 #endif
