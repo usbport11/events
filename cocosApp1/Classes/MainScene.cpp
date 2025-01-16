@@ -1,4 +1,5 @@
 #include "MainScene.h"
+#include "EndScene.h"
 #include "MenuItemImageExt.h"
 #include "utils.h"
 #include "logic/area.h"
@@ -130,13 +131,16 @@ bool MMainScene::startAbfluss() {
     return true;
 }
 
-bool MMainScene::extrart() {
+bool MMainScene::extract() {
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
     //check extract can be used
-    //if (!processor.execFunction("extract")) return false;
+    //if (!processor.execFunction("extract")) {
+    //    std::cout << "[MainScene] failed to extract!" << std::endl;
+    //    return false;
+    //}
     currentAction = "";
 
     return true;
@@ -415,7 +419,7 @@ bool MMainScene::initVisual() {
 }
 
 bool MMainScene::init() {
-    if(!Scene::init()) {
+    if (!Scene::init()) {
         return false;
     }
 
@@ -462,6 +466,12 @@ void MMainScene::update(float delta) {
     waterLevel.setCurrent(processor.getFloodLevel());
     updateActionNumber();
 }
+
+/*
+void MMainScene::setEndScene(MEndScene* _pEndScene) {
+    pEndScene = _pEndScene;
+}
+*/
 
 void MMainScene::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
     cocos2d::Vec2 direction = gridMap.sign(destination - sprite->getPosition());
@@ -543,6 +553,12 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
         if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
         currentAction = "";
+    }
+    if (keyCode == EventKeyboard::KeyCode::KEY_E) {
+        MEndScene* endScene = (MEndScene*)MEndScene::createScene();
+        if (!endScene) return;
+        endScene->setMessage("Congratulations!");
+        Director::getInstance()->pushScene(endScene);
     }
 }
 

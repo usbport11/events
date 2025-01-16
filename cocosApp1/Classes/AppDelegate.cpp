@@ -60,9 +60,10 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     register_all_packages();
 
-    auto scene = MMainScene::createScene();
-    if (!scene) return false;
-    director->runWithScene(scene);
+    auto mainScene = MMainScene::createScene();
+    if (!mainScene) return false;
+
+    director->runWithScene(mainScene);
 
     return true;
 }

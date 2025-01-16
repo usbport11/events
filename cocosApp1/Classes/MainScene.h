@@ -10,8 +10,12 @@
 #include "menu.h"
 #include "logic/processor.h"
 
+class MEndScene;
+
 class MMainScene: public cocos2d::Scene {
 private:
+    //MEndScene* pEndScene;
+
     MProcessor processor;
     std::string currentAction;
 
@@ -44,12 +48,13 @@ public:
     bool endTurn();
     bool startMove();//start move instead move because it complex
     bool startAbfluss();//start abluss instead abluss because it complex
-    bool extrart();
+    bool extract();
     bool skip();
 
     static cocos2d::Scene* createScene();
     virtual bool init();
     void update(float delta);
+    //void setEndScene(MEndScene* _pEndScene);
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
