@@ -87,7 +87,6 @@ private:
 
   void createItemCards(const std::string& _name, const std::string& type, int number);
   bool initAreas();
-  bool looseCheck();
   bool tryMomentCard(MAdventurer* adventurer);
   
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
@@ -99,6 +98,7 @@ public:
   MProcessor();
   ~MProcessor();
   bool execFunction(const std::string& name, const std::string& _sargs="");
+  bool adventureFailed();
 
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
@@ -111,6 +111,8 @@ public:
   float getFloodLevel();
   int getCurrentActionNumber();
   bool actionNumberLimitReached();
+  bool allActiveAdventurersOnArea(const std::string& name);
+  bool allArifactsCollected();
 };
 
 #endif

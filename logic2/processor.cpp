@@ -644,7 +644,7 @@ MProcessor::~MProcessor() {
     usedActions.clear();
     actionsSwitches.clear();
 }
-bool MProcessor::looseCheck() {
+bool MProcessor::adventureFailed() {
   int num;
   MArtifact* artifact;
   MArea* area;
@@ -797,4 +797,17 @@ int MProcessor::getCurrentActionNumber() {
 
 bool MProcessor::actionNumberLimitReached() {
     return (currentActionNumber >= actionsLimit);
+}
+
+bool MProcessor::allActiveAdventurersOnArea(const std::string& areaName) {
+    for (int i = 0; i < activeAdventurers.size(); i++) {
+        if (findAdventurer(activeAdventurers[i])->getArea()->getName() != areaName) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool MProcessor::allArifactsCollected() {
+    return (collectedArtifacts.size() == 4);
 }

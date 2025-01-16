@@ -88,3 +88,10 @@ std::vector<MCard*> MAdventurer::getArtifactCards(const std::string& name) {
 bool MAdventurer::canUseDiagonal() {
     return (getName() == "explorer");
 }
+
+bool MAdventurer::hasCard(const std::string& cardName) {
+    for (int i = 0; cards.size(); i++) {
+        if (cards[i]->getName() == cardName) return true;
+    }
+    return false;
+}
