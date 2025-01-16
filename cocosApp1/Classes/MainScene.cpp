@@ -39,11 +39,19 @@ bool MMainScene::endTurn() {
     //display top card at flood drop deck
     if (!processor.getFloodDropDeck().empty()) floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
     else floodDeck.reset();
+
     //update areas
     updateAreas();
     //display name of next adventurer
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+
+    if (processor.adventureFailed()) {
+        MEndScene* endScene = (MEndScene*)MEndScene::createScene();
+        if (!endScene) return false;
+        endScene->setMessage("Adventure failed!");
+        Director::getInstance()->pushScene(endScene);
+    }
 
     currentAction = "";
    
@@ -136,11 +144,20 @@ bool MMainScene::extract() {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
-    //check extract can be used
-    //if (!processor.execFunction("extract")) {
-    //    std::cout << "[MainScene] failed to extract!" << std::endl;
-    //    return false;
-    //}
+    if (processor.getCurrentAdventurer()->hasCard("helicopter") && processor.allActiveAdventurersOnArea("adventurers_circle") && processor.allArifactsCollected()) {
+        if (!processor.execFunction("extract")) {
+            std::cout << "[MainScene] failed to extract!" << std::endl;
+            return false;
+        }
+        MEndScene* endScene = (MEndScene*)MEndScene::createScene();
+        if (!endScene) return false;
+        endScene->setMessage("Congratulations!");
+        Director::getInstance()->pushScene(endScene);
+    }
+    else {
+        std::cout << "[MainScene] can't extract. Some condition failed" << std::endl;
+        return false;
+    }
     currentAction = "";
 
     return true;
@@ -155,6 +172,12 @@ bool MMainScene::skip() {
     currentAction = "";
 
     return true;
+}
+
+bool MMainScene::getArtifact() {
+    //todo
+    currentAction = "";
+    return false;
 }
 
 bool MMainScene::updateAreas() {
@@ -553,12 +576,6 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
         if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
         currentAction = "";
-    }
-    if (keyCode == EventKeyboard::KeyCode::KEY_E) {
-        MEndScene* endScene = (MEndScene*)MEndScene::createScene();
-        if (!endScene) return;
-        endScene->setMessage("Congratulations!");
-        Director::getInstance()->pushScene(endScene);
     }
 }
 

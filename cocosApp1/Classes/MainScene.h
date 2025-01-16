@@ -50,6 +50,7 @@ public:
     bool startAbfluss();//start abluss instead abluss because it complex
     bool extract();
     bool skip();
+    bool getArtifact();
 
     static cocos2d::Scene* createScene();
     virtual bool init();

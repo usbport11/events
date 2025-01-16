@@ -39,16 +39,23 @@ void MMenu::menuMoveCallback(cocos2d::Ref* pSender) {
 void MMenu::menuHandOverCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
     std::cout << " [Menu] item 'handOver' selected" << std::endl;
+    //need more than one adv - need check
 }
 
 void MMenu::menuGetArtifactCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
     std::cout << " [Menu] Menu item 'getArtifact' selected" << std::endl;
+    if (!pMainScene->getArtifact()) {
+        std::cout << " [Menu] item 'getArtifact' failed!" << std::endl;
+    }
 }
 
 void MMenu::menuExtractCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
     std::cout << " [Menu] Menu item 'extract' selected" << std::endl;
+    if (!pMainScene->extract()) {
+        std::cout << " [Menu] item 'extract' failed!" << std::endl;
+    }
 }
 
 void MMenu::menuSkipCallback(cocos2d::Ref* pSender) {
