@@ -3,14 +3,14 @@
 MDeck::MDeck() {
 	card = "card%d";
 	cardBack = "back";
-	scene = nullptr;
+	pScene = nullptr;
 	cardsNumber = 0;
     lastName = "itm_no_right";
 }
 
-bool MDeck::create(cocos2d::Scene* _scene, const std::string& plistFile, const std::string& deckName, cocos2d::Vec2 position, tCardsMap& cardsMap) {
-	if(!_scene) return false;
-	scene = _scene;
+bool MDeck::create(cocos2d::Scene* _pScene, const std::string& plistFile, const std::string& deckName, cocos2d::Vec2 position, tCardsMap& cardsMap) {
+	if(!_pScene) return false;
+    pScene = _pScene;
 	
 	if(plistFile.empty()) return false;
 	if(deckName.empty()) return false;
@@ -22,7 +22,7 @@ bool MDeck::create(cocos2d::Scene* _scene, const std::string& plistFile, const s
     cocos2d::Label* labelLevel = cocos2d::Label::createWithTTF(deckName, "fonts/Marker Felt.ttf", 24);
     if (!labelLevel) return false;
     labelLevel->setPosition(position);
-    scene->addChild(labelLevel);
+    pScene->addChild(labelLevel);
 
     cocos2d::Vec2 pos2;
     for (auto it = cardsMap.begin(); it != cardsMap.end(); it ++ ) {
@@ -40,7 +40,7 @@ bool MDeck::create(cocos2d::Scene* _scene, const std::string& plistFile, const s
         }
         sp->setPosition(pos2);
         sp->setVisible((bool)std::stoi(cardsMap[it->first]["visible"]));
-        scene->addChild(sp, std::stoi(cardsMap[it->first]["zOrder"]), it->first);
+        pScene->addChild(sp, std::stoi(cardsMap[it->first]["zOrder"]), it->first);
     }
 	cardsNumber = cardsMap.size() - 3;
 
@@ -57,13 +57,13 @@ bool MDeck::setCardNames(const std::string& _card, const std::string& _cardBack)
 void MDeck::setTopCard(const std::string& name) {
     cocos2d::Sprite* sp;
     if (lastName != "itm_no_right") {
-        sp = (cocos2d::Sprite*)scene->getChildByName(lastName);
+        sp = (cocos2d::Sprite*)pScene->getChildByName(lastName);
         if (sp) {
             sp->setVisible(false);
         }
     }
     if (!name.empty()) {
-        sp = (cocos2d::Sprite*)scene->getChildByName(name);
+        sp = (cocos2d::Sprite*)pScene->getChildByName(name);
         if (sp) {
             sp->setVisible(true);
             lastName = name;
@@ -71,13 +71,21 @@ void MDeck::setTopCard(const std::string& name) {
     }
 }
 
-void MDeck::reset() {
-	scene->getChildByName(cardBack)->setVisible(true);
+bool MDeck::reset() {
+    if (!pScene) return false;
+
+    cocos2d::Sprite* sp;
+    sp = (cocos2d::Sprite*)pScene->getChildByName(cardBack);
+    if (!sp) return false;
+    sp->setVisible(true);
     char buffer[16];
 	for(int i=0; i<cardsNumber; i++) {
         memset(buffer, 0, 16);
 		snprintf(buffer, 16, card.c_str(), i);
-        scene->getChildByName(buffer)->setVisible(false);
+        sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
+        if (!sp) return false;
+        sp->setVisible(false);
 	}
     lastName = "itm_no_right";
+    return true;
 }

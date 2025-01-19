@@ -24,8 +24,8 @@ bool MPathGenerator::detectCollision(NVector2 coordinates_) {
     return false;
 }
 
-Node* MPathGenerator::findNodeOnList(NodeSet& nodes_, NVector2 coordinates_) {
-	for(NodeSet::iterator node = nodes_.begin(); node != nodes_.end(); node ++) {
+pgNode* MPathGenerator::findNodeOnList(pgNodeSet& nodes_, NVector2 coordinates_) {
+	for(pgNodeSet::iterator node = nodes_.begin(); node != nodes_.end(); node ++) {
         if ((*node)->coordinates == coordinates_) {
             return *node;
         }
@@ -33,8 +33,8 @@ Node* MPathGenerator::findNodeOnList(NodeSet& nodes_, NVector2 coordinates_) {
     return NULL;
 }
 
-void MPathGenerator::releaseNodes(NodeSet& nodes_) {
-	for(NodeSet::iterator it = nodes_.begin(); it != nodes_.end(); it++) {
+void MPathGenerator::releaseNodes(pgNodeSet& nodes_) {
+	for(pgNodeSet::iterator it = nodes_.begin(); it != nodes_.end(); it++) {
         delete *it;
    }
    nodes_.clear();
@@ -66,13 +66,13 @@ void MPathGenerator::setHeuristic(HeuristicFunction heuristic_) {
 }
 
 std::vector<NVector2> MPathGenerator::findPath(NVector2 source_, NVector2 target_) {
-	Node *current = NULL;
-    NodeSet openSet, closedSet;
-    openSet.insert(new Node(source_));
+	pgNode *current = NULL;
+    pgNodeSet openSet, closedSet;
+    openSet.insert(new pgNode(source_));
 
     while (!openSet.empty()) {
         current = *openSet.begin();
-        for (NodeSet::iterator node = openSet.begin(); node != openSet.end(); node++) {
+        for (pgNodeSet::iterator node = openSet.begin(); node != openSet.end(); node++) {
             if ((*node)->getScore() <= current->getScore()) {
                 current = (*node);
             }
@@ -96,9 +96,9 @@ std::vector<NVector2> MPathGenerator::findPath(NVector2 source_, NVector2 target
 
             uint totalCost = current->G + ((i < 4) ? 10 : 14);
 
-            Node *successor = findNodeOnList(openSet, newCoordinates);
+            pgNode *successor = findNodeOnList(openSet, newCoordinates);
             if (successor == NULL) {
-                successor = new Node(newCoordinates, current);
+                successor = new pgNode(newCoordinates, current);
                 successor->G = totalCost;
                 successor->H = heuristic(successor->coordinates, target_);
                 openSet.insert(successor);

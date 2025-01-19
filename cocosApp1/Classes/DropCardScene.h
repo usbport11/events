@@ -4,10 +4,13 @@
 #include "cocos2d.h"
 
 class MenuItemImageExt;
+class MMainScene;
 
 class MDropCardScene: public cocos2d::Scene {
 private:
-	std::vector<std::string> selectedCards;
+	MMainScene* pMainScene;
+
+	std::list<int> selectedCards;
 	std::vector<std::string> sourceCards;
 	int selectedCardsNumber;
 	int cardsLimit;
@@ -15,7 +18,6 @@ private:
 	MenuItemImageExt* closeItem;
 	std::string menuName;
 
-	int getSelectedNumber();
 	void selectMenuItem(cocos2d::Ref* pSender, int number);
 
 	void card0Callback(cocos2d::Ref* pSender);
@@ -29,6 +31,7 @@ private:
 public:
     static cocos2d::Scene* createScene();
 	virtual bool init();
+	void setMainScene(MMainScene* _pMainScene);
 	bool setCards(std::vector<std::string> _sourceCards);
     CREATE_FUNC(MDropCardScene);
 };

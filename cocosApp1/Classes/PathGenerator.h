@@ -14,12 +14,12 @@ uint manhattan(NVector2 source_, NVector2 target_);
 uint euclidean(NVector2 source_, NVector2 target_);
 uint octagonal(NVector2 source_, NVector2 target_);
 
-struct Node
+struct pgNode
 {
 	uint G, H;
 	NVector2 coordinates;
-	Node* parent;
-	Node(NVector2 coord_, Node* parent_ = 0) {
+    pgNode* parent;
+    pgNode(NVector2 coord_, pgNode* parent_ = 0) {
 		parent = parent_;
 		coordinates = coord_;
 		G = H = 0;
@@ -29,12 +29,12 @@ struct Node
 	}
 };
 
-typedef std::set<Node*> NodeSet;
+typedef std::set<pgNode*> pgNodeSet;
 
 class MPathGenerator {
     bool detectCollision(NVector2 coordinates_);
-    Node* findNodeOnList(NodeSet& nodes_, NVector2 coordinates_);
-    void releaseNodes(NodeSet& nodes_);
+    pgNode* findNodeOnList(pgNodeSet& nodes_, NVector2 coordinates_);
+    void releaseNodes(pgNodeSet& nodes_);
 public:
     MPathGenerator();
     void setWorldSize(NVector2 worldSize_);

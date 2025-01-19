@@ -24,7 +24,7 @@ bool MMainScene::endTurn() {
 
     //update hand
     std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
-    for (int i = 0; i < cards.size(); i++) {
+    for (int i = hand.getUsedSize(); i < cards.size(); i++) {
         if (!hand.addCard(cardFrame[cards[i]->getName()])) return false;
     }
 
@@ -41,6 +41,7 @@ bool MMainScene::endTurn() {
     if (processor.adventureFailed()) {
         MEndScene* endScene = (MEndScene*)MEndScene::createScene();
         if (!endScene) return false;
+        endScene->setMainScene(this);
         endScene->setMessage("Adventure failed!");
         Director::getInstance()->pushScene(endScene);
     }
@@ -143,6 +144,7 @@ bool MMainScene::extract() {
         }
         MEndScene* endScene = (MEndScene*)MEndScene::createScene();
         if (!endScene) return false;
+        endScene->setMainScene(this);
         endScene->setMessage("Congratulations!");
         Director::getInstance()->pushScene(endScene);
     }
@@ -170,6 +172,15 @@ bool MMainScene::getArtifact() {
     //todo
     currentAction = "";
     return false;
+}
+
+bool MMainScene::discard(std::list<int> cards) {
+    for (std::list<int>::iterator it = cards.begin(); it != cards.end(); it++) {
+        if(!processor.execFunction("discard", processor.getCurrentAdventurer()->getName() + " " + processor.getCurrentAdventurer()->getAllCards()[*it]->getName())) return false;
+        hand.removeCard(*it);
+        //itemDeck.setTopCard(); update item deck
+    }
+    return true;
 }
 
 bool MMainScene::updateAreas() {
@@ -205,6 +216,7 @@ bool MMainScene::updateAreas() {
             break;
         }
     }
+    return true;
 }
 
 bool MMainScene::updateActionNumber() {
@@ -412,6 +424,28 @@ bool MMainScene::initVisual() {
     return true;
 }
 
+bool MMainScene::reset() {
+    itemDeck.reset();
+    floodDeck.reset();
+    waterLevel.reset();
+
+    if (!processor.execFunction("start")) return false;
+    if (!gridMap.init()) return false;
+    //initPathGenerator();
+    if (!updateAreas()) return false;
+    gridMap.clearAreaLimit();
+    if (!initAdventurers()) return false;
+    if (!initHand()) return false;
+    floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
+    //clear all collisions except standard one
+    //show adventurer name
+    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+    currentAction = "";
+
+    return true;
+}
+
 bool MMainScene::init() {
     if (!Scene::init()) {
         return false;
@@ -434,21 +468,9 @@ bool MMainScene::init() {
     keybordListener->onKeyReleased = CC_CALLBACK_2(MMainScene::onKeyReleased, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
 
-    //visual
     if (!initVisual()) return false; //need check this for some reasons
 
-    if (!processor.execFunction("start")) return false;
-    if (!gridMap.init()) return false;
-    //initPathGenerator();
-    updateAreas();
-    initAdventurers();
-    initHand();
-    floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
-    //clear all collisions except standard one
-    //show adventurer name
-    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
-    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
-    currentAction = "";
+    if (!reset()) return false;
 
     this->scheduleUpdate();
 
@@ -460,12 +482,6 @@ void MMainScene::update(float delta) {
     waterLevel.setCurrent(processor.getFloodLevel());
     updateActionNumber();
 }
-
-/*
-void MMainScene::setEndScene(MEndScene* _pEndScene) {
-    pEndScene = _pEndScene;
-}
-*/
 
 void MMainScene::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
     cocos2d::Vec2 direction = gridMap.sign(destination - sprite->getPosition());
@@ -530,33 +546,13 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
 
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
-        itemDeck.reset();
-        floodDeck.reset();
-        waterLevel.reset();
-
-        if(!processor.execFunction("start")) return;
-        if(!gridMap.init()) return;
-        //initPathGenerator();
-        updateAreas();
-        gridMap.clearAreaLimit();
-        initAdventurers();
-        initHand();
-        floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
-        //clear all collisions except standard one
-        //show adventurer name
-        cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
-        if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
-        currentAction = "";
+        if(!reset()) return;
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_D) {
         MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
-        if (!dropCardScene) {
-            return;
-        }
-        if (!dropCardScene->setCards(hand.getCards())) {
-            return;
-        }
-
+        if (!dropCardScene) return;
+        dropCardScene->setMainScene(this);
+        if (!dropCardScene->setCards(hand.getNotEmptyCards())) return;
         Director::getInstance()->pushScene(dropCardScene);
     }
 }

@@ -13,6 +13,14 @@ void MHand::setLimit(int _limit) {
 int MHand::getLimit() {
 	return limit;
 }
+int MHand::getUsedSize() {
+	std::vector<std::string>::iterator it = std::find(cards.begin(), cards.end(), noneCard);
+	if (it == cards.end()) {
+		return cards.size();
+	}
+	int num = it - cards.begin();
+	return num;
+}
 int MHand::getSize() {
 	return cards.size();
 }
@@ -52,15 +60,16 @@ bool MHand::create(cocos2d::Scene* _pScene, int _limit, const std::string& _hand
 std::vector<std::string> MHand::getCards() {
 	return cards;
 }
+std::vector<std::string> MHand::getNotEmptyCards() {
+	std::vector<std::string> noEmpty;
+	for (int i = 0; i<cards.size(); i++) {
+		if (cards[i] != noneCard) noEmpty.push_back(cards[i]);
+		else return noEmpty;
+	}
+	return noEmpty;
+}
 bool MHand::addCard(const std::string& name) {
 	std::vector<std::string>::iterator it;
-
-	//check diplicate ?
-	//it = std::find(cards.begin(), cards.end(), name);
-	//if (it != cards.end()) {
-	//	std::cout << " [hand] Card alredy added" << std::endl;
-	//	return true;
-	//}
 
 	//check limit
 	it = std::find(cards.begin(), cards.end(), noneCard);
@@ -83,29 +92,62 @@ bool MHand::addCard(const std::string& name) {
 	
 	return true;
 }
-bool MHand::removeCard(const std::string& name) {
-	std::vector<std::string>::iterator it = std::find(cards.begin(), cards.end(), name);
-	if (it == cards.end()) {
-		std::cout << " [hand] Cant find card or array empty" << std::endl;
-		return false;
-	}
-	int num = it - cards.begin();
-	*it = name;
-
+bool MHand::removeCard(int number) {
 	char buffer[16] = { 0 };
 	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-	sprintf(buffer, handMask.c_str(), num);
+	sprintf(buffer, handMask.c_str(), number);
 	cocos2d::Sprite* sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
 	cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName(noneCard);
 	if (!sp || !frame) {
 		return false;
 	}
 	sp->setSpriteFrame(frame);
+	cards.erase(cards.begin() + number);
 
-	cards.erase(it);
+	//split
+	int num = 0;
+	for (int i = 0; i < cards.size(); i++) {
+		if (cards[i] == noneCard) num++;
+	}
+	if (num >= cards.size()) return true;
+
+	int emptyPos = -1;
+	int fullPos = -1;
+	for (int i = 0; i < cards.size(); i++) {
+		if (cards[i] == noneCard) emptyPos = i;
+		else fullPos = i;
+		if (emptyPos != -1 && fullPos != -1 && fullPos > emptyPos) {
+			cards[emptyPos] = cards[fullPos];
+			cards[fullPos] = noneCard;
+			i = emptyPos;
+			emptyPos = -1;
+			fullPos = -1;
+		}
+	}
+	refresh();
 
 	return true;
 }
+
+void MHand::refresh() {
+	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+	if (!cache) return;
+
+	cocos2d::Sprite* sp;
+	cocos2d::SpriteFrame* frame;
+	char buffer[16];
+	for (int i = 0; i < cards.size(); i++) {
+		memset(buffer, 0, 16);
+		snprintf(buffer, 16, handMask.c_str(), i);
+		sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
+		frame = cache->getSpriteFrameByName(cards[i]);
+		if (!sp || !frame) {
+			return;
+		}
+		sp->setSpriteFrame(frame);
+	}
+}
+
 bool MHand::reset() {
 	cards.clear();
 	for (int i = 0; i < limit; i++) {
@@ -114,7 +156,7 @@ bool MHand::reset() {
 
 	char buffer[16];
 	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-	for (int i = 0; i < limit; i++) {
+	for (int i = 0; i < cards.size(); i++) {
 		memset(buffer, 0, 16);
 		sprintf(buffer, handMask.c_str(), i);
 		cocos2d::Sprite* sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);

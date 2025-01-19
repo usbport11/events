@@ -1,5 +1,6 @@
 #include "EndScene.h"
 #include "MenuItemImageExt.h"
+#include "MainScene.h"
 
 USING_NS_CC;
 
@@ -39,6 +40,10 @@ bool MEndScene::init() {
     return true;
 }
 
+void MEndScene::setMainScene(MMainScene* _pMainScene) {
+    pMainScene = _pMainScene;
+}
+
 void MEndScene::setMessage(const std::string& message) {
     cocos2d::Label* label = (cocos2d::Label*)getChildByName("lblMessage");
     if (!label) return;
@@ -46,5 +51,6 @@ void MEndScene::setMessage(const std::string& message) {
 }
 
 void MEndScene::menuCloseCallback(cocos2d::Ref* pSender) {
+    pMainScene->reset();
     Director::getInstance()->popScene();
 }

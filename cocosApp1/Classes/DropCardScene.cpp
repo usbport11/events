@@ -1,5 +1,6 @@
 #include "DropCardScene.h"
 #include "MenuItemImageExt.h"
+#include "MainScene.h"
 #include <iostream>
 
 USING_NS_CC;
@@ -12,6 +13,8 @@ bool MDropCardScene::init() {
     if(!Scene::init()) {
         return false;
     }
+
+	pMainScene = nullptr;
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
@@ -41,8 +44,6 @@ bool MDropCardScene::init() {
 	cocos2d::Vec2 itemPosition;
 	float offset;
     for (int i = 0; i < totalCardsLimit; i++) {
-		selectedCards.push_back("");
-		
         menuItem = MenuItemImageExt::create("empty_card.png", "empty_card.png", "", menuCallback[i]);
 		offset = (visibleSize.width - (menuItem->getContentSize().width + 20) * totalCardsLimit) / 2 + (menuItem->getContentSize().width + 20) / 2;
         if(!menuItem) {
@@ -99,6 +100,10 @@ bool MDropCardScene::init() {
     return true;
 }
 
+void MDropCardScene::setMainScene(MMainScene* _pMainScene) {
+	pMainScene = _pMainScene;
+}
+
 bool MDropCardScene::setCards(std::vector<std::string> _sourceCards) {
 	sourceCards = _sourceCards;
 	
@@ -123,31 +128,23 @@ bool MDropCardScene::setCards(std::vector<std::string> _sourceCards) {
 	return true;
 }
 
-int MDropCardScene::getSelectedNumber() {
-	int number = 0;
-	for (int i = 0; i < selectedCards.size(); i++) {
-		if(selectedCards[i] != "") number ++;
-	}
-	return number;
-}
-
 void MDropCardScene::selectMenuItem(cocos2d::Ref* pSender, int number) {
-	if (number >= totalCardsLimit) return;
+	if (number >= totalCardsLimit ) return;
+	if (number >= sourceCards.size()) return;
+	if (sourceCards[number] == "card1") return;
 
 	MenuItemImageExt* menuItem = (MenuItemImageExt*)pSender;
-		if (menuItem->getColor() == cocos2d::Color3B(255, 0, 0)) {
+	if (menuItem->getColor() == cocos2d::Color3B(255, 0, 0)) {
 		menuItem->setColor(cocos2d::Color3B(255, 255, 255));
-		selectedCards[number] = "card_name";
-		selectedCardsNumber ++;
+		selectedCards.remove(number);
 	}
 	else {
 		menuItem->setColor(cocos2d::Color3B(255, 0, 0));
-		selectedCards[number] = "";
-		selectedCardsNumber --;
+		selectedCards.push_back(number);
 	}
 
 	return;
-	if (sourceCards.size() - selectedCardsNumber <= cardsLimit) closeItem->setEnabled(true);
+	if (sourceCards.size() - selectedCards.size() <= cardsLimit) closeItem->setEnabled(true);
 	else closeItem->setEnabled(false);
 }
 
@@ -187,5 +184,6 @@ void MDropCardScene::menuCloseCallback(cocos2d::Ref* pSender) {
 		//processor exec function draw card for current adventurer
 		//hide sprite in hand slot for current adventurer that was draw
 	//return to mainScene;
+	pMainScene->discard(selectedCards);
 	Director::getInstance()->popScene();
 }

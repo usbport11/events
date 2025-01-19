@@ -37,7 +37,6 @@ private:
     bool initAdventurers();
     bool initHand();
     //bool initPathGenerator();
-
 public:
     MProcessor* getProcessor();
 
@@ -47,11 +46,13 @@ public:
     bool extract();
     bool skip();
     bool getArtifact();
+    bool discard(std::list<int> cards);
+
+    bool reset();
 
     static cocos2d::Scene* createScene();
     virtual bool init();
     void update(float delta);
-    //void setEndScene(MEndScene* _pEndScene);
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
