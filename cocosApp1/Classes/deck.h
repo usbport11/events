@@ -12,9 +12,10 @@ private:
 	std::string cardBack;
 	int cardsNumber;
 	std::string lastName;
+	std::string noRight;
 public:
 	MDeck();
-	bool create(cocos2d::Scene* _scene, const std::string& plistFile, const std::string& deckName, cocos2d::Vec2 position, tCardsMap& cardsMap);
+	bool create(cocos2d::Scene* _scene, const std::string& plistFile, const std::string& deckName, cocos2d::Vec2 position, tCardsMap& cardsMap, const std::string& _noRight);
 	bool setCardNames(const std::string& card, const std::string& cardBack);
 	void setTopCard(const std::string& name);
 	bool reset();

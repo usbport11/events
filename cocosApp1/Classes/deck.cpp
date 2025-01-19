@@ -1,19 +1,23 @@
 #include "deck.h"
+#include <iostream>
 
 MDeck::MDeck() {
 	card = "card%d";
 	cardBack = "back";
 	pScene = nullptr;
 	cardsNumber = 0;
-    lastName = "itm_no_right";
+    lastName = "";//"itm_no_right";
 }
 
-bool MDeck::create(cocos2d::Scene* _pScene, const std::string& plistFile, const std::string& deckName, cocos2d::Vec2 position, tCardsMap& cardsMap) {
+bool MDeck::create(cocos2d::Scene* _pScene, const std::string& plistFile, const std::string& deckName, cocos2d::Vec2 position, tCardsMap& cardsMap, const std::string& _noRight) {
 	if(!_pScene) return false;
     pScene = _pScene;
 	
 	if(plistFile.empty()) return false;
 	if(deckName.empty()) return false;
+
+    noRight = _noRight;
+    lastName = _noRight;
 	
     cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
     if (!cache) return false;
@@ -56,11 +60,13 @@ bool MDeck::setCardNames(const std::string& _card, const std::string& _cardBack)
 
 void MDeck::setTopCard(const std::string& name) {
     cocos2d::Sprite* sp;
-    if (lastName != "itm_no_right") {
+    //if (lastName != "itm_no_right") {
+    if (lastName != noRight) {
         sp = (cocos2d::Sprite*)pScene->getChildByName(lastName);
         if (sp) {
             sp->setVisible(false);
         }
+        else std::cout << "no sp for no right: " << name << std::endl;
     }
     if (!name.empty()) {
         sp = (cocos2d::Sprite*)pScene->getChildByName(name);
@@ -68,6 +74,7 @@ void MDeck::setTopCard(const std::string& name) {
             sp->setVisible(true);
             lastName = name;
         }
+        else std::cout << "no sp for no right: " << name << std::endl;
     }
 }
 
@@ -86,6 +93,7 @@ bool MDeck::reset() {
         if (!sp) return false;
         sp->setVisible(false);
 	}
-    lastName = "itm_no_right";
+    //lastName = "itm_no_right";
+    lastName = noRight;
     return true;
 }

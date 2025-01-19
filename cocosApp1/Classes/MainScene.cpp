@@ -176,9 +176,9 @@ bool MMainScene::getArtifact() {
 
 bool MMainScene::discard(std::list<int> cards) {
     for (std::list<int>::iterator it = cards.begin(); it != cards.end(); it++) {
-        if(!processor.execFunction("discard", processor.getCurrentAdventurer()->getName() + " " + processor.getCurrentAdventurer()->getAllCards()[*it]->getName())) return false;
+        if (!processor.execFunction("discard", processor.getCurrentAdventurer()->getName() + " " + processor.getCurrentAdventurer()->getAllCards()[*it]->getName())) return false;
         hand.removeCard(*it);
-        //itemDeck.setTopCard(); update item deck
+        itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]); //need to fix
     }
     return true;
 }
@@ -306,13 +306,13 @@ bool MMainScene::initVisual() {
         {"itm_back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
         {"itm_no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
         {"itm_no_right", {{"listName", "card1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"itm_card0", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card1", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card2", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card3", {{"listName", "card5"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card4", {{"listName", "card6"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card5", {{"listName", "card7"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card6", {{"listName", "card8"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card2", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card3", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card4", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card5", {{"listName", "card5"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card6", {{"listName", "card6"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card7", {{"listName", "card7"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
+        {"itm_card8", {{"listName", "card8"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
     };
     tCardsMap floodCards = {
         {"fld_back", {{"listName", "flood0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
@@ -343,9 +343,9 @@ bool MMainScene::initVisual() {
         {"fld_card22", {{"listName", "flood24"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
         {"fld_card23", {{"listName", "flood25"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
     };
-    if (!itemDeck.create(this, "anim/cards.plist", "Item deck", cocos2d::Vec2(850, 170), itemCards)) return false;
+    if (!itemDeck.create(this, "anim/cards.plist", "Item deck", cocos2d::Vec2(850, 170), itemCards, "itm_no_right")) return false;
     if (!itemDeck.setCardNames("itm_card%d", "itm_back")) return false;
-    if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards)) return false;
+    if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards, "fld_no_right")) return false;
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
 
     //pg.setWorldSize(NVector2(gridSize, gridSize));
