@@ -109,6 +109,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
         pMainScene->addChild(itemLabel, 2);
         num ++;
     }
+
     cocos2d::Menu* menu = Menu::createWithArray(menuItems);
     if(!menu) {
         return false;
@@ -133,6 +134,6 @@ void MMenu::selectMenuItem(cocos2d::Ref* pSender) {
     unselectMenuAll();
     MenuItemImageExt* menuItem = (MenuItemImageExt*)pSender;
     menuItem->setColor(cocos2d::Color3B(255, 0, 0));
-    menuItem->selected();
+    menuItem->selected();//?
 }
 

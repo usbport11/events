@@ -1,5 +1,6 @@
 #include "MainScene.h"
 #include "EndScene.h"
+#include "DropCardScene.h"
 #include "MenuItemImageExt.h"
 #include "utils.h"
 #include "logic/area.h"
@@ -20,22 +21,13 @@ MProcessor* MMainScene::getProcessor() {
 bool MMainScene::endTurn() {
     //exec function
     if(!processor.execFunction("endturn", processor.getCurrentAdventurer()->getName())) return false;
-    //add two new item cards to hand
-    std::string handMask = "hand%d";
-    char buffer[16];
-    cocos2d::Sprite* sp;
-    cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-    cocos2d::SpriteFrame* frame;
-    if (!cache) return false;
+
+    //update hand
     std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
     for (int i = 0; i < cards.size(); i++) {
-        frame = nullptr;
-        memset(buffer, 0, 16);
-        sprintf(buffer, handMask.c_str(), i);
-        sp = (cocos2d::Sprite*)this->getChildByName(buffer);
-        if(cardFrame.find(cards[i]->getName()) != cardFrame.end()) frame = cache->getSpriteFrameByName(cardFrame[cards[i]->getName()]);
-        if (sp && frame) sp->setSpriteFrame(frame);
+        if (!hand.addCard(cardFrame[cards[i]->getName()])) return false;
     }
+
     //display top card at flood drop deck
     if (!processor.getFloodDropDeck().empty()) floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
     else floodDeck.reset();
@@ -242,34 +234,13 @@ bool MMainScene::initAdventurers() {
 }
 
 bool MMainScene::initHand() {
-    cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-    if (!cache) return false;
-
-    std::string handMask = "hand%d";
-    char buffer[16];
-    cocos2d::Sprite* sp;
-    cocos2d::SpriteFrame* frame;
-
-    //clear hand
-    for (int i = 0; i < 5; i++) {
-        memset(buffer, 0, 16);
-        sprintf(buffer, handMask.c_str(), i);
-        sp = (cocos2d::Sprite*)this->getChildByName(buffer);
-        cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName("card1");
-        if (sp && frame) sp->setSpriteFrame(frame);
-    }
-
-    //fill hand
+    if(!hand.reset()) return false;
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     std::vector<MCard*> cards = adventurer->getAllCards();
     for (int i = 0; i < cards.size(); i++) {
-        frame = nullptr;
-        memset(buffer, 0, 16);
-        sprintf(buffer, handMask.c_str(), i);
-        sp = (cocos2d::Sprite*)this->getChildByName(buffer);
-        if (cardFrame.find(cards[i]->getName()) != cardFrame.end()) frame = cache->getSpriteFrameByName(cardFrame[cards[i]->getName()]);
-        if (sp && frame) sp->setSpriteFrame(frame);
+        if(!hand.addCard(cardFrame[cards[i]->getName()])) return false;
     }
+    return true;
 }
 
 /*
@@ -370,7 +341,7 @@ bool MMainScene::initVisual() {
 
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
-    if (!hand.create(this, 5, "hand%d", "card1", cocos2d::Vec2(160, 100))) return false;
+    if (!hand.create(this, 5, "hand%d", "card1", cocos2d::Vec2(100, 100))) return false; //maybe 5+2?
     if (!menu.create(this)) return false;
 
     cardFrame = { {"crystal0", "card5"},
@@ -576,6 +547,17 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
         if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
         currentAction = "";
+    }
+    if (keyCode == EventKeyboard::KeyCode::KEY_D) {
+        MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
+        if (!dropCardScene) {
+            return;
+        }
+        if (!dropCardScene->setCards(hand.getCards())) {
+            return;
+        }
+
+        Director::getInstance()->pushScene(dropCardScene);
     }
 }
 

@@ -10,12 +10,8 @@
 #include "menu.h"
 #include "logic/processor.h"
 
-class MEndScene;
-
 class MMainScene: public cocos2d::Scene {
 private:
-    //MEndScene* pEndScene;
-
     MProcessor processor;
     std::string currentAction;
 
