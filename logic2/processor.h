@@ -83,7 +83,6 @@ private:
   MCard* findItemCard(const std::string& name);
   MCard* findFloodCard(const std::string& name);
   MArtifact* findActifact(const std::string& name);
-  std::deque<std::string> getItemDropDeck();
 
   void createItemCards(const std::string& _name, const std::string& type, int number);
   bool initAreas();
@@ -105,6 +104,7 @@ public:
 
   std::map<std::string, MObject*> getAreas();
   std::vector<std::string> getActiveAdventurers();
+  std::deque<std::string> getItemDropDeck();
   std::deque<std::string> getFloodDropDeck();
   MAdventurer* getCurrentAdventurer();
   MArea* getAreaByIndex(int x, int y);
