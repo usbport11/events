@@ -40,11 +40,11 @@ bool MDropCardScene::init() {
 	};
 	
     cocos2d::Vector<cocos2d::MenuItem*> menuItems;
-	MenuItemImageExt* menuItem;
+	MenuItemImage* menuItem;
 	cocos2d::Vec2 itemPosition;
 	float offset;
     for (int i = 0; i < totalCardsLimit; i++) {
-        menuItem = MenuItemImageExt::create("empty_card.png", "empty_card.png", "", menuCallback[i]);
+		menuItem = MenuItemImage::create("empty_card.png", "", menuCallback[i]);
 		offset = (visibleSize.width - (menuItem->getContentSize().width + 20) * totalCardsLimit) / 2 + (menuItem->getContentSize().width + 20) / 2;
         if(!menuItem) {
             return false;
@@ -52,23 +52,15 @@ bool MDropCardScene::init() {
         itemPosition = Vec2(offset + i * (menuItem->getContentSize().width + 20), visibleSize.height / 2);
         menuItem->setPosition(itemPosition);
         menuItems.pushBack(menuItem);
-
-		//for test only
-        cocos2d::Label* itemLabel = Label::createWithTTF("card", "fonts/Marker Felt.ttf", 24);
-        if (!itemLabel) {
-            return false;
-        }
-        itemLabel->setPosition(itemPosition);
-        this->addChild(itemLabel, 2);
     }
 	
 	//create close item
-	closeItem = MenuItemImageExt::create("back_off.png", "back_on.png", "", menuCallback[totalCardsLimit]);
+	closeItem = MenuItemImage::create("back_off.png", "back_on.png", menuCallback[totalCardsLimit]);
     if(!closeItem) {
 		return false;
     }
 	offset = (visibleSize.width - closeItem->getContentSize().width) / 2;
-	itemPosition = Vec2(offset + closeItem->getContentSize().width/2, visibleSize.height / 2 - 200);
+	itemPosition = Vec2(offset + closeItem->getContentSize().width/2, visibleSize.height / 2 - 150);
 	//closeItem->setEnabled(false);
 	closeItem->setName("closeButton");
     closeItem->setPosition(itemPosition);
@@ -112,17 +104,27 @@ bool MDropCardScene::setCards(std::vector<std::string> _sourceCards) {
         return false;
     }
 	
+	auto visibleSize = Director::getInstance()->getVisibleSize();
 	cocos2d::Node* node = this->getChildByName(menuName);
     cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
 	cocos2d::Sprite* sp;
-    for (int i = 0; i < items.size() && i < sourceCards.size(); i++) {
-		sp = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(sourceCards[i]));
-		if (!sp) {
-			return false;
+	int offset = (visibleSize.width - (items.at(0)->getContentSize().width + 20) * sourceCards.size()) / 2 + (items.at(0)->getContentSize().width + 20) / 2;
+
+    for (int i = 0; i < items.size() - 1; i++) {
+		//MenuItemImageExt* item = (MenuItemImageExt*) items.at(i);
+		MenuItemImage* item = (MenuItemImage*)items.at(i);
+		if (i < sourceCards.size()) {
+			sp = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(sourceCards[i]));
+			if (!sp) {
+				return false;
+			}
+			item->setNormalImage(sp);
+			item->setSelectedImage(sp);
+			item->setPosition(offset + i * (sp->getContentSize().width + 20), visibleSize.height / 2);
 		}
-		MenuItemImageExt* item = (MenuItemImageExt*) items.at(i);
-		item->setNormalImage(sp);
-		item->setSelectedImage(sp);
+		else {
+			item->setVisible(false);
+		}
     }
 	
 	return true;

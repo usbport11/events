@@ -25,7 +25,7 @@ bool MMainScene::endTurn() {
     //update hand
     std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
     for (int i = hand.getUsedSize(); i < cards.size(); i++) {
-        if (!hand.addCard(cardFrame[cards[i]->getName()])) return false;
+        if (!hand.addCard(cardFrame[cards[i]->getName()])) return false;//here
     }
 
     //display top card at flood drop deck
@@ -44,6 +44,14 @@ bool MMainScene::endTurn() {
         endScene->setMainScene(this);
         endScene->setMessage("Adventure failed!");
         Director::getInstance()->pushScene(endScene);
+    }
+
+    if (hand.getUsedSize() > 5) {
+        MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
+        if (!dropCardScene) return false;
+        dropCardScene->setMainScene(this);
+        if (!dropCardScene->setCards(hand.getNotEmptyCards())) return false;
+        Director::getInstance()->pushScene(dropCardScene);
     }
 
     currentAction = "";
@@ -175,10 +183,16 @@ bool MMainScene::getArtifact() {
 }
 
 bool MMainScene::discard(std::list<int> cards) {
+    int removed = 0;
     for (std::list<int>::iterator it = cards.begin(); it != cards.end(); it++) {
-        if (!processor.execFunction("discard", processor.getCurrentAdventurer()->getName() + " " + processor.getCurrentAdventurer()->getAllCards()[*it]->getName())) return false;
-        hand.removeCard(*it);
-        itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]); //need to fix
+        MAdventurer* adventurer = processor.getCurrentAdventurer();
+        if (!adventurer) return false;
+        MCard* card = processor.getCurrentAdventurer()->getCardByNumber(*it - removed);
+        if (!card) return false;
+        if (!processor.execFunction("discard", adventurer->getName() + " " + card->getName())) return false;
+        hand.removeCard(*it - removed);
+        itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
+        removed ++;
     }
     return true;
 }
@@ -353,7 +367,7 @@ bool MMainScene::initVisual() {
 
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
-    if (!hand.create(this, 5, "hand%d", "card1", cocos2d::Vec2(100, 100))) return false; //maybe 5+2?
+    if (!hand.create(this, 5, 7, "hand%d", "card1", cocos2d::Vec2(100, 100))) return false; //maybe 5+2?
     if (!menu.create(this)) return false;
 
     cardFrame = { {"crystal0", "card5"},

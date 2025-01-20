@@ -3,7 +3,6 @@
 
 #include "cocos2d.h"
 
-class MenuItemImageExt;
 class MMainScene;
 
 class MDropCardScene: public cocos2d::Scene {
@@ -15,7 +14,8 @@ private:
 	int selectedCardsNumber;
 	int cardsLimit;
 	int totalCardsLimit;
-	MenuItemImageExt* closeItem;
+	//MenuItemImageExt* closeItem;
+	cocos2d::MenuItemImage* closeItem;
 	std::string menuName;
 
 	void selectMenuItem(cocos2d::Ref* pSender, int number);
