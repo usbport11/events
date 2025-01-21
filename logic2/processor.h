@@ -102,6 +102,7 @@ public:
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
 
+  std::map<std::string, MObject*> getArtifacts();
   std::map<std::string, MObject*> getAreas();
   std::vector<std::string> getActiveAdventurers();
   std::deque<std::string> getItemDropDeck();

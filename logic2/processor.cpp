@@ -746,6 +746,10 @@ void MProcessor::createConsole() {
   std::cin.clear();
 }
 
+std::map<std::string, MObject*> MProcessor::getArtifacts() {
+    return artifacts;
+}
+
 std::map<std::string, MObject*> MProcessor::getAreas() {
     return areas;
 }
