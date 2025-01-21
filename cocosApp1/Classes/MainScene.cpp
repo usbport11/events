@@ -177,7 +177,19 @@ bool MMainScene::skip() {
 }
 
 bool MMainScene::getArtifact() {
-    //todo
+    //not tested
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    std::map<std::string, MObject*> artifacts = processor.getArtifacts();
+    for (std::map<std::string, MObject*>::iterator it = artifacts.begin(); ; artifacts.end()) {
+        std::vector<MCard*> artifactCards = adventurer->getArtifactCards(it->first);
+        if (artifactCards.size() >= 4) {
+            processor.execFunction("getartifact", adventurer->getName() + " " + it->first);
+            for (int i=0; i < 4; i++) {
+                hand.removeCard(000);
+            }
+        }
+        
+    }
     currentAction = "";
     return false;
 }

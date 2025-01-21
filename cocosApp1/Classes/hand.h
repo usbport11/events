@@ -24,6 +24,7 @@ public:
 	std::vector<std::string> getNotEmptyCards();
 	bool addCard(const std::string& name);
 	bool removeCard(int number);
+	bool removeCard(const std::string& name);
 	bool reset();
 };
 

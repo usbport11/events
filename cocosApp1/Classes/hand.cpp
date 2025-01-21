@@ -134,6 +134,13 @@ bool MHand::removeCard(int number) {
 	return true;
 }
 
+bool MHand::removeCard(const std::string& name) {
+  std::vector<std::string>::iterator it = std::find(cards.begin(), cards.end(), name);
+  if (it == cards.end()) return false;
+  int num = it - cards.begin();
+  return removeCard(num);
+}
+
 void MHand::refresh() {
 	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
 	if (!cache) return;
