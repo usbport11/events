@@ -177,21 +177,21 @@ bool MMainScene::skip() {
 }
 
 bool MMainScene::getArtifact() {
-    //not tested
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     std::map<std::string, MObject*> artifacts = processor.getArtifacts();
-    for (std::map<std::string, MObject*>::iterator it = artifacts.begin(); ; artifacts.end()) {
+    for (std::map<std::string, MObject*>::iterator it = artifacts.begin(); it != artifacts.end(); it++) {
         std::vector<MCard*> artifactCards = adventurer->getArtifactCards(it->first);
         if (artifactCards.size() >= 4) {
-            processor.execFunction("getartifact", adventurer->getName() + " " + it->first);
+            if(!processor.execFunction("getartifact", adventurer->getName() + " " + it->first)) return false;
             for (int i=0; i < 4; i++) {
-                hand.removeCard(000);
+                if(!hand.removeCard(cardFrame[it->first+"0"])) return false; //hand not matter real card name
+                itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
             }
         }
         
     }
     currentAction = "";
-    return false;
+    return true;
 }
 
 bool MMainScene::discard(std::list<int> cards) {
@@ -202,10 +202,11 @@ bool MMainScene::discard(std::list<int> cards) {
         MCard* card = processor.getCurrentAdventurer()->getCardByNumber(*it - removed);
         if (!card) return false;
         if (!processor.execFunction("discard", adventurer->getName() + " " + card->getName())) return false;
-        hand.removeCard(*it - removed);
+        if(!hand.removeCard(*it - removed)) return false;
         itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
         removed ++;
     }
+    currentAction = "";
     return true;
 }
 
@@ -574,12 +575,22 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
         if(!reset()) return;
     }
-    if (keyCode == EventKeyboard::KeyCode::KEY_D) {
-        MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
-        if (!dropCardScene) return;
-        dropCardScene->setMainScene(this);
-        if (!dropCardScene->setCards(hand.getNotEmptyCards())) return;
-        Director::getInstance()->pushScene(dropCardScene);
+    if (keyCode == EventKeyboard::KeyCode::KEY_C) {
+        processor.execFunction("getitemcard", processor.getCurrentAdventurer()->getName());
+        std::cout << "[MainScene] call get next card" << std::endl;
+
+        std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
+        for (int i = hand.getUsedSize(); i < cards.size(); i++) {
+            if (!hand.addCard(cardFrame[cards[i]->getName()])) return;
+        }
+
+        if (hand.getUsedSize() > 5) {
+            MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
+            if (!dropCardScene) return;
+            dropCardScene->setMainScene(this);
+            if (!dropCardScene->setCards(hand.getNotEmptyCards())) return;
+            Director::getInstance()->pushScene(dropCardScene);
+        }
     }
 }
 

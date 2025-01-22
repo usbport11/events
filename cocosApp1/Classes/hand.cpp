@@ -77,6 +77,9 @@ bool MHand::addCard(const std::string& name) {
 	it = std::find(cards.begin(), cards.end(), noneCard);
 	if (it == cards.end()) {
 		std::cout << " [hand] Hand is full or array empty" << std::endl;
+		for (int i = 0; i < cards.size(); i++) {
+			std::cout << cards[i] << std::endl;
+		}
 		return false;
 	}
 	int num = it - cards.begin();
@@ -107,7 +110,7 @@ bool MHand::removeCard(int number) {
 		return false;
 	}
 	sp->setSpriteFrame(frame);
-	cards.erase(cards.begin() + number);
+	cards[number] = noneCard;
 
 	//split
 	int num = 0;
@@ -135,10 +138,10 @@ bool MHand::removeCard(int number) {
 }
 
 bool MHand::removeCard(const std::string& name) {
-  std::vector<std::string>::iterator it = std::find(cards.begin(), cards.end(), name);
-  if (it == cards.end()) return false;
-  int num = it - cards.begin();
-  return removeCard(num);
+	std::vector<std::string>::iterator it = std::find(cards.begin(), cards.end(), name);
+	if (it == cards.end()) return false;
+	int num = it - cards.begin();
+	return removeCard(num);
 }
 
 void MHand::refresh() {
