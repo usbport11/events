@@ -61,7 +61,8 @@ bool MDropCardScene::init() {
     }
 	offset = (visibleSize.width - closeItem->getContentSize().width) / 2;
 	itemPosition = Vec2(offset + closeItem->getContentSize().width/2, visibleSize.height / 2 - 150);
-	//closeItem->setEnabled(false);
+	
+	closeItem->setEnabled(false);
 	closeItem->setName("closeButton");
     closeItem->setPosition(itemPosition);
     menuItems.pushBack(closeItem);
@@ -145,7 +146,7 @@ void MDropCardScene::selectMenuItem(cocos2d::Ref* pSender, int number) {
 		selectedCards.push_back(number);
 	}
 
-	return;
+	//return;
 	if (sourceCards.size() - selectedCards.size() <= cardsLimit) closeItem->setEnabled(true);
 	else closeItem->setEnabled(false);
 }

@@ -32,7 +32,7 @@ bool MWaterLevel::create(cocos2d::Scene* _pScene, const std::string& _animatedNa
     snprintf(buffer, 12, floodValueMask.c_str(), current);
     cocos2d::Label* labelFlood = cocos2d::Label::createWithTTF(buffer, "fonts/Marker Felt.ttf", 24);
     if (!labelFlood) return false;
-    labelFlood->setPosition(cocos2d::Vec2(position.x - halfSize.width, (position.y - spriteSize.height - halfSize.height) + spriteSize.height * 0));
+    labelFlood->setPosition(cocos2d::Vec2(position.x - halfSize.width, (position.y - spriteSize.height - halfSize.height) + spriteSize.height * 0 + 16));
     labelFlood->setName("lblFloodLevel");
     pScene->addChild(labelFlood);
     update();

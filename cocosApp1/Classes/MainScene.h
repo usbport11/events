@@ -2,7 +2,7 @@
 #define __MAIN_SCENE_H__
 
 #include "cocos2d.h"
-#include "PathGenerator.h"
+//#include "PathGenerator.h"
 #include "gridMap.h"
 #include "deck.h"
 #include "hand.h"
@@ -19,13 +19,15 @@ private:
     MDeck itemDeck;
     MDeck floodDeck;
     MWaterLevel waterLevel;
-    //MPathGenerator pg;
-    MHand hand;
     MMenu menu;
-    std::vector<NVector2> path;
+    
     int gridSize;
     std::map<std::string, std::string> cardFrame;
     std::map<std::string, std::string> floodSprite;
+    std::map<std::string, std::string> artifactSprite;
+
+    std::map<std::string, MHand*> adventurerHand;
+    std::vector<MHand*> hands;
 
     cocos2d::Vec2 speed;
     bool moving;
@@ -36,7 +38,6 @@ private:
     bool updateActionNumber();
     bool initAdventurers();
     bool initHand();
-    //bool initPathGenerator();
 public:
     MProcessor* getProcessor();
 

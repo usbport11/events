@@ -11,9 +11,11 @@ private:
 	std::string handMask;
 	std::string noneCard;
 	std::vector<std::string> cards;//frameNames
+	std::map<std::string, cocos2d::SpriteFrame*> cardFrame;
+	std::map<int, cocos2d::Sprite*> numberSprite;
 	void refresh();
 public:
-	MHand();
+	MHand(); 
 	~MHand();
 	void setLimit(int _limit);
 	int getLimit();
@@ -26,6 +28,7 @@ public:
 	bool removeCard(int number);
 	bool removeCard(const std::string& name);
 	bool reset();
+	void setVisible(bool visible);
 };
 
 #endif

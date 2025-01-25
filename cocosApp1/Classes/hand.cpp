@@ -6,6 +6,8 @@ MHand::MHand() {
 }
 MHand::~MHand() {
 	cards.clear();
+	cardFrame.clear();
+	numberSprite.clear();
 }
 void MHand::setLimit(int _limit) {
 	limit = _limit;
@@ -44,18 +46,27 @@ bool MHand::create(cocos2d::Scene* _pScene, int _limit, int _max, const std::str
 	labelHand->setPosition(cocos2d::Vec2(position.x + 70 * limit/2 - 30, position.y + 70));
 	pScene->addChild(labelHand);
 
-	cocos2d::Sprite* hand;
-	char buffer[16];
+	cardFrame = {
+		{"card0", cache->getSpriteFrameByName("card0")},
+		{"card1", cache->getSpriteFrameByName("card1")},
+		{"card2", cache->getSpriteFrameByName("card2")},
+		{"card3", cache->getSpriteFrameByName("card3")},
+		{"card4", cache->getSpriteFrameByName("card4")},
+		{"card5", cache->getSpriteFrameByName("card5")},
+		{"card6", cache->getSpriteFrameByName("card6")},
+		{"card7", cache->getSpriteFrameByName("card7")},
+		{"card8", cache->getSpriteFrameByName("card8")}
+	};
+
+	char buffer[32];
 	for (int i = 0; i < limit; i++) {
-		memset(buffer, 0, 16);
-		snprintf(buffer, 16, handMask.c_str(), i);
-		hand = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(noneCard));
-		if (!hand) {
-			return false;
-		}
-		hand->setName(buffer);
-		hand->setPosition(cocos2d::Vec2(position.x + 70 * i, position.y));
-		pScene->addChild(hand);
+		memset(buffer, 0, 32);
+		snprintf(buffer, 32, handMask.c_str(), i);
+		numberSprite[i] = cocos2d::Sprite::createWithSpriteFrame(cardFrame[noneCard]);
+		if (!numberSprite[i]) return false;
+		numberSprite[i]->setName(buffer);
+		numberSprite[i]->setPosition(cocos2d::Vec2(position.x + 70 * i, position.y));
+		pScene->addChild(numberSprite[i]);
 	}
 
 	return true;
@@ -85,31 +96,15 @@ bool MHand::addCard(const std::string& name) {
 	int num = it - cards.begin();
 	*it = name;
 
-	//display only 5 cards
+	//there are only 5 cards to display and sprites too
 	if (num < limit) {
-		char buffer[16] = { 0 };
-		cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-		sprintf(buffer, handMask.c_str(), num);
-		cocos2d::Sprite* sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
-		cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName(name);
-		if (!sp || !frame) {
-			return false;
-		}
-		sp->setSpriteFrame(frame);
+		numberSprite[num]->setSpriteFrame(cardFrame[name]);
 	}
 	
 	return true;
 }
 bool MHand::removeCard(int number) {
-	char buffer[16] = { 0 };
-	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-	sprintf(buffer, handMask.c_str(), number);
-	cocos2d::Sprite* sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
-	cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName(noneCard);
-	if (!sp || !frame) {
-		return false;
-	}
-	sp->setSpriteFrame(frame);
+	numberSprite[number]->setSpriteFrame(cardFrame[noneCard]);
 	cards[number] = noneCard;
 
 	//split
@@ -132,6 +127,7 @@ bool MHand::removeCard(int number) {
 			fullPos = -1;
 		}
 	}
+
 	refresh();
 
 	return true;
@@ -145,21 +141,12 @@ bool MHand::removeCard(const std::string& name) {
 }
 
 void MHand::refresh() {
-	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-	if (!cache) return;
-
-	cocos2d::Sprite* sp;
-	cocos2d::SpriteFrame* frame;
-	char buffer[16];
-	for (int i = 0; i < cards.size(); i++) {
-		memset(buffer, 0, 16);
-		snprintf(buffer, 16, handMask.c_str(), i);
-		sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
-		frame = cache->getSpriteFrameByName(cards[i]);
-		if (!sp || !frame) {
+	for (int i = 0; i < limit; i++) {
+		if (cardFrame.find(cards[i]) == cardFrame.end()) {
+			std::cout<<"can't find: " << cards[i] << std::endl;
 			return;
 		}
-		sp->setSpriteFrame(frame);
+		numberSprite[i]->setSpriteFrame(cardFrame[cards[i]]);
 	}
 }
 
@@ -168,18 +155,14 @@ bool MHand::reset() {
 	for (int i = 0; i < max; i++) {//limit
 		cards.push_back(noneCard);
 	}
-
-	char buffer[16];
-	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-	for (int i = 0; i < limit; i++) {//cards.size()
-		memset(buffer, 0, 16);
-		sprintf(buffer, handMask.c_str(), i);
-		cocos2d::Sprite* sp = (cocos2d::Sprite*)pScene->getChildByName(buffer);
-		cocos2d::SpriteFrame* frame = cache->getSpriteFrameByName(noneCard);
-		if (!sp || !frame) {
-			return false;
-		}
-		sp->setSpriteFrame(frame);
+	for(int i = 0; i < limit; i++) {
+		numberSprite[i]->setSpriteFrame(cardFrame[noneCard]);
 	}
 	return true;
+}
+
+void MHand::setVisible(bool visible) {
+	for (int i = 0; i < limit; i++) {
+		numberSprite[i]->setVisible(visible);
+	}
 }

@@ -7,6 +7,7 @@
 #include "logic/adventurer.h"
 #include "logic/card.h"
 #include <iostream>
+#include <algorithm>
 
 USING_NS_CC;
 
@@ -20,12 +21,14 @@ MProcessor* MMainScene::getProcessor() {
 
 bool MMainScene::endTurn() {
     //exec function
-    if(!processor.execFunction("endturn", processor.getCurrentAdventurer()->getName())) return false;
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    MHand* hand = adventurerHand[adventurer->getName()];
+    if(!processor.execFunction("endturn", adventurer->getName())) return false;
 
     //update hand
-    std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
-    for (int i = hand.getUsedSize(); i < cards.size(); i++) {
-        if (!hand.addCard(cardFrame[cards[i]->getName()])) return false;//here
+    std::vector<MCard*> cards = adventurer->getAllCards();
+    for (int i = hand->getUsedSize(); i < cards.size(); i++) {
+        if (!hand->addCard(cardFrame[cards[i]->getName()])) return false;
     }
 
     //display top card at flood drop deck
@@ -34,9 +37,6 @@ bool MMainScene::endTurn() {
 
     //update areas
     updateAreas();
-    //display name of next adventurer
-    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
-    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
 
     if (processor.adventureFailed()) {
         MEndScene* endScene = (MEndScene*)MEndScene::createScene();
@@ -46,13 +46,19 @@ bool MMainScene::endTurn() {
         Director::getInstance()->pushScene(endScene);
     }
 
-    if (hand.getUsedSize() > 5) {
+    if(hand->getUsedSize() > 5) {
         MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
         if (!dropCardScene) return false;
         dropCardScene->setMainScene(this);
-        if (!dropCardScene->setCards(hand.getNotEmptyCards())) return false;
+        if (!dropCardScene->setCards(hand->getNotEmptyCards())) return false;
         Director::getInstance()->pushScene(dropCardScene);
     }
+    adventurerHand[adventurer->getName()]->setVisible(false);
+    adventurerHand[processor.getCurrentAdventurer()->getName()]->setVisible(true);
+
+    //display name of next adventurer
+    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
 
     currentAction = "";
    
@@ -69,8 +75,6 @@ bool MMainScene::startMove() {
         return false;
     }
 
-    //pg.setDiagonalMovement(false);
-
     updateAreas();
     gridMap.clearAreaLimit();
 
@@ -80,11 +84,9 @@ bool MMainScene::startMove() {
     if (!adventurer) return false;
     if (adventurer->canUseDiagonal()) {
         areas = adventurer->getArea()->getAllActiveNeighbors();
-        //pg.setDiagonalMovement(true);
     }
     else areas = adventurer->getArea()->getDirectActiveNeighbors();
     if (areas.empty()) {
-        //currentAction = "";
         std::cout << " [MainScene] no available to move areas" << std::endl;
         return false;
     }
@@ -184,11 +186,13 @@ bool MMainScene::getArtifact() {
         if (artifactCards.size() >= 4) {
             if(!processor.execFunction("getartifact", adventurer->getName() + " " + it->first)) return false;
             for (int i=0; i < 4; i++) {
-                if(!hand.removeCard(cardFrame[it->first+"0"])) return false; //hand not matter real card name
+                MHand* hand = adventurerHand[adventurer->getName()];
+                if (!hand->removeCard(cardFrame[it->first + "0"])) return false; //hand not matter real card name
                 itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
             }
-        }
-        
+            cocos2d::Sprite* sp = (cocos2d::Sprite*)this->getChildByName(artifactSprite[it->first]);
+            if (sp) sp->setColor(cocos2d::Color3B(0, 255, 0));
+        } 
     }
     currentAction = "";
     return true;
@@ -196,15 +200,17 @@ bool MMainScene::getArtifact() {
 
 bool MMainScene::discard(std::list<int> cards) {
     int removed = 0;
+    cards.sort();//important!
     for (std::list<int>::iterator it = cards.begin(); it != cards.end(); it++) {
         MAdventurer* adventurer = processor.getCurrentAdventurer();
         if (!adventurer) return false;
-        MCard* card = processor.getCurrentAdventurer()->getCardByNumber(*it - removed);
+        MCard* card = adventurer->getCardByNumber(*it - removed);
         if (!card) return false;
         if (!processor.execFunction("discard", adventurer->getName() + " " + card->getName())) return false;
-        if(!hand.removeCard(*it - removed)) return false;
+        MHand* hand = adventurerHand[adventurer->getName()];
+        if (!hand->removeCard(*it - removed)) return false; //hand not matter real card name
         itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
-        removed ++;
+        removed++;
     }
     currentAction = "";
     return true;
@@ -230,16 +236,13 @@ bool MMainScene::updateAreas() {
         case 0:
             sp->setVisible(true);
             sp->setColor(white);
-            //pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
             break;
         case 1:
             sp->setVisible(true);
             sp->setColor(blue);
-            //pg.removeCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
             break;
         case 2:
             sp->setVisible(false);
-            //pg.addCollision(NVector2(area->getIndex()[0], area->getIndex()[1]));
             break;
         }
     }
@@ -273,48 +276,63 @@ bool MMainScene::initAdventurers() {
 }
 
 bool MMainScene::initHand() {
-    if(!hand.reset()) return false;
-    MAdventurer* adventurer = processor.getCurrentAdventurer();
-    std::vector<MCard*> cards = adventurer->getAllCards();
-    for (int i = 0; i < cards.size(); i++) {
-        if(!hand.addCard(cardFrame[cards[i]->getName()])) return false;
+    adventurerHand.clear();
+    for (int i=0; i < hands.size(); i++) {
+        hands[i]->reset();
+        hands[i]->setVisible(false);
     }
+    std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
+    for (int i=0; i < activeAdventurers.size(); i++) {
+        adventurerHand[activeAdventurers[i]] = hands[i];
+        MAdventurer* adventurer = processor.findAdventurer(activeAdventurers[i]);
+        if (!adventurer) return false;
+        if (i == 0) {
+            hands[i]->setVisible(true);
+        }
+        std::vector<MCard*> cards = adventurer->getAllCards();
+        for (int j = 0; j < cards.size(); j++) {
+            if (!hands[i]->addCard(cardFrame[cards[j]->getName()])) return false;
+        }
+    }
+    
     return true;
 }
-
-/*
-bool MMainScene::initPathGenerator() {
-    pg.clearCollisions();
-    //need make nicer (in sitaution when map is not standard type)
-    for (int i = 0; i < 2; i++) {
-        //x
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, 0));
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, 1));
-        pg.addCollision(NVector2((gridSize - 1) * i - 1, 0));
-        //y
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 1)));
-        pg.addCollision(NVector2((gridSize - 1) * i - 1, (gridSize - 1)));
-        pg.addCollision(NVector2((gridSize - 1) * i - 0, (gridSize - 2)));
-    }
-    return true;
-}
-*/
 
 bool MMainScene::initVisual() {
+    //gridmap selector
     if (!createAnimSpriteFromPlist(this, "anim/out.plist", "selection", "pt", 4, 0.2f)) {
         return false;
     }
     this->getChildByName("selection")->setPosition(0, 0);
     this->getChildByName("selection")->setScale(1.5);//1.0
     this->getChildByName("selection")->setVisible(false);
+
+    //adventurer
     if (!createAnimSpriteFromPlist(this, "anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
         return false;
     }
-    this->getChildByName("anim_fox")->setPosition(0, 0);//(394, 332);//200 + 48*3
+    this->getChildByName("anim_fox")->setPosition(0, 0);
     this->getChildByName("anim_fox")->setVisible(false);
     this->getChildByName("anim_fox")->setScale(2.0);
     this->getChildByName("anim_fox")->setVisible(true);
 
+    //artifacts
+    cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+    if (!cache) return false;
+    cache->addSpriteFramesWithFile("anim/artifacts.plist");
+    char buffer[32];
+    cocos2d::Sprite* artSprite;
+    for (int i = 0; i < 4; i++) {
+        memset(buffer, 0, 32);
+        snprintf(buffer, 32, "artifact%d", i);
+        artSprite = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(buffer));
+        if (!artSprite) return false;
+        artSprite->setName(buffer);
+        artSprite->setPosition(cocos2d::Vec2(980, 80 + i * 80 ));
+        this->addChild(artSprite);
+    }
+
+    //move prep to waterlevel class?
     if (!createAnimSpriteFromPlist(this, "anim/water.plist", "anim_water", "water", 4, 0.1f)) {
         return false;
     }
@@ -324,7 +342,7 @@ bool MMainScene::initVisual() {
     this->addChild(waterBack, 0, "water_back");
     cocos2d::Sprite* glass = Sprite::create("glass.png");
     //bad realization (must be calculated)
-    glass->setPosition(cocos2d::Vec2(964, 592));//592//624
+    glass->setPosition(cocos2d::Vec2(964, 592));
     glass->setScaleY(5);//5
     this->addChild(glass, 2);
     if (!waterLevel.create(this, "anim_water", "water_back", cocos2d::Vec2(964, 464), cocos2d::Size(64, 64))) return false;//464 -> 592//496 -> 624
@@ -370,17 +388,22 @@ bool MMainScene::initVisual() {
         {"fld_card22", {{"listName", "flood24"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
         {"fld_card23", {{"listName", "flood25"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
     };
-    if (!itemDeck.create(this, "anim/cards.plist", "Item deck", cocos2d::Vec2(850, 170), itemCards, "itm_no_right")) return false;
+    if (!itemDeck.create(this, "anim/cards.plist", "Item deck", cocos2d::Vec2(800, 170), itemCards, "itm_no_right")) return false;//850
     if (!itemDeck.setCardNames("itm_card%d", "itm_back")) return false;
-    if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(650, 170), floodCards, "fld_no_right")) return false;
+    if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(600, 170), floodCards, "fld_no_right")) return false;//650
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
-
-    //pg.setWorldSize(NVector2(gridSize, gridSize));
-    //pg.setDiagonalMovement(false);
 
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
-    if (!hand.create(this, 5, 7, "hand%d", "card1", cocos2d::Vec2(100, 100))) return false; //maybe 5+2?
+    //hands
+    std::map<std::string, MObject*> adventurers = processor.getAdventurers();
+    int i = 0;
+    for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
+        hands.push_back(new MHand);
+        if(!hands[i]->create(this, 5, 7, it->first + "_hand%d", "card1", cocos2d::Vec2(100, 100))) return false;
+        i ++;
+    }
+
     if (!menu.create(this)) return false;
 
     cardFrame = { {"crystal0", "card5"},
@@ -410,6 +433,7 @@ bool MMainScene::initVisual() {
         {"flood0", "card6"},
         {"flood1", "card6"},
         {"flood2", "card6"} };
+
     floodSprite = {
         {"temple_of_the_moon", "fld_card0"},
         {"temple_of_the_sun", "fld_card1"},
@@ -435,6 +459,13 @@ bool MMainScene::initVisual() {
         {"silver_gate", "fld_card21"},
         {"copper_gate", "fld_card22"},
         {"foggy_marshes", "fld_card23"}};
+
+    artifactSprite = {
+        {"crystal", "artifact3"},
+        {"sphere", "artifact1"},
+        {"lion", "artifact2"},
+        {"bowl", "artifact0"},
+    };
 
     cocos2d::Label* advLabel = Label::createWithTTF("some_name", "fonts/Marker Felt.ttf", 24);
     if (!advLabel) return false;
@@ -505,7 +536,6 @@ bool MMainScene::init() {
 }
 
 void MMainScene::update(float delta) {
-    //is it good to be here?
     waterLevel.setCurrent(processor.getFloodLevel());
     updateActionNumber();
 }
@@ -563,7 +593,6 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         }
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-        //pg.setDiagonalMovement(false);
         updateAreas();
         gridMap.clearAreaLimit();
         menu.unselectMenuAll();
@@ -579,16 +608,18 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         processor.execFunction("getitemcard", processor.getCurrentAdventurer()->getName());
         std::cout << "[MainScene] call get next card" << std::endl;
 
+        MHand* hand = adventurerHand[processor.getCurrentAdventurer()->getName()];
+
         std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
-        for (int i = hand.getUsedSize(); i < cards.size(); i++) {
-            if (!hand.addCard(cardFrame[cards[i]->getName()])) return;
+        for (int i = hand->getUsedSize(); i < cards.size(); i++) {
+            if (!hand->addCard(cardFrame[cards[i]->getName()])) return;
         }
 
-        if (hand.getUsedSize() > 5) {
+        if (hand->getUsedSize() > 5) {
             MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
             if (!dropCardScene) return;
             dropCardScene->setMainScene(this);
-            if (!dropCardScene->setCards(hand.getNotEmptyCards())) return;
+            if (!dropCardScene->setCards(hand->getNotEmptyCards())) return;
             Director::getInstance()->pushScene(dropCardScene);
         }
     }
