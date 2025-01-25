@@ -104,9 +104,12 @@ public:
 
   std::map<std::string, MObject*> getArtifacts();
   std::map<std::string, MObject*> getAreas();
+  std::map<std::string, MObject*> getAdventurers();
+
   std::vector<std::string> getActiveAdventurers();
   std::deque<std::string> getItemDropDeck();
   std::deque<std::string> getFloodDropDeck();
+
   MAdventurer* getCurrentAdventurer();
   MArea* getAreaByIndex(int x, int y);
   float getFloodLevel();

@@ -106,7 +106,7 @@ void MProcessor::moveDeck(std::deque<std::string>& src, std::deque<std::string>&
 bool MProcessor::start() {
   adventureStarted = false;
   floodLevel = 2.1;
-  adventurersNumber = 1;
+  adventurersNumber = 1;//2
   lastItemCard = nullptr;
   currentActionNumber = 0;
 
@@ -730,8 +730,6 @@ void MProcessor::getSwimAreas(MArea* area, std::vector<std::string>& result, int
   }
 }
 
-//
-
 void MProcessor::createConsole() {
   if (!AllocConsole()) {
     return;
@@ -752,6 +750,10 @@ std::map<std::string, MObject*> MProcessor::getArtifacts() {
 
 std::map<std::string, MObject*> MProcessor::getAreas() {
     return areas;
+}
+
+std::map<std::string, MObject*> MProcessor::getAdventurers() {
+    return adventurers;
 }
 
 std::vector<std::string> MProcessor::getActiveAdventurers() {
@@ -784,6 +786,7 @@ void MProcessor::changeCurrentAdventurer() {
     }
     if (pos >= activeAdventurers.size()) pos = 0;
     currentAdventurer = findAdventurer(activeAdventurers[pos]);
+    std::cout << "Change current adventurer to: " << currentAdventurer->getName() << std::endl;
 }
 
 MArea* MProcessor::getAreaByIndex(int x, int y) {
