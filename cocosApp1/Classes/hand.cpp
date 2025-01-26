@@ -88,9 +88,6 @@ bool MHand::addCard(const std::string& name) {
 	it = std::find(cards.begin(), cards.end(), noneCard);
 	if (it == cards.end()) {
 		std::cout << " [hand] Hand is full or array empty" << std::endl;
-		for (int i = 0; i < cards.size(); i++) {
-			std::cout << cards[i] << std::endl;
-		}
 		return false;
 	}
 	int num = it - cards.begin();

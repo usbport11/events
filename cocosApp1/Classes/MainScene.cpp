@@ -19,6 +19,18 @@ MProcessor* MMainScene::getProcessor() {
     return &processor;
 }
 
+MMainScene::~MMainScene() {
+    cardFrame.clear();
+    floodSprite.clear();
+    artifactSprite.clear();
+    adventurerHand.clear();
+    for (int i = 0; i < hands.size(); i++) {
+        if (hands[i]) delete hands[i];
+    }
+    hands.clear();
+    adventurerSprite.clear();
+}
+
 bool MMainScene::endTurn() {
     //exec function
     MAdventurer* adventurer = processor.getCurrentAdventurer();
@@ -59,6 +71,9 @@ bool MMainScene::endTurn() {
     //display name of next adventurer
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+
+    //update wather level
+    waterLevel.setCurrent(processor.getFloodLevel());
 
     currentAction = "";
    
@@ -267,10 +282,9 @@ bool MMainScene::initAdventurers() {
         if (!area) return false;
         cocos2d::Sprite* sp = gridMap.getSpriteByCell(area->getIndex()[0], area->getIndex()[1]);
         if (!sp) return false;
-        this->getChildByName("anim_fox")->setPosition(sp->getPosition());
-        this->getChildByName("anim_fox")->setVisible(true);
+        adventurerSprite[adventurer->getName()]->setPosition(sp->getPosition());
+        adventurerSprite[adventurer->getName()]->setVisible(true);
         gridMap.setCurrentCell(gridMap.getCellByCoordinates(sp->getPosition()));
-        break;
     }
     return true;
 }
@@ -285,7 +299,9 @@ bool MMainScene::initHand() {
     for (int i=0; i < activeAdventurers.size(); i++) {
         adventurerHand[activeAdventurers[i]] = hands[i];
         MAdventurer* adventurer = processor.findAdventurer(activeAdventurers[i]);
-        if (!adventurer) return false;
+        if (!adventurer) {
+            return false;
+        }
         if (i == 0) {
             hands[i]->setVisible(true);
         }
@@ -306,15 +322,6 @@ bool MMainScene::initVisual() {
     this->getChildByName("selection")->setPosition(0, 0);
     this->getChildByName("selection")->setScale(1.5);//1.0
     this->getChildByName("selection")->setVisible(false);
-
-    //adventurer
-    if (!createAnimSpriteFromPlist(this, "anim/fox.plist", "anim_fox", "fox_pt", 4, 0.1f)) {
-        return false;
-    }
-    this->getChildByName("anim_fox")->setPosition(0, 0);
-    this->getChildByName("anim_fox")->setVisible(false);
-    this->getChildByName("anim_fox")->setScale(2.0);
-    this->getChildByName("anim_fox")->setVisible(true);
 
     //artifacts
     cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
@@ -395,13 +402,20 @@ bool MMainScene::initVisual() {
 
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
-    //hands
+    //hands + adventurers sprites
     std::map<std::string, MObject*> adventurers = processor.getAdventurers();
     int i = 0;
     for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
         hands.push_back(new MHand);
         if(!hands[i]->create(this, 5, 7, it->first + "_hand%d", "card1", cocos2d::Vec2(100, 100))) return false;
         i ++;
+        if (!createAnimSpriteFromPlist(this, "anim/fox.plist", it->first + "_anim", "fox_pt", 4, 0.1f)) {
+            return false;
+        }
+        adventurerSprite[it->first] = (cocos2d::Sprite*) this->getChildByName(it->first + "_anim");
+        adventurerSprite[it->first]->setPosition(0, 0);
+        adventurerSprite[it->first]->setVisible(false);
+        adventurerSprite[it->first]->setScale(2.0);
     }
 
     if (!menu.create(this)) return false;
@@ -489,13 +503,11 @@ bool MMainScene::reset() {
 
     if (!processor.execFunction("start")) return false;
     if (!gridMap.init()) return false;
-    //initPathGenerator();
     if (!updateAreas()) return false;
     gridMap.clearAreaLimit();
     if (!initAdventurers()) return false;
     if (!initHand()) return false;
     floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
-    //clear all collisions except standard one
     //show adventurer name
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
@@ -536,7 +548,6 @@ bool MMainScene::init() {
 }
 
 void MMainScene::update(float delta) {
-    waterLevel.setCurrent(processor.getFloodLevel());
     updateActionNumber();
 }
 
@@ -581,7 +592,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
                 std::cout << "[MainScene] failed to move adventurer!" << std::endl;
                 return;
             }
-            getChildByName("anim_fox")->setPosition(gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
+            adventurerSprite[processor.getCurrentAdventurer()->getName()]->setPosition(gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
             currentAction = "";
         }
         if (currentAction == "abfluss") {

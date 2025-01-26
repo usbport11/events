@@ -25,9 +25,9 @@ private:
     std::map<std::string, std::string> cardFrame;
     std::map<std::string, std::string> floodSprite;
     std::map<std::string, std::string> artifactSprite;
-
     std::map<std::string, MHand*> adventurerHand;
     std::vector<MHand*> hands;
+    std::map<std::string, cocos2d::Sprite*> adventurerSprite;
 
     cocos2d::Vec2 speed;
     bool moving;
@@ -40,6 +40,7 @@ private:
     bool initHand();
 public:
     MProcessor* getProcessor();
+    ~MMainScene();
 
     bool endTurn();
     bool startMove();//start move instead move because it complex
@@ -54,6 +55,7 @@ public:
     static cocos2d::Scene* createScene();
     virtual bool init();
     void update(float delta);
+
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
