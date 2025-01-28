@@ -79,7 +79,7 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
         if(!menuItem) {
             return false;
         }
-        menuItem->setPosition(offset.x + , offset.y + );//<--- need calculate
+        menuItem->setPosition(offset.x + 0, offset.y + 0);//<--- need calculate
 		menuItem->setVisible(false);
 		menuItem->setEnabled(false);
         menuItems.pushBack(menuItem);
