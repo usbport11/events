@@ -181,6 +181,7 @@ bool MMainScene::extract() {
 
     return true;
 }
+/*
 bool MMainScene::skip() {
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
@@ -192,7 +193,7 @@ bool MMainScene::skip() {
 
     return true;
 }
-
+*/
 bool MMainScene::getArtifact() {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     std::map<std::string, MObject*> artifacts = processor.getArtifacts();
@@ -404,6 +405,7 @@ bool MMainScene::initVisual() {
 
     //hands + adventurers sprites
     std::map<std::string, MObject*> adventurers = processor.getAdventurers();
+    std::vector<std::string> advs;
     int i = 0;
     for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
         hands.push_back(new MHand);
@@ -416,9 +418,12 @@ bool MMainScene::initVisual() {
         adventurerSprite[it->first]->setPosition(0, 0);
         adventurerSprite[it->first]->setVisible(false);
         adventurerSprite[it->first]->setScale(2.0);
+        advs.push_back(it->first);
     }
 
     if (!menu.create(this)) return false;
+    if (!adventurerMenu.create(this, "anim/adventurers.plist", advs)) return false;
+    advs.clear();
 
     cardFrame = { {"crystal0", "card5"},
         {"crystal1", "card5"},
@@ -512,6 +517,8 @@ bool MMainScene::reset() {
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
     currentAction = "";
+
+    if (!adventurerMenu.init(processor.getActiveAdventurers())) return false;
 
     return true;
 }

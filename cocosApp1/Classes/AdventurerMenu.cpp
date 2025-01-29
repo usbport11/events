@@ -55,13 +55,13 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
 		{"pilot", "adv5"}
 	};
 	
-	cocos2d::SpriteFrame* spriteFrame;
-	cocos2d::Sprite* sprite;
-	for(int i=0; i<adventurers.size(); i++) {
-		spriteFrame = cache->getSpriteFrameByName(advNameFrame[adventurers[i]]);
-		sprite = cocos2d::Sprite::createWithSpriteFrame(spriteFrame);
-		adventurerSprite[adventurers[i]] = sprite;
-	}
+	//cocos2d::SpriteFrame* spriteFrame;
+	//cocos2d::Sprite* sprite;
+	//for(int i=0; i<adventurers.size(); i++) {
+	//	spriteFrame = cache->getSpriteFrameByName(advNameFrame[adventurers[i]]);
+	//	sprite = cocos2d::Sprite::createWithSpriteFrame(spriteFrame);
+	//	adventurerSprite[adventurers[i]] = sprite;
+	//}
 	
 	//create items
     std::map<int, cocos2d::ccMenuCallback> menuCallback = {
@@ -73,13 +73,18 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
 		{5, CC_CALLBACK_1(MAdventurerMenu::menuAdv5Callback, this)},
 	};
 	cocos2d::Vector<cocos2d::MenuItem*> menuItems;
-	cocos2d::Vec2 offset = cocos2d::Vec2(100, 100);
-	for(int i=0; i<adventurerSprite.size(); i++) {
+	cocos2d::Vec2 offset = cocos2d::Vec2(50, 300);
+	int rows = 2;
+	int pos[2];
+	//for(int i=0; i<adventurerSprite.size(); i++) {
+	for (int i = 0; i < adventurers.size(); i++) {
 		cocos2d::MenuItemImage* menuItem = cocos2d::MenuItemImage::create("empty_card.png", "", "", menuCallback[i]);
         if(!menuItem) {
             return false;
         }
-        menuItem->setPosition(offset.x + 0, offset.y + 0);//<--- need calculate
+		pos[0] = i / rows;
+		pos[1] = i - pos[0] * rows;
+        menuItem->setPosition(offset.x + pos[0] * 64 - 10, offset.y - pos[1] * 64 - 10);//<--- need calculate
 		menuItem->setVisible(false);
 		menuItem->setEnabled(false);
         menuItems.pushBack(menuItem);
@@ -101,6 +106,19 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
 bool MAdventurerMenu::init(std::vector<std::string> activeAdventurers) {
 	numberAdventurer.clear();
 
+	std::map<std::string, std::string> advNameFrame = {
+		{"diver", "adv0"},
+		{"engineer", "adv1"},
+		{"explorer", "adv2"},
+		{"liaison", "adv3"},
+		{"navigator", "adv4"},
+		{"pilot", "adv5"}
+	};
+	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+	if (!cache) return false;
+	cocos2d::SpriteFrame* spriteFrame;
+	cocos2d::Sprite* sprite;
+
 	cocos2d::Node* node = pMainScene->getChildByName("adventurerMenu");
 	if(!node) return false;
     cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
@@ -108,13 +126,19 @@ bool MAdventurerMenu::init(std::vector<std::string> activeAdventurers) {
     for (int i = 0; i < items.size(); i++) {
 		menuItem = (cocos2d::MenuItemImage*)items.at(i);
 		if(i < activeAdventurers.size()) {
+			spriteFrame = cache->getSpriteFrameByName(advNameFrame[activeAdventurers[i]]);
+			sprite = cocos2d::Sprite::createWithSpriteFrame(spriteFrame);
+
+			//adventurerSprite[adventurers[i]] = sprite;
+			//cocos2d::Sprite* sp = adventurerSprite[activeAdventurers[i]];
+
 			menuItem->setVisible(true);
 			menuItem->setEnabled(true);
-			menuItem->setNormalImage(adventurerSprite[activeAdventurers[i]]);
-			menuItem->setSelectedImage(adventurerSprite[activeAdventurers[i]]);
+			menuItem->setNormalImage(sprite);//sp
+			menuItem->setSelectedImage(sprite);//sp
 			numberAdventurer[i] = activeAdventurers[i];
 			if(i == 0) {
-				menuItem->setSelectedImage(adventurerSprite[activeAdventurers[i]]);
+				menuItem->setSelectedImage(sprite);//sp
 			}
 		}
 		else {

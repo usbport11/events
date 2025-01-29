@@ -2,12 +2,12 @@
 #define __MAIN_SCENE_H__
 
 #include "cocos2d.h"
-//#include "PathGenerator.h"
 #include "gridMap.h"
 #include "deck.h"
 #include "hand.h"
 #include "waterLevel.h"
 #include "menu.h"
+#include "AdventurerMenu.h"
 #include "logic/processor.h"
 
 class MMainScene: public cocos2d::Scene {
@@ -20,6 +20,7 @@ private:
     MDeck floodDeck;
     MWaterLevel waterLevel;
     MMenu menu;
+    MAdventurerMenu adventurerMenu;
     
     int gridSize;
     std::map<std::string, std::string> cardFrame;
@@ -46,7 +47,7 @@ public:
     bool startMove();//start move instead move because it complex
     bool startAbfluss();//start abluss instead abluss because it complex
     bool extract();
-    bool skip();
+    //bool skip();
     bool getArtifact();
     bool discard(std::list<int> cards);
 
