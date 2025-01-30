@@ -58,6 +58,7 @@ void MMenu::menuExtractCallback(cocos2d::Ref* pSender) {
     }
 }
 
+/*
 void MMenu::menuSkipCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
     std::cout << " [Menu] Menu item 'skip' selected" << std::endl;
@@ -65,6 +66,7 @@ void MMenu::menuSkipCallback(cocos2d::Ref* pSender) {
         std::cout << " [Menu] item 'skip' failed!" << std::endl;
     }
 }
+*/
 
 bool MMenu::create(MMainScene* _pMainScene) {
     if (!_pMainScene) {
@@ -73,7 +75,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
 
     pMainScene = _pMainScene;
 
-    const std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract", "Skip"};
+    const std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract"};//, "Skip"
     std::map<std::string, ccMenuCallback> menuCallback;
     menuCallback["EndTurn"] = CC_CALLBACK_1(MMenu::menuEndTurnCallback, this);
     menuCallback["Move"] = CC_CALLBACK_1(MMenu::menuMoveCallback, this);
@@ -81,7 +83,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
     menuCallback["HandOver"] = CC_CALLBACK_1(MMenu::menuHandOverCallback, this);
     menuCallback["GetArtifact"] = CC_CALLBACK_1(MMenu::menuGetArtifactCallback, this);
     menuCallback["Extract"] = CC_CALLBACK_1(MMenu::menuExtractCallback, this);
-    menuCallback["Skip"] = CC_CALLBACK_1(MMenu::menuSkipCallback, this);
+    //menuCallback["Skip"] = CC_CALLBACK_1(MMenu::menuSkipCallback, this);
 
     float topOffset = pMainScene->getContentSize().height - 30;
     const std::string btnBackPng[2] = { "back_off.png", "back_on.png" };

@@ -9,7 +9,8 @@ class MAdventurerMenu {
 private:
 	MMainScene* pMainScene;
 	std::map<int, std::string> numberAdventurer;
-	std::map<std::string, cocos2d::Sprite*> adventurerSprite; 
+	std::map<std::string, std::string> advNameFrame;
+	//std::map<std::string, cocos2d::Sprite*> adventurerSprite; 
 	void menuAdv0Callback(cocos2d::Ref* pSender);
 	void menuAdv1Callback(cocos2d::Ref* pSender);
 	void menuAdv2Callback(cocos2d::Ref* pSender);
@@ -23,6 +24,7 @@ public:
 	~MAdventurerMenu();
 	bool create(MMainScene* _pMainScene, const std::string& pListFile, std::vector<std::string> adventurers);
 	bool init(std::vector<std::string> activeAdventurers);
+	void selectByName(const std::string& name);
 };
 
 #endif

@@ -21,6 +21,7 @@ private:
     MWaterLevel waterLevel;
     MMenu menu;
     MAdventurerMenu adventurerMenu;
+    std::string adventurerMenuSelected;
     
     int gridSize;
     std::map<std::string, std::string> cardFrame;
@@ -42,20 +43,18 @@ private:
 public:
     MProcessor* getProcessor();
     ~MMainScene();
+    static cocos2d::Scene* createScene();
+    virtual bool init();
+    void update(float delta);
 
     bool endTurn();
     bool startMove();//start move instead move because it complex
     bool startAbfluss();//start abluss instead abluss because it complex
     bool extract();
-    //bool skip();
     bool getArtifact();
     bool discard(std::list<int> cards);
-
     bool reset();
-
-    static cocos2d::Scene* createScene();
-    virtual bool init();
-    void update(float delta);
+    void adventurerClicked(const std::string& name);
 
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);

@@ -37,7 +37,7 @@ bool MMainScene::endTurn() {
     MHand* hand = adventurerHand[adventurer->getName()];
     if(!processor.execFunction("endturn", adventurer->getName())) return false;
 
-    //update hand
+    //update hand current adventurer
     std::vector<MCard*> cards = adventurer->getAllCards();
     for (int i = hand->getUsedSize(); i < cards.size(); i++) {
         if (!hand->addCard(cardFrame[cards[i]->getName()])) return false;
@@ -65,8 +65,12 @@ bool MMainScene::endTurn() {
         if (!dropCardScene->setCards(hand->getNotEmptyCards())) return false;
         Director::getInstance()->pushScene(dropCardScene);
     }
-    adventurerHand[adventurer->getName()]->setVisible(false);
-    adventurerHand[processor.getCurrentAdventurer()->getName()]->setVisible(true);
+
+    //change hand
+    //adventurerHand[adventurer->getName()]->setVisible(false);
+    //adventurerHand[processor.getCurrentAdventurer()->getName()]->setVisible(true);
+    adventurerClicked(processor.getCurrentAdventurer()->getName());
+    adventurerMenu.selectByName(processor.getCurrentAdventurer()->getName());
 
     //display name of next adventurer
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
@@ -181,19 +185,6 @@ bool MMainScene::extract() {
 
     return true;
 }
-/*
-bool MMainScene::skip() {
-    if (processor.actionNumberLimitReached()) {
-        std::cout << "Can't action. Limit reached" << std::endl;
-        return false;
-    }
-
-    if (!processor.execFunction("skip", processor.getCurrentAdventurer()->getName())) return false;
-    currentAction = "";
-
-    return true;
-}
-*/
 bool MMainScene::getArtifact() {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     std::map<std::string, MObject*> artifacts = processor.getArtifacts();
@@ -220,9 +211,9 @@ bool MMainScene::discard(std::list<int> cards) {
     for (std::list<int>::iterator it = cards.begin(); it != cards.end(); it++) {
         MAdventurer* adventurer = processor.getCurrentAdventurer();
         if (!adventurer) return false;
-        MCard* card = adventurer->getCardByNumber(*it - removed);
+        MCard* card = adventurer->getCardByNumber(*it - removed);//wrong card after delete
         if (!card) return false;
-        if (!processor.execFunction("discard", adventurer->getName() + " " + card->getName())) return false;
+        if (!processor.execFunction("discard", adventurer->getName() + " " + card->getName())) return false; //error!
         MHand* hand = adventurerHand[adventurer->getName()];
         if (!hand->removeCard(*it - removed)) return false; //hand not matter real card name
         itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
@@ -275,9 +266,14 @@ bool MMainScene::updateActionNumber() {
 }
 
 bool MMainScene::initAdventurers() {
-    std::vector<std::string> adventurers = processor.getActiveAdventurers();
-    for (int i = 0; i < adventurers.size(); i++) {
-        MAdventurer* adventurer = processor.findAdventurer(adventurers[i]);
+    std::map<std::string, MObject*> adventurers = processor.getAdventurers();
+    for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
+        adventurerSprite[it->first]->setVisible(false);
+    }
+
+    std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
+    for (int i = 0; i < activeAdventurers.size(); i++) {
+        MAdventurer* adventurer = processor.findAdventurer(activeAdventurers[i]);
         if (!adventurer) return false;
         MArea* area = processor.findArea(adventurer->getStartArea());
         if (!area) return false;
@@ -518,9 +514,19 @@ bool MMainScene::reset() {
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
     currentAction = "";
 
+    //clear sprites adventurers
+
     if (!adventurerMenu.init(processor.getActiveAdventurers())) return false;
+    adventurerMenuSelected = processor.getCurrentAdventurer()->getName();
 
     return true;
+}
+
+void MMainScene::adventurerClicked(const std::string& name) {
+    if (adventurerMenuSelected == name) return;
+    adventurerHand[adventurerMenuSelected]->setVisible(false);
+    adventurerHand[name]->setVisible(true);
+    adventurerMenuSelected = name;
 }
 
 bool MMainScene::init() {
