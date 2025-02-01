@@ -4,10 +4,12 @@
 #include "cocos2d.h"
 
 class MMainScene;
+class MAdventurer;
 
 class MDropCardScene: public cocos2d::Scene {
 private:
 	MMainScene* pMainScene;
+	MAdventurer* pAdventurer;
 
 	std::list<int> selectedCards;
 	std::vector<std::string> sourceCards;
@@ -33,6 +35,7 @@ public:
 	virtual bool init();
 	void setMainScene(MMainScene* _pMainScene);
 	bool setCards(std::vector<std::string> _sourceCards);
+	bool setAdventurer(MAdventurer* _pAdventurer);
     CREATE_FUNC(MDropCardScene);
 };
 

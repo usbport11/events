@@ -131,6 +131,12 @@ bool MDropCardScene::setCards(std::vector<std::string> _sourceCards) {
 	return true;
 }
 
+bool MDropCardScene::setAdventurer(MAdventurer* _pAdventurer) {
+	if (!_pAdventurer) return false;
+	pAdventurer = _pAdventurer;
+	return true;
+}
+
 void MDropCardScene::selectMenuItem(cocos2d::Ref* pSender, int number) {
 	if (number >= totalCardsLimit ) return;
 	if (number >= sourceCards.size()) return;
@@ -187,6 +193,6 @@ void MDropCardScene::menuCloseCallback(cocos2d::Ref* pSender) {
 		//processor exec function draw card for current adventurer
 		//hide sprite in hand slot for current adventurer that was draw
 	//return to mainScene;
-	pMainScene->discard(selectedCards);
+	pMainScene->discard(pAdventurer, selectedCards);
 	Director::getInstance()->popScene();
 }

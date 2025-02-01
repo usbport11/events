@@ -52,7 +52,7 @@ public:
     bool startAbfluss();//start abluss instead abluss because it complex
     bool extract();
     bool getArtifact();
-    bool discard(std::list<int> cards);
+    bool discard(MAdventurer* adventurer, std::list<int> cards);
     bool reset();
     void adventurerClicked(const std::string& name);
 

@@ -59,18 +59,21 @@ bool MMainScene::endTurn() {
     }
 
     if(hand->getUsedSize() > 5) {
+        std::cout << "Drop cards for: " << adventurer->getName() << std::endl;//important! current adveturer is changed in processor!
         MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
         if (!dropCardScene) return false;
         dropCardScene->setMainScene(this);
         if (!dropCardScene->setCards(hand->getNotEmptyCards())) return false;
+        if (!dropCardScene->setAdventurer(adventurer)) return false;
         Director::getInstance()->pushScene(dropCardScene);
     }
 
+    //change adventurer
+    adventurer = processor.getCurrentAdventurer();
+
     //change hand
-    //adventurerHand[adventurer->getName()]->setVisible(false);
-    //adventurerHand[processor.getCurrentAdventurer()->getName()]->setVisible(true);
-    adventurerClicked(processor.getCurrentAdventurer()->getName());
-    adventurerMenu.selectByName(processor.getCurrentAdventurer()->getName());
+    adventurerClicked(adventurer->getName());
+    adventurerMenu.selectByName(adventurer->getName());
 
     //display name of next adventurer
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
@@ -205,16 +208,24 @@ bool MMainScene::getArtifact() {
     return true;
 }
 
-bool MMainScene::discard(std::list<int> cards) {
+bool MMainScene::discard(MAdventurer* adventurer, std::list<int> cards) {
+    if (!adventurer) return false;
     int removed = 0;
     cards.sort();//important!
+
+    //MAdventurer* adventurer = processor.getCurrentAdventurer();
+    std::cout << "Drop cards for: " << adventurer->getName() << std::endl;
+    std::vector<MCard*> cardsR = adventurer->getAllCards();
+    if (!adventurer) return false;
+    if (cards.back() >= cardsR.size()) return false;
+
+    MHand* hand = adventurerHand[adventurer->getName()];
+    MCard* card;
+
     for (std::list<int>::iterator it = cards.begin(); it != cards.end(); it++) {
-        MAdventurer* adventurer = processor.getCurrentAdventurer();
-        if (!adventurer) return false;
-        MCard* card = adventurer->getCardByNumber(*it - removed);//wrong card after delete
+        card = adventurer->getCardByNumber(*it - removed);//wrong card after delete
         if (!card) return false;
         if (!processor.execFunction("discard", adventurer->getName() + " " + card->getName())) return false; //error!
-        MHand* hand = adventurerHand[adventurer->getName()];
         if (!hand->removeCard(*it - removed)) return false; //hand not matter real card name
         itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
         removed++;
