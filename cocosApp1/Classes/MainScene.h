@@ -53,8 +53,10 @@ public:
     bool extract();
     bool getArtifact();
     bool discard(MAdventurer* adventurer, std::list<int> cards);
+
     bool reset();
     void adventurerClicked(const std::string& name);
+    int getAdventurerNumber(const std::string& name);
 
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);

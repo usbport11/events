@@ -282,6 +282,8 @@ bool MMainScene::initAdventurers() {
         adventurerSprite[it->first]->setVisible(false);
     }
 
+    int pos[2];
+
     std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
     for (int i = 0; i < activeAdventurers.size(); i++) {
         MAdventurer* adventurer = processor.findAdventurer(activeAdventurers[i]);
@@ -290,7 +292,13 @@ bool MMainScene::initAdventurers() {
         if (!area) return false;
         cocos2d::Sprite* sp = gridMap.getSpriteByCell(area->getIndex()[0], area->getIndex()[1]);
         if (!sp) return false;
-        adventurerSprite[adventurer->getName()]->setPosition(sp->getPosition());
+
+        pos[0] = i / 2;
+        pos[0] = pos[0] * 32 - 16;
+        pos[1] = 16 - (i % 2) * 32;
+        adventurerSprite[adventurer->getName()]->setPosition(sp->getPosition().x + pos[0], sp->getPosition().y + pos[1]);
+
+        //adventurerSprite[adventurer->getName()]->setPosition(sp->getPosition());
         adventurerSprite[adventurer->getName()]->setVisible(true);
         gridMap.setCurrentCell(gridMap.getCellByCoordinates(sp->getPosition()));
     }
@@ -540,6 +548,14 @@ void MMainScene::adventurerClicked(const std::string& name) {
     adventurerMenuSelected = name;
 }
 
+int MMainScene::getAdventurerNumber(const std::string& name) {
+    std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
+    for (int i = 0; i < activeAdventurers.size(); i++) {
+        if (activeAdventurers[i] == name) return i;
+    }
+    return -1;
+}
+
 bool MMainScene::init() {
     if (!Scene::init()) {
         return false;
@@ -608,19 +624,29 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         if (!gridMap.cellCheck(cell)) {
             return;
         }
-        if (cell == gridMap.getCurrentCell()) {
+        //why check this? previous check not pass here
+        MAdventurer* adventurer = processor.getCurrentAdventurer();
+        if(gridMap.getCellByCoordinates(adventurerSprite[adventurer->getName()]->getPosition()) == cell) {
             return;
         }
         if (currentAction == "move") {
-            if (!processor.execFunction("move", processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+            if (!processor.execFunction("move", adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
                 std::cout << "[MainScene] failed to move adventurer!" << std::endl;
                 return;
             }
-            adventurerSprite[processor.getCurrentAdventurer()->getName()]->setPosition(gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
+            //position of adventurer must be 1/N adventurers number
+            //better case is 4 adventurers limit
+            int pos[2];
+            int num = getAdventurerNumber(adventurer->getName());
+            pos[0] = (num / 2);
+            pos[0] = pos[0] * 32 - 16;
+            pos[1] = 16 - (num % 2) * 32;
+            cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
+            adventurerSprite[adventurer->getName()]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
             currentAction = "";
         }
         if (currentAction == "abfluss") {
-            if (!processor.execFunction("abfluss", processor.getCurrentAdventurer()->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+            if (!processor.execFunction("abfluss", adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
                 std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
                 return;
             }
