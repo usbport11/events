@@ -22,6 +22,7 @@ public:
 	int getUsedSize();
 	int getSize();
 	bool create(cocos2d::Scene* _pScene, int _limit, int _max, const std::string& _prefix, const std::string& _noneCard, cocos2d::Vec2 position);
+	bool create(cocos2d::Scene* _pScene, MHand* hand, const std::string namePrefix, cocos2d::Vec2 position);
 	std::vector<std::string> getCards();
 	std::vector<std::string> getNotEmptyCards();
 	bool addCard(const std::string& name);
@@ -29,6 +30,12 @@ public:
 	bool removeCard(const std::string& name);
 	bool reset();
 	void setVisible(bool visible);
+	std::string getCard(int number);
+	int getMax();
+	std::string getHandMask();
+	std::string getNoneCard();
+	std::map<std::string, cocos2d::SpriteFrame*> getCardFrame();
+	std::map<int, cocos2d::Sprite*> getNumberSprite();
 };
 
 #endif

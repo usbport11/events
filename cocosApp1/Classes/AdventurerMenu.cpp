@@ -17,7 +17,7 @@ MAdventurerMenu::MAdventurerMenu() {
 
 MAdventurerMenu::~MAdventurerMenu() {
 	numberAdventurer.clear();
-	//adventurerSprite.clear();
+	adventurerSprite.clear();
 }
 
 void MAdventurerMenu::menuAdv0Callback(cocos2d::Ref* pSender) {
@@ -96,6 +96,7 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
 
 bool MAdventurerMenu::init(std::vector<std::string> activeAdventurers) {
 	numberAdventurer.clear();
+	adventurerSprite.clear();
 	unselectMenuAll();
 
 	
@@ -125,6 +126,7 @@ bool MAdventurerMenu::init(std::vector<std::string> activeAdventurers) {
 			}
 
 			numberAdventurer[i] = activeAdventurers[i];
+			adventurerSprite[activeAdventurers[i]] = sprite;
 			menuItem->setName(advNameFrame[activeAdventurers[i]]);
 		}
 		else {
@@ -167,4 +169,8 @@ void MAdventurerMenu::selectByName(const std::string& name) {
 			return;
 		}
 	}
+}
+
+std::map<std::string, cocos2d::Sprite*> MAdventurerMenu::getAdventurerSprite() {
+	return adventurerSprite;
 }

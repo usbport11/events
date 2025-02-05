@@ -71,6 +71,28 @@ bool MHand::create(cocos2d::Scene* _pScene, int _limit, int _max, const std::str
 
 	return true;
 }
+bool MHand::create(cocos2d::Scene* _pScene, MHand* hand, const std::string namePrefix, cocos2d::Vec2 position) {
+	if (!_pScene) return false;
+	if (!hand) return false;
+	if (namePrefix.empty()) return false;
+
+	pScene = _pScene;
+	handMask = hand->getHandMask();
+	noneCard = hand->getNoneCard();
+	cards = hand->getCards();
+	cardFrame = hand->getCardFrame();
+	limit = hand->getLimit();
+	max = hand->getMax();
+	numberSprite = hand->getNumberSprite();
+	for (std::map<int, cocos2d::Sprite*>::iterator it = numberSprite.begin(); it != numberSprite.end(); it++) {
+		numberSprite[it->first] = cocos2d::Sprite::createWithSpriteFrame(it->second->getSpriteFrame());
+		if (!numberSprite[it->first]) return false;
+		numberSprite[it->first]->setPosition(cocos2d::Vec2(position.x + 70 * it->first, position.y));
+		numberSprite[it->first]->setName(namePrefix + numberSprite[it->first]->getName());
+		pScene->addChild(numberSprite[it->first]);
+	}
+	return true;
+}
 std::vector<std::string> MHand::getCards() {
 	return cards;
 }
@@ -129,14 +151,12 @@ bool MHand::removeCard(int number) {
 
 	return true;
 }
-
 bool MHand::removeCard(const std::string& name) {
 	std::vector<std::string>::iterator it = std::find(cards.begin(), cards.end(), name);
 	if (it == cards.end()) return false;
 	int num = it - cards.begin();
 	return removeCard(num);
 }
-
 void MHand::refresh() {
 	for (int i = 0; i < limit; i++) {
 		if (cardFrame.find(cards[i]) == cardFrame.end()) {
@@ -146,7 +166,6 @@ void MHand::refresh() {
 		numberSprite[i]->setSpriteFrame(cardFrame[cards[i]]);
 	}
 }
-
 bool MHand::reset() {
 	cards.clear();
 	for (int i = 0; i < max; i++) {//limit
@@ -157,9 +176,27 @@ bool MHand::reset() {
 	}
 	return true;
 }
-
 void MHand::setVisible(bool visible) {
 	for (int i = 0; i < limit; i++) {
 		numberSprite[i]->setVisible(visible);
 	}
+}
+std::string MHand::getCard(int number) {
+	if (number >= cards.size()) return "";
+	return cards[number];
+}
+int MHand::getMax() {
+	return max;
+}
+std::string MHand::getHandMask() {
+	return handMask;
+}
+std::string MHand::getNoneCard() {
+	return noneCard;
+}
+std::map<std::string, cocos2d::SpriteFrame*> MHand::getCardFrame() {
+	return cardFrame;
+}
+std::map<int, cocos2d::Sprite*> MHand::getNumberSprite() {
+	return numberSprite;
 }

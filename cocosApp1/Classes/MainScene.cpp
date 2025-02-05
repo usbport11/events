@@ -1,6 +1,7 @@
 #include "MainScene.h"
 #include "EndScene.h"
 #include "DropCardScene.h"
+#include "HandoverScene.h"
 #include "MenuItemImageExt.h"
 #include "utils.h"
 #include "logic/area.h"
@@ -556,6 +557,23 @@ int MMainScene::getAdventurerNumber(const std::string& name) {
     return -1;
 }
 
+MAdventurer* MMainScene::getCurrentAdventurer() {
+    return processor.getCurrentAdventurer();
+}
+
+MHand* MMainScene::getAdventurerHand(const std::string& name) {
+    if (adventurerHand.find(name) != adventurerHand.end()) return adventurerHand[name];
+    return nullptr;
+}
+
+std::map<std::string, std::string> MMainScene::getCardFrame() {
+    return cardFrame;
+}
+
+MAdventurerMenu* MMainScene::getAdventurerMenu() {
+    return &adventurerMenu;
+}
+
 bool MMainScene::init() {
     if (!Scene::init()) {
         return false;
@@ -665,24 +683,10 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
         if(!reset()) return;
     }
-    if (keyCode == EventKeyboard::KeyCode::KEY_C) {
-        processor.execFunction("getitemcard", processor.getCurrentAdventurer()->getName());
-        std::cout << "[MainScene] call get next card" << std::endl;
-
-        MHand* hand = adventurerHand[processor.getCurrentAdventurer()->getName()];
-
-        std::vector<MCard*> cards = processor.getCurrentAdventurer()->getAllCards();
-        for (int i = hand->getUsedSize(); i < cards.size(); i++) {
-            if (!hand->addCard(cardFrame[cards[i]->getName()])) return;
-        }
-
-        if (hand->getUsedSize() > 5) {
-            MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
-            if (!dropCardScene) return;
-            dropCardScene->setMainScene(this);
-            if (!dropCardScene->setCards(hand->getNotEmptyCards())) return;
-            Director::getInstance()->pushScene(dropCardScene);
-        }
+    if (keyCode == EventKeyboard::KeyCode::KEY_H) {
+        MHandoverScene* handoverScene = (MHandoverScene*)MHandoverScene::createScene();
+        if(!handoverScene->create(this)) return;
+        Director::getInstance()->pushScene(handoverScene);
     }
 }
 
