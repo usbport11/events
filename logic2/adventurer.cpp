@@ -4,6 +4,7 @@
 #include "card.h"
 #include "artifact.h"
 #include <algorithm>
+#include <iostream>
 
 MAdventurer::MAdventurer():MObject() {
   startArea = "";
@@ -23,7 +24,10 @@ void MAdventurer::addArtifact(MArtifact* artifact) {
   artifacts.push_back(artifact);
 }
 void MAdventurer::addCard(MCard* card) {
-  if(std::find(cards.begin(), cards.end(), card) != cards.end()) return;
+  if (std::find(cards.begin(), cards.end(), card) != cards.end()) {
+    std::cout << "Can't add card. It alredy added!" << std::endl;
+    return;
+  }
   cards.push_back(card);
 }
 void MAdventurer::removeCard(MCard* card) {
