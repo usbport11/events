@@ -106,7 +106,7 @@ void MProcessor::moveDeck(std::deque<std::string>& src, std::deque<std::string>&
 bool MProcessor::start() {
   adventureStarted = false;
   floodLevel = 2.1;
-  adventurersNumber = 2;//2
+  adventurersNumber = 3;//<<----------------------
   lastItemCard = nullptr;
   currentActionNumber = 0;
 
