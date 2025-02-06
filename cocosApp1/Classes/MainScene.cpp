@@ -235,6 +235,36 @@ bool MMainScene::discard(MAdventurer* adventurer, std::list<int> cards) {
     return true;
 }
 
+bool MMainScene::startHandover() {
+    if (adventurerHand.size() <= 1) return false;
+    MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
+    MArea* area = srcAdventurer->getArea();
+    std::vector<std::string> adventurers = processor.getActiveAdventurers();
+    std::vector<std::string> dstAdventurers;
+    for (int i = 0; i < adventurers.size(); i++) {
+        if (srcAdventurer->getName() == adventurers[i]) continue;
+        if (srcAdventurer->getArea() != processor.findAdventurer(adventurers[i])->getArea()) continue;
+        dstAdventurers.push_back(adventurers[i]);
+    }
+    if (dstAdventurers.empty()) return false;
+    MHandoverScene* handoverScene = (MHandoverScene*)MHandoverScene::createScene();
+    if (!handoverScene->create(this, srcAdventurer, dstAdventurers)) return false;
+    Director::getInstance()->pushScene(handoverScene);
+    return true;
+}
+
+bool MMainScene::sumbitHandover(MAdventurer* adventurer, int cardNumber) {
+    if (!adventurer || cardNumber < 0 || cardNumber >= 5) {
+        return false;
+    }
+    MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
+    MCard* srcCard = srcAdventurer->getCardByNumber(cardNumber);
+    if (!processor.execFunction("handover", srcAdventurer->getName() + " " + adventurer->getName() + " " + srcCard->getName())) return false;
+    adventurerHand[srcAdventurer->getName()]->removeCard(cardFrame[srcCard->getName()]);
+    adventurerHand[adventurer->getName()]->addCard(cardFrame[srcCard->getName()]);
+    return true;
+}
+
 bool MMainScene::updateAreas() {
     MArea* area;
     cocos2d::Sprite* sp;
@@ -684,8 +714,16 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         if(!reset()) return;
     }
     if (keyCode == EventKeyboard::KeyCode::KEY_H) {
+        MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
+        MArea* area = srcAdventurer->getArea();
+        std::vector<std::string> adventurers = processor.getActiveAdventurers();
+        std::vector<std::string> dstAdventurers;
+        for (int i = 0; i < adventurers.size(); i++) {
+            if (srcAdventurer->getName() == adventurers[i]) continue;
+            dstAdventurers.push_back(adventurers[i]);
+        }
         MHandoverScene* handoverScene = (MHandoverScene*)MHandoverScene::createScene();
-        if(!handoverScene->create(this)) return;
+        if(!handoverScene->create(this, srcAdventurer, dstAdventurers)) return;
         Director::getInstance()->pushScene(handoverScene);
     }
 }

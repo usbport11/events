@@ -27,10 +27,12 @@ Scene* MHandoverScene::createScene() {
 bool MHandoverScene::init() {
 	return Scene::init();
 }
-bool MHandoverScene::create(MMainScene* _pMainScene) {
+bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer, std::vector<std::string> dstAdventurers) {
 	if (!_pMainScene) return false;
+	if (!srcAdventurer) return false;
+	if (dstAdventurers.empty()) return false;
 	pMainScene = _pMainScene;
-	pAdventurer = pMainScene->getCurrentAdventurer();
+	pAdventurer = srcAdventurer;
 
 	std::map<int, ccMenuCallback> cardsCallback = {
 		{0, CC_CALLBACK_1(MHandoverScene::sourceCard0Select, this)},
@@ -67,41 +69,34 @@ bool MHandoverScene::create(MMainScene* _pMainScene) {
 
 	//============================================================================================
 	//create adventurers menu and hands
-	int k = 0;
 	MAdventurer* nextAdventurer;
-	std::vector<std::string> adventurerNames = pMainScene->getProcessor()->getActiveAdventurers();
-	for (int i = 0; i < adventurerNames.size(); i++) {
-		nextAdventurer = pMainScene->getProcessor()->findAdventurer(adventurerNames[i]);
+	for (int i = 0; i < dstAdventurers.size(); i++) {
+		nextAdventurer = pMainScene->getProcessor()->findAdventurer(dstAdventurers[i]);
 		if (!nextAdventurer) return false;
-		if (nextAdventurer == pAdventurer) {
-			continue;
-		}
-		numberAdventurer[k] = nextAdventurer;
+		numberAdventurer[i] = nextAdventurer;
 
 		MHand* hand = new MHand;
-		hand->create(this, pMainScene->getAdventurerHand(numberAdventurer[k]->getName()), numberAdventurer[k]->getName(), cocos2d::Vec2((visibleSize.width - 350)/2 + 35, 450));
-		if (k > 0) {
+		hand->create(this, pMainScene->getAdventurerHand(numberAdventurer[i]->getName()), numberAdventurer[i]->getName(), cocos2d::Vec2((visibleSize.width - 350)/2 + 35, 450));
+		if (i > 0) {
 			hand->setVisible(false);
 		}
 		std::vector<std::string> data = hand->getCards();
 		hands.push_back(hand);
 
 		//adventurer icon items
-		menuItem = MenuItemImage::create("empty_card.png", "", adventurersCallback[k]);
+		menuItem = MenuItemImage::create("empty_card.png", "", adventurersCallback[i]);
 		if (!menuItem) {
 			return false;
 		}
 		sp = cocos2d::Sprite::createWithSpriteFrame(pMainScene->getAdventurerMenu()->getAdventurerSprite()[nextAdventurer->getName()]->getSpriteFrame());
 		if (!sp) return false;
-		offset = (visibleSize.width - (sp->getContentSize().width + 20) * (adventurerNames.size() - 1)) / 2 - (sp->getContentSize().width + 20) / 2;
+		offset = (visibleSize.width - (sp->getContentSize().width + 20) * (dstAdventurers.size() - 1)) / 2;
 		itemPosition = Vec2(offset + i * (sp->getContentSize().width + 20), 600);
 		menuItem->setPosition(itemPosition);
 		if (!sp) return false;
 		menuItem->setNormalImage(sp);
 		menuItem->setSelectedImage(sp);
 		adventurerItems.pushBack(menuItem);
-
-		k++;
 	}
 	//create menu based on items
 	menu = Menu::createWithArray(adventurerItems);
@@ -175,19 +170,18 @@ void MHandoverScene::handoverSumbit(cocos2d::Ref* pSender) {
 	if(selectedCard < 0 || selectedCard >= 5) return;
 	if(selectedAdventurer < 0 || selectedAdventurer >= hands.size()) return;
 	if(hands[selectedAdventurer]->getUsedSize() >= 5) return;
-	//pMainScene->handoverSubmit(numberAdventurer[selectedAdventurer], hands[selectedAdventurer]->getCard(selectedCard));
+	pMainScene->sumbitHandover(numberAdventurer[selectedAdventurer], selectedCard);
 	std::cout << "Submit clicked!" << std::endl;
 	Director::getInstance()->popScene();
 }
 void MHandoverScene::handoverCancel(cocos2d::Ref* pSender) {
-	//pMainScene->hadoverCancel();
 	std::cout<<"Cancel clicked!" << std::endl;
 	Director::getInstance()->popScene();
 }
 void MHandoverScene::selectAdventurer(int number) {
 	if(numberAdventurer.size() <= number) return;
-	if (selectedCard >= 0) adventurerItems.at(selectedAdventurer)->setColor(cocos2d::Color3B(255,255,255));
-	if (selectedCard >= 0) hands.at(selectedAdventurer)->setVisible(false);
+	if (selectedAdventurer >= 0) adventurerItems.at(selectedAdventurer)->setColor(cocos2d::Color3B(255,255,255));
+	if (selectedAdventurer >= 0) hands.at(selectedAdventurer)->setVisible(false);
 	adventurerItems.at(number)->setColor(cocos2d::Color3B(0,255,0));
 	hands.at(number)->setVisible(true);
 	selectedAdventurer = number;

@@ -39,7 +39,7 @@ public:
 	~MHandoverScene();
 	static cocos2d::Scene* createScene();
 	virtual bool init();
-	bool create(MMainScene* _pMainScene);
+	bool create(MMainScene* _pMainScene, MAdventurer* srcAdventurer, std::vector<std::string> dstAdventurers);
 
 	CREATE_FUNC(MHandoverScene);
 };

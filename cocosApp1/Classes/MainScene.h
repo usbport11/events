@@ -53,6 +53,8 @@ public:
     bool extract();
     bool getArtifact();
     bool discard(MAdventurer* adventurer, std::list<int> cards);
+    bool startHandover();//start handover instead handover because it complex
+    bool sumbitHandover(MAdventurer* adventurer, int cardNumber);
 
     bool reset();
     void adventurerClicked(const std::string& name);
