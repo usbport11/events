@@ -6,8 +6,6 @@
 #include "artifact.h"
 #include "ui.h"
 
-#include <windows.h> //AllocConsole FreeConsole
-
 #include <chrono>
 #include <iostream>
 #include <cstring>
@@ -106,7 +104,7 @@ void MProcessor::moveDeck(std::deque<std::string>& src, std::deque<std::string>&
 bool MProcessor::start() {
   adventureStarted = false;
   floodLevel = 2.1;
-  adventurersNumber = 3;//<<----------------------
+  //adventurersNumber = 3;
   lastItemCard = nullptr;
   currentActionNumber = 0;
 
@@ -517,8 +515,6 @@ bool MProcessor::initAreas() {
   return true;
 }
 MProcessor::MProcessor():extractionArea("adventurers_circle") {
-  createConsole();
-
   std::chrono::steady_clock::time_point tp = std::chrono::steady_clock::now();
   long nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).time_since_epoch().count();
   rng.seed(nsec);
@@ -604,10 +600,9 @@ MProcessor::MProcessor():extractionArea("adventurers_circle") {
     {"extract", ACT_EXTRACT}}; //"endturn", ACT_ENDTURN
 
   actionsLimit = 3;
+  adventurersNumber = 1;
 }
 MProcessor::~MProcessor() {
-    FreeConsole();
-
     functions.clear();
     vargs.clear();
     sargs.clear();
@@ -680,6 +675,12 @@ bool MProcessor::adventureFailed() {
 
   return false;
 }
+
+void MProcessor::setAdventurersNumber(int number) {
+    if (number <= 0 || number > ADVENTURES_LIMIT) adventurersNumber = 1;
+    else adventurersNumber = number;
+}
+
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {
   parseArgs(_sargs);
   std::map<std::string, bptr>::iterator mit = functions.find(name);
@@ -728,20 +729,6 @@ void MProcessor::getSwimAreas(MArea* area, std::vector<std::string>& result, int
       }
     }
   }
-}
-
-void MProcessor::createConsole() {
-  if (!AllocConsole()) {
-    return;
-  }
-  FILE* fDummy;
-  freopen_s(&fDummy, "CONOUT$", "w", stdout);
-  freopen_s(&fDummy, "CONOUT$", "w", stderr);
-  freopen_s(&fDummy, "CONIN$", "r", stdin);
-  std::cout.clear();
-  std::clog.clear();
-  std::cerr.clear();
-  std::cin.clear();
 }
 
 std::map<std::string, MObject*> MProcessor::getArtifacts() {

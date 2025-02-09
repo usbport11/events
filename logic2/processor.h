@@ -8,6 +8,7 @@
 #include <random>
 
 #define CARDS_LIMIT 5
+#define ADVENTURES_LIMIT 4
 
 class MObject;
 class MArea;
@@ -89,15 +90,15 @@ private:
   bool tryMomentCard(MAdventurer* adventurer);
   
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
-
-  void createConsole();
   void changeCurrentAdventurer();
 
 public:
   MProcessor();
   ~MProcessor();
+
   bool execFunction(const std::string& name, const std::string& _sargs="");
   bool adventureFailed();
+  void setAdventurersNumber(int number);
 
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
