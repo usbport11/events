@@ -18,7 +18,7 @@ bool MDropCardScene::init() {
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
-	
+
 	menuName = "dropCardMenu";
 	selectedCards.clear();
 	sourceCards.clear();
@@ -55,7 +55,8 @@ bool MDropCardScene::init() {
     }
 	
 	//create close item
-	closeItem = MenuItemImage::create("back_off.png", "back_on.png", menuCallback[totalCardsLimit]);
+	//closeItem = MenuItemImage::create("back_off.png", "back_on.png", menuCallback[totalCardsLimit]);
+	closeItem = MenuItemImageExt::create("back_off.png", "back_on.png", "", menuCallback[totalCardsLimit]);
     if(!closeItem) {
 		return false;
     }

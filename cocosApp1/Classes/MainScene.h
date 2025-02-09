@@ -61,7 +61,6 @@ public:
     int getAdventurerNumber(const std::string& name);
     MAdventurer* getCurrentAdventurer();
     MHand* getAdventurerHand(const std::string& name);
-    std::map<std::string, std::string> getCardFrame();
     MAdventurerMenu* getAdventurerMenu();
 
     void onMouseMove(cocos2d::Event* event);

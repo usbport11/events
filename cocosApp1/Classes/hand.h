@@ -34,8 +34,9 @@ public:
 	int getMax();
 	std::string getHandMask();
 	std::string getNoneCard();
-	std::map<std::string, cocos2d::SpriteFrame*> getCardFrame();
-	std::map<int, cocos2d::Sprite*> getNumberSprite();
+	std::map<int, cocos2d::Sprite*> getNumberSprites();
+	std::map<std::string, cocos2d::SpriteFrame*> getCardFrames();
+	cocos2d::SpriteFrame* getCardFrame(const std::string& cardFrameName);
 };
 
 #endif

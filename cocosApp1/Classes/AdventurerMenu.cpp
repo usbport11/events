@@ -75,7 +75,7 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
         }
 		pos[0] = i / rows;
 		pos[1] = i - pos[0] * rows;
-        menuItem->setPosition(offset.x + pos[0] * 64 - 10, offset.y - pos[1] * 64 - 10);//<--- need calculate
+        menuItem->setPosition(offset.x + pos[0] * (64 + 10), offset.y - pos[1] * (64 + 10));//<--- need calculate
 		menuItem->setVisible(false);
 		menuItem->setEnabled(false);
         menuItems.pushBack(menuItem);
@@ -171,6 +171,7 @@ void MAdventurerMenu::selectByName(const std::string& name) {
 	}
 }
 
-std::map<std::string, cocos2d::Sprite*> MAdventurerMenu::getAdventurerSprite() {
-	return adventurerSprite;
+cocos2d::Sprite* MAdventurerMenu::getAdventurerSprite(const std::string& adventurerName) {
+	if (adventurerSprite.find(adventurerName) == adventurerSprite.end()) return nullptr;
+	return adventurerSprite[adventurerName];
 }

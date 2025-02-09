@@ -1,5 +1,7 @@
 #include "AppDelegate.h"
 #include "MainScene.h"
+#include "IntroScene.h"
+#include <iostream>
 
 // #define USE_AUDIO_ENGINE 1
 
@@ -16,9 +18,21 @@ static cocos2d::Size mediumResolutionSize = cocos2d::Size(1024, 768);
 static cocos2d::Size largeResolutionSize = cocos2d::Size(2048, 1536);
 
 AppDelegate::AppDelegate() {
+    if (!AllocConsole()) {
+        return;
+    }
+    FILE* fDummy;
+    freopen_s(&fDummy, "CONOUT$", "w", stdout);
+    freopen_s(&fDummy, "CONOUT$", "w", stderr);
+    freopen_s(&fDummy, "CONIN$", "r", stdin);
+    std::cout.clear();
+    std::clog.clear();
+    std::cerr.clear();
+    std::cin.clear();
 }
 
 AppDelegate::~AppDelegate() {
+    FreeConsole();
 #if USE_AUDIO_ENGINE
     AudioEngine::end();
 #endif
@@ -62,8 +76,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     auto mainScene = MMainScene::createScene();
     if (!mainScene) return false;
+    auto introScene = MIntroScene::createScene();
+    if (!introScene) return false;
 
-    director->runWithScene(mainScene);
+    director->pushScene(mainScene);
+    director->pushScene(introScene);
+    //director->runWithScene(mainScene);
 
     return true;
 }

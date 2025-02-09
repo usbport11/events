@@ -25,7 +25,7 @@ public:
 	bool create(MMainScene* _pMainScene, const std::string& pListFile, std::vector<std::string> adventurers);
 	bool init(std::vector<std::string> activeAdventurers);
 	void selectByName(const std::string& name);
-	std::map<std::string, cocos2d::Sprite*> getAdventurerSprite();
+	cocos2d::Sprite* getAdventurerSprite(const std::string& adventurerName);
 };
 
 #endif

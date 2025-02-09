@@ -5,6 +5,7 @@
 
 class MMainScene;
 class MAdventurer;
+class MenuItemImageExt;
 
 class MDropCardScene: public cocos2d::Scene {
 private:
@@ -16,8 +17,8 @@ private:
 	int selectedCardsNumber;
 	int cardsLimit;
 	int totalCardsLimit;
-	//MenuItemImageExt* closeItem;
-	cocos2d::MenuItemImage* closeItem;
+	MenuItemImageExt* closeItem;
+	//cocos2d::MenuItemImage* closeItem;
 	std::string menuName;
 
 	void selectMenuItem(cocos2d::Ref* pSender, int number);

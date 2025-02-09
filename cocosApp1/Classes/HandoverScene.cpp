@@ -1,5 +1,6 @@
 #include "HandOverScene.h"
 #include "MainScene.h"
+#include "MenuItemImageExt.h"
 #include "logic/adventurer.h"
 #include "logic/card.h"
 #include <iostream>
@@ -58,11 +59,13 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 
 	cocos2d::Vector<cocos2d::MenuItem*> menuItems;
 	MenuItemImage* menuItem;
-	MenuItemImage* buttonItem;
+	//MenuItemImage* buttonItem;
+	MenuItemImageExt* buttonItem;
 	MenuItemImage* closeItem;
 	cocos2d::Menu* menu;
 	cocos2d::Vec2 itemPosition;
 	cocos2d::Sprite* sp;
+	cocos2d::SpriteFrame* spf;
 	float offset;
 
 	cocos2d::Size visibleSize = Director::getInstance()->getVisibleSize();
@@ -88,7 +91,9 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 		if (!menuItem) {
 			return false;
 		}
-		sp = cocos2d::Sprite::createWithSpriteFrame(pMainScene->getAdventurerMenu()->getAdventurerSprite()[nextAdventurer->getName()]->getSpriteFrame());
+		sp = pMainScene->getAdventurerMenu()->getAdventurerSprite(nextAdventurer->getName());
+		if (!sp) return false;
+		sp = cocos2d::Sprite::createWithSpriteFrame(sp->getSpriteFrame());
 		if (!sp) return false;
 		offset = (visibleSize.width - (sp->getContentSize().width + 20) * (dstAdventurers.size() - 1)) / 2;
 		itemPosition = Vec2(offset + i * (sp->getContentSize().width + 20), 600);
@@ -124,7 +129,9 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
         itemPosition = Vec2(offset + i * (menuItem->getContentSize().width + 20), 300);
         menuItem->setPosition(itemPosition);
 
-		sp = cocos2d::Sprite::createWithSpriteFrame(hand->getCardFrame()[hand->getCard(i)]);
+		spf = hand->getCardFrame(hand->getCard(i));
+		if (!spf) return false;
+		sp = cocos2d::Sprite::createWithSpriteFrame(spf);
 		if(!sp) return false;
 
 		menuItem->setNormalImage(sp);
@@ -135,7 +142,8 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 	
 	//create close items
 	for(int i=0; i<2; i++) {
-		buttonItem = MenuItemImage::create("back_off.png", "back_on.png", buttonsCallback[buttons[i]]);
+		//buttonItem = MenuItemImage::create("back_off.png", "back_on.png", buttonsCallback[buttons[i]]);
+		buttonItem = MenuItemImageExt::create("back_off.png", "back_on.png", "", buttonsCallback[buttons[i]]);
 		if(!buttonItem) {
 			return false;
 		}
@@ -179,7 +187,8 @@ void MHandoverScene::handoverCancel(cocos2d::Ref* pSender) {
 	Director::getInstance()->popScene();
 }
 void MHandoverScene::selectAdventurer(int number) {
-	if(numberAdventurer.size() <= number) return;
+	if (number >= numberAdventurer.size()) return;
+	if (numberAdventurer[number]->getArtifactCards().empty()) return;
 	if (selectedAdventurer >= 0) adventurerItems.at(selectedAdventurer)->setColor(cocos2d::Color3B(255,255,255));
 	if (selectedAdventurer >= 0) hands.at(selectedAdventurer)->setVisible(false);
 	adventurerItems.at(number)->setColor(cocos2d::Color3B(0,255,0));

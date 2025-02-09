@@ -2,7 +2,6 @@
 #include "EndScene.h"
 #include "DropCardScene.h"
 #include "HandoverScene.h"
-#include "MenuItemImageExt.h"
 #include "utils.h"
 #include "logic/area.h"
 #include "logic/adventurer.h"
@@ -329,7 +328,6 @@ bool MMainScene::initAdventurers() {
         pos[1] = 16 - (i % 2) * 32;
         adventurerSprite[adventurer->getName()]->setPosition(sp->getPosition().x + pos[0], sp->getPosition().y + pos[1]);
 
-        //adventurerSprite[adventurer->getName()]->setPosition(sp->getPosition());
         adventurerSprite[adventurer->getName()]->setVisible(true);
         gridMap.setCurrentCell(gridMap.getCellByCoordinates(sp->getPosition()));
     }
@@ -552,6 +550,11 @@ bool MMainScene::reset() {
     floodDeck.reset();
     waterLevel.reset();
 
+    std::cout << "##############################################################################" << std::endl;
+    std::cout << "###  Next start" << std::endl;
+    std::cout << "##############################################################################" << std::endl;
+
+    processor.setAdventurersNumber(3);
     if (!processor.execFunction("start")) return false;
     if (!gridMap.init()) return false;
     if (!updateAreas()) return false;
@@ -594,10 +597,6 @@ MAdventurer* MMainScene::getCurrentAdventurer() {
 MHand* MMainScene::getAdventurerHand(const std::string& name) {
     if (adventurerHand.find(name) != adventurerHand.end()) return adventurerHand[name];
     return nullptr;
-}
-
-std::map<std::string, std::string> MMainScene::getCardFrame() {
-    return cardFrame;
 }
 
 MAdventurerMenu* MMainScene::getAdventurerMenu() {
@@ -712,19 +711,6 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
         if(!reset()) return;
-    }
-    if (keyCode == EventKeyboard::KeyCode::KEY_H) {
-        MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
-        MArea* area = srcAdventurer->getArea();
-        std::vector<std::string> adventurers = processor.getActiveAdventurers();
-        std::vector<std::string> dstAdventurers;
-        for (int i = 0; i < adventurers.size(); i++) {
-            if (srcAdventurer->getName() == adventurers[i]) continue;
-            dstAdventurers.push_back(adventurers[i]);
-        }
-        MHandoverScene* handoverScene = (MHandoverScene*)MHandoverScene::createScene();
-        if(!handoverScene->create(this, srcAdventurer, dstAdventurers)) return;
-        Director::getInstance()->pushScene(handoverScene);
     }
 }
 
