@@ -94,12 +94,20 @@ std::vector<MCard*> MAdventurer::getArtifactCards(const std::string& name) {
   return resCards;
 }
 bool MAdventurer::canUseDiagonal() {
-    return (getName() == "explorer");
+  return (getName() == "explorer");
 }
-
 bool MAdventurer::hasCard(const std::string& cardName) {
-    for (int i = 0; cards.size(); i++) {
-        if (cards[i]->getName() == cardName) return true;
-    }
-    return false;
+  for (int i = 0; cards.size(); i++) {
+    if (cards[i]->getName() == cardName) return true;
+  }
+  return false;
+}
+void MAdventurer::clearUsedActions() {
+    usedActions.clear();
+}
+void MAdventurer::addUsedActions(const std::string& action) {
+  usedActions.push_back(action);
+}
+bool MAdventurer::actionWasUsed(const std::string& action) {
+  return std::find(usedActions.begin(), usedActions.end(), action) != usedActions.end();
 }

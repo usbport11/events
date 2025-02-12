@@ -104,7 +104,6 @@ void MProcessor::moveDeck(std::deque<std::string>& src, std::deque<std::string>&
 bool MProcessor::start() {
   adventureStarted = false;
   floodLevel = 2.1;
-  //adventurersNumber = 3;
   lastItemCard = nullptr;
   currentActionNumber = 0;
 
@@ -405,7 +404,7 @@ bool MProcessor::endTurn() {
     for (int j = 0; j < 2; j++) {
         if (!execFunction("getitemcard", vargs[0])) return false;
     }
-    for (int j = 0; j < 2; j++) {
+    for (int j = 0; j < (int)floodLevel; j++) {
         if (!execFunction("getfloodcard", vargs[0])) return false;
     }
     std::cout << "End turn by: " << vargs[0] << std::endl;
@@ -636,13 +635,18 @@ MProcessor::~MProcessor() {
     floodOutDeck.clear();
     activeAdventurers.clear();
     collectedArtifacts.clear();
-    usedActions.clear();
+    //usedActions.clear();
     actionsSwitches.clear();
 }
 bool MProcessor::adventureFailed() {
   int num;
   MArtifact* artifact;
   MArea* area;
+
+  if (activeAdventurers.empty()) {
+      std::cout << "All adventurer flooded" << std::endl;
+      return true;
+  }
 
   for(moi moit = artifacts.begin(); moit != moit; moit++) {
     num = 0;
@@ -667,9 +671,9 @@ bool MProcessor::adventureFailed() {
     std::cout<<"Extraction area flooded"<<std::endl;
     return true;
   }
-  //max flood level reach
-  if(floodLevel > 5) {
-    std::cout<<"Total flooded"<<std::endl;
+  
+  if(floodLevel > 6) {
+    std::cout<<"Island totaly flooded"<<std::endl;
     return true;
   }
 

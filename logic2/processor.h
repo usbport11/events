@@ -52,7 +52,7 @@ private:
   std::deque<std::string> floodOutDeck;
   std::vector<std::string> activeAdventurers;
   std::vector<std::string> collectedArtifacts;
-  std::vector<std::string> usedActions;
+  //std::vector<std::string> usedActions;
   std::map<std::string, int> actionsSwitches;
 
   bool argsLessLimit(int num);
@@ -89,7 +89,6 @@ private:
   bool initAreas();
   bool tryMomentCard(MAdventurer* adventurer);
   
-  void getSwimAreas(MArea* area, std::vector<std::string>& result, int level=0);
   void changeCurrentAdventurer();
 
 public:
@@ -97,8 +96,10 @@ public:
   ~MProcessor();
 
   bool execFunction(const std::string& name, const std::string& _sargs="");
+
   bool adventureFailed();
   void setAdventurersNumber(int number);
+  void getSwimAreas(MArea* area, std::vector<std::string>& result, int level = 0);
 
   MArea* findArea(const std::string& name);
   MAdventurer* findAdventurer(const std::string& name);
