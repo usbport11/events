@@ -50,6 +50,26 @@ bool MMainScene::endTurn() {
     //update areas
     updateAreas();
 
+    //update adventurer positions (in case that area drawn)
+    std::vector<std::string> adventurers = processor.getActiveAdventurers();
+    MAdventurer* nextAdventurer;
+    int pos[2];
+    int num;
+    cocos2d::Vec2 advPos;
+    for (int i = 0; i < adventurers.size(); i++) {
+        nextAdventurer = processor.findAdventurer(adventurers[i]);
+        if (!nextAdventurer) return false;
+        num = getAdventurerNumber(adventurers[i]);
+        pos[0] = (num / 2);
+        pos[0] = pos[0] * 32 - 16;
+        pos[1] = 16 - (num % 2) * 32;
+        advPos = gridMap.getSpriteByAreaName(nextAdventurer->getArea()->getName())->getPosition();
+        adventurerSprite[adventurers[i]]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
+    }   
+
+    //remove adventurer if it totaly flooded (sprite on grid, sprite on panel)
+    //todo
+
     if (processor.adventureFailed()) {
         MEndScene* endScene = (MEndScene*)MEndScene::createScene();
         if (!endScene) return false;
@@ -189,6 +209,10 @@ bool MMainScene::extract() {
     return true;
 }
 bool MMainScene::getArtifact() {
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     std::map<std::string, MObject*> artifacts = processor.getArtifacts();
     for (std::map<std::string, MObject*>::iterator it = artifacts.begin(); it != artifacts.end(); it++) {
@@ -235,20 +259,33 @@ bool MMainScene::discard(MAdventurer* adventurer, std::list<int> cards) {
 }
 
 bool MMainScene::startHandover() {
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
     if (adventurerHand.size() <= 1) return false;
+    
     MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
+
     MArea* area = srcAdventurer->getArea();
     std::vector<std::string> adventurers = processor.getActiveAdventurers();
     std::vector<std::string> dstAdventurers;
     for (int i = 0; i < adventurers.size(); i++) {
         if (srcAdventurer->getName() == adventurers[i]) continue;
-        if (srcAdventurer->getArea() != processor.findAdventurer(adventurers[i])->getArea()) continue;
-        dstAdventurers.push_back(adventurers[i]);
+        if (srcAdventurer->getName() == "liaison") {
+            dstAdventurers.push_back(adventurers[i]);
+        }
+        else {
+            if (srcAdventurer->getArea() == processor.findAdventurer(adventurers[i])->getArea()) {
+                dstAdventurers.push_back(adventurers[i]);
+            }
+        }
     }
     if (dstAdventurers.empty()) return false;
     MHandoverScene* handoverScene = (MHandoverScene*)MHandoverScene::createScene();
     if (!handoverScene->create(this, srcAdventurer, dstAdventurers)) return false;
     Director::getInstance()->pushScene(handoverScene);
+    currentAction = "";
     return true;
 }
 
@@ -261,6 +298,74 @@ bool MMainScene::sumbitHandover(MAdventurer* adventurer, int cardNumber) {
     if (!processor.execFunction("handover", srcAdventurer->getName() + " " + adventurer->getName() + " " + srcCard->getName())) return false;
     adventurerHand[srcAdventurer->getName()]->removeCard(cardFrame[srcCard->getName()]);
     adventurerHand[adventurer->getName()]->addCard(cardFrame[srcCard->getName()]);
+    return true;
+}
+
+bool MMainScene::startFly() {
+    //NOT TESTED!
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (adventurer->getName() != "pilot") return false;
+    if (adventurer->actionWasUsed("fly")) return false;
+
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
+    if (currentAction == "fly") {
+        std::cout << "Can't action. Alredy selected" << std::endl;
+        return false;
+    }
+
+    updateAreas();
+    gridMap.clearAreaLimit();
+
+    cocos2d::Sprite* sp;
+    MArea* area;
+    std::map<std::string, MObject*> areas = processor.getAreas();
+    for (std::map<std::string, MObject*>::iterator it = areas.begin(); it != areas.end(); it++) {
+        area = (MArea*)it->second;
+        if (!area) return false;
+        if (area->getFloodLevel() <= 2) {
+            gridMap.addAreaLimit(area->getIndex()[0] * gridSize + area->getIndex()[1]);
+            sp = gridMap.getSpriteByAreaName(area->getName());
+            if (!sp) return false;
+            sp->setColor(cocos2d::Color3B(128, 255, 128));
+        }
+    }
+    currentAction = "fly";
+    return true;
+}
+
+bool MMainScene::startSwim() {
+    //NOT TESTED!
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (adventurer->getName() != "diver") return false;
+
+    if (processor.actionNumberLimitReached()) {
+        std::cout << "Can't action. Limit reached" << std::endl;
+        return false;
+    }
+    if (currentAction == "swim") {
+        std::cout << "Can't action. Alredy selected" << std::endl;
+        return false;
+    }
+
+    updateAreas();
+    gridMap.clearAreaLimit();
+
+    MArea* area;
+    cocos2d::Sprite* sp;
+    std::vector<std::string> swimAreas;
+    processor.getSwimAreas(adventurer->getArea(), swimAreas);
+    for (int i = 0; i < swimAreas.size(); i++) {
+        area = processor.findArea(swimAreas[i]);
+        gridMap.addAreaLimit(area->getIndex()[0] * gridSize + area->getIndex()[1]);
+        sp = gridMap.getSpriteByAreaName(area->getName());
+        if (!sp) return false;
+        sp->setColor(cocos2d::Color3B(128, 255, 128));
+    }
+    
+    currentAction = "swim";
     return true;
 }
 
@@ -360,7 +465,6 @@ bool MMainScene::initHand() {
 }
 
 bool MMainScene::initVisual() {
-    //gridmap selector
     if (!createAnimSpriteFromPlist(this, "anim/out.plist", "selection", "pt", 4, 0.2f)) {
         return false;
     }
@@ -676,13 +780,13 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         if(gridMap.getCellByCoordinates(adventurerSprite[adventurer->getName()]->getPosition()) == cell) {
             return;
         }
-        if (currentAction == "move") {
-            if (!processor.execFunction("move", adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
-                std::cout << "[MainScene] failed to move adventurer!" << std::endl;
+        if (currentAction == "move" || currentAction == "fly" || currentAction == "swim") {
+            if (!processor.execFunction(currentAction, adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+                std::cout << "[MainScene] failed to "<< currentAction <<" adventurer!" << std::endl;
                 return;
             }
-            //position of adventurer must be 1/N adventurers number
-            //better case is 4 adventurers limit
+            //position of adventurer must be 1/N adventurers number (max N = 4)
+            //16px and 32px must be calculated
             int pos[2];
             int num = getAdventurerNumber(adventurer->getName());
             pos[0] = (num / 2);

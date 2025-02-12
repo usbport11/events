@@ -55,6 +55,8 @@ public:
     bool discard(MAdventurer* adventurer, std::list<int> cards);
     bool startHandover();//start handover instead handover because it complex
     bool sumbitHandover(MAdventurer* adventurer, int cardNumber);
+    bool startFly();
+    bool startSwim();
 
     bool reset();
     void adventurerClicked(const std::string& name);
