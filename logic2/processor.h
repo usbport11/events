@@ -52,7 +52,7 @@ private:
   std::deque<std::string> floodOutDeck;
   std::vector<std::string> activeAdventurers;
   std::vector<std::string> collectedArtifacts;
-  //std::vector<std::string> usedActions;
+  std::vector<std::string> usedActions;
   std::map<std::string, int> actionsSwitches;
 
   bool argsLessLimit(int num);
@@ -64,19 +64,22 @@ private:
   void moveDeck(std::deque<std::string>& src, std::deque<std::string>& dest);
 
   bool start();
-  bool move();
-  bool abfluss();
+ 
   bool flood();
-  bool skip();
-  bool handOver();
   bool getItemCard();
   bool getFloodCard();
   bool discard();
   bool useCard();
+  //bool skip();
+
+  bool handOver();
+  bool move();
+  bool abfluss();
   bool getArtifact();
   bool fly();
   bool moveOther();
   bool swim();
+
   bool extract();
   bool endTurn();
 
@@ -119,6 +122,7 @@ public:
   bool actionNumberLimitReached();
   bool allActiveAdventurersOnArea(const std::string& name);
   bool allArifactsCollected();
+  std::vector<std::string> getAvailableActions(MAdventurer* adventurer);
 };
 
 #endif

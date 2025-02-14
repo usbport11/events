@@ -180,36 +180,13 @@ bool MProcessor::start() {
     if(!execFunction("getitemcard", activeAdventurers[i])) return false;
     if(!execFunction("getitemcard", activeAdventurers[i])) return false;
   }
+
+  usedActions.clear();
   adventureStarted = true;
 
   return true;
 }
-bool MProcessor::move() {
-  if(argsLessLimit(2)) return false;
-  MAdventurer* adventurer = findAdventurer(vargs[0]);
-  MArea* area = findArea(vargs[1]);
-  if(!adventurer) return false;
-  if(!area) return false;
-  adventurer->setArea(area);
-  std::cout<<"Move: "<<vargs[0]<<" to the "<<vargs[1]<<std::endl;
-  return true;
-}
-bool MProcessor::abfluss() {
-  if(argsLessLimit(2)) return false;
-  MAdventurer* adventurer = findAdventurer(vargs[0]);
-  MArea* area1 = findArea(vargs[1]);
-  MArea* area2;
-  if(!adventurer) return false;
-  if(!area1) return false;
-  area1->abfluss();
-  std::cout<<"Abluss: "<<vargs[1]<<std::endl;
-  if(vargs.size() == 3) {
-    area2 = findArea(vargs[2]);
-    if(!area2) return false;
-    std::cout<<"Abluss: "<<vargs[2]<<std::endl;
-  }
-  return true;
-}
+
 bool MProcessor::flood() {
   if(argsLessLimit(1)) return false;
   MArea* area = findArea(vargs[0]);
@@ -242,22 +219,13 @@ bool MProcessor::flood() {
   std::cout<<"Flood: "<<vargs[0]<<std::endl;
   return true;
 }
+/*
 bool MProcessor::skip() {
   if(argsLessLimit(1)) return false;
   std::cout<<"Skip: "<<vargs[0]<<std::endl;
   return true;
 }
-bool MProcessor::handOver() {
-  if(argsLessLimit(3)) return false;
-  MAdventurer* srcAdventurer = findAdventurer(vargs[0]);
-  MAdventurer* dstAdventurer = findAdventurer(vargs[1]);
-  MCard* card = findItemCard(vargs[2]);
-  if(!srcAdventurer || !dstAdventurer) return false;
-  if(!card) return false;
-  dstAdventurer->addCard(card);
-  std::cout<<"Handover "<<vargs[2]<<" from "<<vargs[0]<<" to "<<vargs[1]<<std::endl;
-  return true;
-}
+*/
 bool MProcessor::getItemCard() {
   int rnd;
   if(argsLessLimit(1)) return false;
@@ -353,6 +321,47 @@ bool MProcessor::useCard() {
   adventurer->removeCard(card);
   return true;
 }
+//basic actions================================================================
+bool MProcessor::handOver() {
+    if (argsLessLimit(3)) return false;
+    MAdventurer* srcAdventurer = findAdventurer(vargs[0]);
+    MAdventurer* dstAdventurer = findAdventurer(vargs[1]);
+    MCard* card = findItemCard(vargs[2]);
+    if (!srcAdventurer || !dstAdventurer) return false;
+    if (!card) return false;
+    dstAdventurer->addCard(card);
+    std::cout << "Handover " << vargs[2] << " from " << vargs[0] << " to " << vargs[1] << std::endl;
+    usedActions.push_back("handover");
+    return true;
+}
+bool MProcessor::move() {
+    if (argsLessLimit(2)) return false;
+    MAdventurer* adventurer = findAdventurer(vargs[0]);
+    MArea* area = findArea(vargs[1]);
+    if (!adventurer) return false;
+    if (!area) return false;
+    adventurer->setArea(area);
+    std::cout << "Move: " << vargs[0] << " to the " << vargs[1] << std::endl;
+    usedActions.push_back("move");
+    return true;
+}
+bool MProcessor::abfluss() {
+    if (argsLessLimit(2)) return false;
+    MAdventurer* adventurer = findAdventurer(vargs[0]);
+    MArea* area1 = findArea(vargs[1]);
+    MArea* area2;
+    if (!adventurer) return false;
+    if (!area1) return false;
+    area1->abfluss();
+    std::cout << "Abluss: " << vargs[1] << std::endl;
+    if (vargs.size() == 3) {
+        area2 = findArea(vargs[2]);
+        if (!area2) return false;
+        std::cout << "Abluss: " << vargs[2] << std::endl;
+    }
+    usedActions.push_back("abfluss");
+    return true;
+}
 bool MProcessor::getArtifact() {
   if(argsLessLimit(2)) return false;
   MAdventurer* adventurer = findAdventurer(vargs[0]);
@@ -366,6 +375,7 @@ bool MProcessor::getArtifact() {
     if(!execFunction("discard", adventurer->getName() + " " + cards[i]->getName())) return false;
   }
   std::cout<<"Get artifact: "<<vargs[0]<<" get "<<vargs[1]<<std::endl;
+  usedActions.push_back("getartifact");
   return true;
 }
 bool MProcessor::fly() {
@@ -376,11 +386,13 @@ bool MProcessor::fly() {
   if(!area) return false;
   adventurer->setArea(area);
   std::cout<<"Fly: "<<vargs[0]<<" to the "<<vargs[1]<<std::endl;
+  usedActions.push_back("fly");
   return true;
 }
 bool MProcessor::moveOther() {
   if(argsLessLimit(3)) return false;
   std::cout<<"Move "<<vargs[1]<<" by "<<vargs[0]<<" to the "<<vargs[2]<<std::endl;
+  usedActions.push_back("moveother");
   return execFunction("move", vargs[1] + " " + vargs[2]);
 }
 bool MProcessor::swim() {
@@ -391,8 +403,10 @@ bool MProcessor::swim() {
   if(!area) return false;
   adventurer->setArea(area);
   std::cout<<"Swim: "<<vargs[0]<<" to the "<<vargs[1]<<std::endl;
+  usedActions.push_back("swim");
   return true;
 }
+//================================================================
 bool MProcessor::extract() {
   std::cout<<"extract!"<<std::endl;
   return true;
@@ -411,6 +425,7 @@ bool MProcessor::endTurn() {
     changeCurrentAdventurer();
     currentActionNumber = 0;
     std::cout << "Next adventurer: " << currentAdventurer->getName() << " [clear action number]" << std::endl;
+    usedActions.clear();
     return true;
 }
 void MProcessor::createItemCards(const std::string& _name, const std::string& type, int number) {
@@ -524,7 +539,7 @@ MProcessor::MProcessor():extractionArea("adventurers_circle") {
     {"move", &MProcessor::move},
     {"abfluss", &MProcessor::abfluss},
     {"flood", &MProcessor::flood},
-    {"skip", &MProcessor::skip},
+    //{"skip", &MProcessor::skip},
     {"handover", &MProcessor::handOver},
     {"getitemcard", &MProcessor::getItemCard},
     {"getfloodcard", &MProcessor::getFloodCard},
@@ -808,4 +823,67 @@ bool MProcessor::allActiveAdventurersOnArea(const std::string& areaName) {
 
 bool MProcessor::allArifactsCollected() {
     return (collectedArtifacts.size() == 4);
+}
+
+std::vector<std::string> MProcessor::getAvailableActions(MAdventurer* adventurer) {
+    std::vector<std::string> actions;
+    std::list<MArea*> nearAreas;
+
+    actions.push_back("endturn");
+
+    if (adventurer->getName() == "explorer") {
+        nearAreas = adventurer->getArea()->getAllActiveNeighbors();
+    }
+    else {
+        nearAreas = adventurer->getArea()->getDirectActiveNeighbors();
+    }
+    if (nearAreas.size() > 0) actions.push_back("move");
+
+    if (adventurer->getArea()->getFloodLevel() == 1) {
+        actions.push_back("abfluss");
+    }
+    else {
+        for (std::list<MArea*>::iterator it = nearAreas.begin(); it != nearAreas.end(); it++) {
+            if ((*it)->getFloodLevel() == 1) {
+                actions.push_back("abfluss");
+                break;
+            }
+        }
+    }
+
+    if (adventurer->getName() == "diver") {
+        for (std::list<MArea*>::iterator it = nearAreas.begin(); it != nearAreas.end(); it++) {
+            if ((*it)->getFloodLevel() == 1) {
+                actions.push_back("swim");
+                break;
+            }
+        }
+    }
+
+    if (adventurer->getName() == "liaison") actions.push_back("handover");
+    else {
+        for (int i = 0; i < activeAdventurers.size(); i++) {
+            if (adventurers[activeAdventurers[i]] == adventurer) continue;
+            if (((MAdventurer*)adventurers[activeAdventurers[i]])->getArea() == adventurer->getArea()) {
+                actions.push_back("handover");
+                break;
+            }
+        }
+    }
+
+    for (moi moit = artifacts.begin(); moit != artifacts.end(); moit++) {
+        if (adventurer->getArtifactCards(moit->first).size() >= 4) {
+            actions.push_back("getartifact");
+            break;
+        }
+    }
+
+    if (adventurer->getName() == "navigator") actions.push_back("moveother");
+    if (adventurer->getName() == "pilot") {
+        if (std::find(usedActions.begin(), usedActions.end(), "fly") == usedActions.end()) {
+            actions.push_back("fly");
+        }
+    }
+
+    return actions;
 }
