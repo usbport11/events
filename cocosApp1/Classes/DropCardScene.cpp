@@ -56,7 +56,7 @@ bool MDropCardScene::init() {
 	
 	//create close item
 	//closeItem = MenuItemImage::create("back_off.png", "back_on.png", menuCallback[totalCardsLimit]);
-	closeItem = MenuItemImageExt::create("back_off.png", "back_on.png", "", menuCallback[totalCardsLimit]);
+	closeItem = MenuItemImageExt::create("back_off.png", "back_on.png", "back_dis.png", menuCallback[totalCardsLimit]);
     if(!closeItem) {
 		return false;
     }
@@ -67,7 +67,7 @@ bool MDropCardScene::init() {
 	closeItem->setName("closeButton");
     closeItem->setPosition(itemPosition);
     menuItems.pushBack(closeItem);
-	cocos2d::Label* itemLabel = Label::createWithTTF("Close", "fonts/Marker Felt.ttf", 24);
+	cocos2d::Label* itemLabel = Label::createWithTTF("Submit", "fonts/Marker Felt.ttf", 24);
     if (!itemLabel) {
 		return false;
     }
@@ -153,8 +153,7 @@ void MDropCardScene::selectMenuItem(cocos2d::Ref* pSender, int number) {
 		selectedCards.push_back(number);
 	}
 
-	//return;
-	if (sourceCards.size() - selectedCards.size() <= cardsLimit) closeItem->setEnabled(true);
+	if (sourceCards.size() - selectedCards.size() == cardsLimit) closeItem->setEnabled(true);
 	else closeItem->setEnabled(false);
 }
 

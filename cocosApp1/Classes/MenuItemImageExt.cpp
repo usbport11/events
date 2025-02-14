@@ -16,6 +16,9 @@ MenuItemImageExt* MenuItemImageExt::create(const std::string &normalImage, const
 }
 
 void MenuItemImageExt::onMouseMove(Event *event) {
+    if (!isEnabled()) {
+        return;
+    }
     //need think about combine hover and select
     EventMouse* e = (EventMouse*)event;
     Size size = getContentSize();

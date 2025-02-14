@@ -123,6 +123,10 @@ bool MHand::addCard(const std::string& name) {
 	return true;
 }
 bool MHand::removeCard(int number) {
+	if (numberSprite.find(number) == numberSprite.end()) {
+		std::cout << "Remove card failed! Hand not contain card with number: " << number << std::endl;
+		return false;
+	}
 	numberSprite[number]->setSpriteFrame(cardFrame[noneCard]);
 	cards[number] = noneCard;
 

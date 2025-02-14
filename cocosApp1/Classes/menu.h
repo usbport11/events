@@ -27,6 +27,7 @@ public:
 	~MMenu();
 	bool create(MMainScene* _pMainScene);
 	void unselectMenuAll();
+	void updateStatuses(std::vector<std::string> availableActions);
 };
 
 #endif

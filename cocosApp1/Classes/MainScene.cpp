@@ -35,6 +35,7 @@ bool MMainScene::endTurn() {
     //exec function
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     MHand* hand = adventurerHand[adventurer->getName()];
+    adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 255, 255));
     if(!processor.execFunction("endturn", adventurer->getName())) return false;
 
     //update hand current adventurer
@@ -79,6 +80,7 @@ bool MMainScene::endTurn() {
     }
 
     if(hand->getUsedSize() > 5) {
+        //move to separate function
         std::cout << "Drop cards for: " << adventurer->getName() << std::endl;//important! current adveturer is changed in processor!
         MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
         if (!dropCardScene) return false;
@@ -90,6 +92,7 @@ bool MMainScene::endTurn() {
 
     //change adventurer
     adventurer = processor.getCurrentAdventurer();
+    adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
 
     //change hand
     adventurerClicked(adventurer->getName());
@@ -102,8 +105,9 @@ bool MMainScene::endTurn() {
     //update wather level
     waterLevel.setCurrent(processor.getFloodLevel());
 
+    //update menu items
+    menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
     currentAction = "";
-   
     return true;
 }
 
@@ -189,7 +193,9 @@ bool MMainScene::extract() {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
-    if (processor.getCurrentAdventurer()->hasCard("helicopter") && processor.allActiveAdventurersOnArea("adventurers_circle") && processor.allArifactsCollected()) {
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return false;
+    if (adventurer->hasCard("helicopter") && processor.allActiveAdventurersOnArea("adventurers_circle") && processor.allArifactsCollected()) {
         if (!processor.execFunction("extract")) {
             std::cout << "[MainScene] failed to extract!" << std::endl;
             return false;
@@ -228,6 +234,9 @@ bool MMainScene::getArtifact() {
             if (sp) sp->setColor(cocos2d::Color3B(0, 255, 0));
         } 
     }
+
+    //update menu items
+    menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
     currentAction = "";
     return true;
 }
@@ -298,14 +307,15 @@ bool MMainScene::sumbitHandover(MAdventurer* adventurer, int cardNumber) {
     if (!processor.execFunction("handover", srcAdventurer->getName() + " " + adventurer->getName() + " " + srcCard->getName())) return false;
     adventurerHand[srcAdventurer->getName()]->removeCard(cardFrame[srcCard->getName()]);
     adventurerHand[adventurer->getName()]->addCard(cardFrame[srcCard->getName()]);
+
+    //update menu items
+    menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
     return true;
 }
 
 bool MMainScene::startFly() {
-    //NOT TESTED!
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (adventurer->getName() != "pilot") return false;
-    if (adventurer->actionWasUsed("fly")) return false;
 
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
@@ -671,10 +681,12 @@ bool MMainScene::reset() {
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
     currentAction = "";
 
-    //clear sprites adventurers
-
     if (!adventurerMenu.init(processor.getActiveAdventurers())) return false;
     adventurerMenuSelected = processor.getCurrentAdventurer()->getName();
+    adventurerSprite[processor.getCurrentAdventurer()->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
+
+    //update menu items
+    menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
 
     return true;
 }
@@ -794,6 +806,9 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
             pos[1] = 16 - (num % 2) * 32;
             cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
             adventurerSprite[adventurer->getName()]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
+
+            //update menu items
+            menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
             currentAction = "";
         }
         if (currentAction == "abfluss") {
@@ -801,6 +816,9 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
                 std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
                 return;
             }
+
+            //update menu items
+            menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
             currentAction = "";
         }
     }

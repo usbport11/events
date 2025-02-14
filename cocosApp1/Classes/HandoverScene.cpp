@@ -143,7 +143,7 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 	//create close items
 	for(int i=0; i<2; i++) {
 		//buttonItem = MenuItemImage::create("back_off.png", "back_on.png", buttonsCallback[buttons[i]]);
-		buttonItem = MenuItemImageExt::create("back_off.png", "back_on.png", "", buttonsCallback[buttons[i]]);
+		buttonItem = MenuItemImageExt::create("back_off.png", "back_on.png", "back_dis.png", buttonsCallback[buttons[i]]);
 		if(!buttonItem) {
 			return false;
 		}
@@ -177,6 +177,8 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 void MHandoverScene::handoverSumbit(cocos2d::Ref* pSender) {
 	if(selectedCard < 0 || selectedCard >= 5) return;
 	if(selectedAdventurer < 0 || selectedAdventurer >= hands.size()) return;
+	//in theory this must bit different
+	//card can be transmit to adventurer with full hand, but after this must be discard
 	if(hands[selectedAdventurer]->getUsedSize() >= 5) return;
 	pMainScene->sumbitHandover(numberAdventurer[selectedAdventurer], selectedCard);
 	std::cout << "Submit clicked!" << std::endl;

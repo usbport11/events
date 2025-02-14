@@ -93,7 +93,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
 
     pMainScene = _pMainScene;
 
-    const std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract", "Fly", "Swim"};//, "Skip"
+    std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract", "Fly", "Swim"};//, "Skip"
     std::map<std::string, ccMenuCallback> menuCallback;
     menuCallback["EndTurn"] = CC_CALLBACK_1(MMenu::menuEndTurnCallback, this);
     menuCallback["Move"] = CC_CALLBACK_1(MMenu::menuMoveCallback, this);
@@ -106,29 +106,35 @@ bool MMenu::create(MMainScene* _pMainScene) {
     //menuCallback["Skip"] = CC_CALLBACK_1(MMenu::menuSkipCallback, this);
 
     float topOffset = pMainScene->getContentSize().height - 30;
-    const std::string btnBackPng[2] = { "back_off_2.png", "back_on_2.png" };
+    const std::string btnBackPng[3] = { "back_off_2.png", "back_on_2.png", "back_dis_2.png"};
 
     //create menu
     int num = 0;
     cocos2d::Vector<cocos2d::MenuItem*> menuItems;
+    cocos2d::Vec2 itemPosition;
+    cocos2d::Label* itemLabel;
     for (int i = 0; i < sizeof(nameList) / sizeof(std::string); i++) {
         if (menuCallback.find(nameList[i]) == menuCallback.end()) {
             std::cout << " [Menu] Can't find item with name " << nameList[i] << std::endl;
         }
-        MenuItemImageExt* menuItem = MenuItemImageExt::create(btnBackPng[0], btnBackPng[1], "", menuCallback[nameList[i]]);
+        MenuItemImageExt* menuItem = MenuItemImageExt::create(btnBackPng[0], btnBackPng[1], btnBackPng[2], menuCallback[nameList[i]]);
         if(!menuItem) {
             return false;
         }
-        cocos2d::Vec2 itemPosition = Vec2(menuItem->getContentSize().width / 2, topOffset - num * menuItem->getContentSize().height);
-        menuItem->setPosition(itemPosition);
-        menuItem->setName(nameList[i]);
-        menuItems.pushBack(menuItem);
-        cocos2d::Label* itemLabel = Label::createWithTTF(nameList[i], "fonts/Marker Felt.ttf", 24);
+        
+        itemPosition = Vec2(menuItem->getContentSize().width / 2, topOffset - num * menuItem->getContentSize().height);
+        itemLabel = Label::createWithTTF(nameList[i], "fonts/Marker Felt.ttf", 24);
         if (!itemLabel) {
             return false;
         }
         itemLabel->setPosition(itemPosition);
         pMainScene->addChild(itemLabel, 2);
+
+        menuItem->setPosition(itemPosition);
+        std::transform(nameList[i].begin(), nameList[i].end(), nameList[i].begin(), std::tolower);
+        menuItem->setName(nameList[i]);
+        menuItems.pushBack(menuItem);
+        
         num ++;
     }
 
@@ -157,4 +163,20 @@ void MMenu::selectMenuItem(cocos2d::Ref* pSender) {
     MenuItemImageExt* menuItem = (MenuItemImageExt*)pSender;
     menuItem->setColor(cocos2d::Color3B(255, 0, 0));
     menuItem->selected();//?
+}
+
+void MMenu::updateStatuses(std::vector<std::string> availableActions) {
+    //not tested
+    cocos2d::Node* node = pMainScene->getChildByName(name);
+    cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
+    MenuItemImageExt* menuItem;
+    for (int i = 0; i < items.size(); i++) {
+        menuItem = (MenuItemImageExt*)items.at(i);
+        if (std::find(availableActions.begin(), availableActions.end(), menuItem->getName()) != availableActions.end()) {
+            menuItem->setEnabled(true);
+        }
+        else {
+            menuItem->setEnabled(false);
+        }
+    }
 }
