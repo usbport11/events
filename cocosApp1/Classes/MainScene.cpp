@@ -2,6 +2,7 @@
 #include "EndScene.h"
 #include "DropCardScene.h"
 #include "HandoverScene.h"
+#include "MainMenuScene.h"
 #include "utils.h"
 #include "logic/area.h"
 #include "logic/adventurer.h"
@@ -246,7 +247,6 @@ bool MMainScene::discard(MAdventurer* adventurer, std::list<int> cards) {
     int removed = 0;
     cards.sort();//important!
 
-    //MAdventurer* adventurer = processor.getCurrentAdventurer();
     std::cout << "Drop cards for: " << adventurer->getName() << std::endl;
     std::vector<MCard*> cardsR = adventurer->getAllCards();
     if (!adventurer) return false;
@@ -308,6 +308,18 @@ bool MMainScene::sumbitHandover(MAdventurer* adventurer, int cardNumber) {
     adventurerHand[srcAdventurer->getName()]->removeCard(cardFrame[srcCard->getName()]);
     adventurerHand[adventurer->getName()]->addCard(cardFrame[srcCard->getName()]);
 
+    //NOT TESTED!
+    //if destination adventurer hand has more than 5 cards - must be call drop card scene
+    if (adventurerHand[adventurer->getName()]->getUsedSize() > 5) {
+        std::cout << "Drop cards after submit for: " << adventurer->getName() << std::endl;
+        MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
+        if (!dropCardScene) return false;
+        dropCardScene->setMainScene(this);
+        if (!dropCardScene->setCards(adventurerHand[adventurer->getName()]->getNotEmptyCards())) return false;
+        if (!dropCardScene->setAdventurer(adventurer)) return false;
+        Director::getInstance()->pushScene(dropCardScene);
+    }
+
     //update menu items
     menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
     return true;
@@ -347,7 +359,7 @@ bool MMainScene::startFly() {
 }
 
 bool MMainScene::startSwim() {
-    //NOT TESTED!
+    //need check available area calculation
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (adventurer->getName() != "diver") return false;
 
@@ -569,7 +581,7 @@ bool MMainScene::initVisual() {
         hands.push_back(new MHand);
         if(!hands[i]->create(this, 5, 7, it->first + "_hand%d", "card1", cocos2d::Vec2(100, 100))) return false;
         i ++;
-        if (!createAnimSpriteFromPlist(this, "anim/fox.plist", it->first + "_anim", "fox_pt", 4, 0.1f)) {
+        if (!createAnimSpriteFromPlist(this, "anim/adven1.plist", it->first + "_anim", "adven", 4, 0.2f)) {
             return false;
         }
         adventurerSprite[it->first] = (cocos2d::Sprite*) this->getChildByName(it->first + "_anim");
@@ -833,6 +845,12 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (keyCode == EventKeyboard::KeyCode::KEY_R) {
         if(!reset()) return;
+    }
+    if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE) {
+        MMainMenuScene* mainMenuScene = (MMainMenuScene*)MMainMenuScene::createScene();
+        if (!mainMenuScene) return;
+        if (!mainMenuScene->create(this, false)) return;
+        Director::getInstance()->pushScene(mainMenuScene);
     }
 }
 

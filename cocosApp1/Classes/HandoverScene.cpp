@@ -142,7 +142,6 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 	
 	//create close items
 	for(int i=0; i<2; i++) {
-		//buttonItem = MenuItemImage::create("back_off.png", "back_on.png", buttonsCallback[buttons[i]]);
 		buttonItem = MenuItemImageExt::create("back_off.png", "back_on.png", "back_dis.png", buttonsCallback[buttons[i]]);
 		if(!buttonItem) {
 			return false;
@@ -150,7 +149,11 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 		offset = (visibleSize.width - (buttonItem->getContentSize().width + 20) * 2) / 2 + (buttonItem->getContentSize().width + 20) / 2;
 		itemPosition = Vec2(offset + i * (buttonItem->getContentSize().width + 20), 150);
 		
-		buttonItem->setName("btn_" + buttons[i]);
+		if (buttons[i] == "Submit") {
+			btnSubmit = buttonItem;
+			btnSubmit->setEnabled(false);
+		}
+		//buttonItem->setName("btn_" + buttons[i]);
 		buttonItem->setPosition(itemPosition);
 		menuItems.pushBack(buttonItem);
 		
@@ -177,9 +180,6 @@ bool MHandoverScene::create(MMainScene* _pMainScene, MAdventurer* srcAdventurer,
 void MHandoverScene::handoverSumbit(cocos2d::Ref* pSender) {
 	if(selectedCard < 0 || selectedCard >= 5) return;
 	if(selectedAdventurer < 0 || selectedAdventurer >= hands.size()) return;
-	//in theory this must bit different
-	//card can be transmit to adventurer with full hand, but after this must be discard
-	if(hands[selectedAdventurer]->getUsedSize() >= 5) return;
 	pMainScene->sumbitHandover(numberAdventurer[selectedAdventurer], selectedCard);
 	std::cout << "Submit clicked!" << std::endl;
 	Director::getInstance()->popScene();
@@ -213,10 +213,18 @@ void MHandoverScene::adventurer4Select(cocos2d::Ref* pSender) {
 	selectAdventurer(4);
 }
 void MHandoverScene::selectSourceCard(int number) {
-	if(number < 0) return;
+	if(number < 0 || selectedCard > 5) return;
+	if (pAdventurer->getCardByNumber(number)->getType() != "artifact") return;
+	if (number == selectedCard) {
+		cardItems.at(number)->setColor(cocos2d::Color3B(255, 255, 255));
+		selectedCard =  -1;
+		btnSubmit->setEnabled(false);
+		return;
+	}
 	if(selectedCard >= 0) cardItems.at(selectedCard)->setColor(cocos2d::Color3B(255,255,255));
 	cardItems.at(number)->setColor(cocos2d::Color3B(0,255,0));
 	selectedCard = number;
+	btnSubmit->setEnabled(true);
 }
 void MHandoverScene::sourceCard0Select(cocos2d::Ref* pSender) {
 	selectSourceCard(0);

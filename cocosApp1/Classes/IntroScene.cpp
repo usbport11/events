@@ -1,5 +1,6 @@
 #include "IntroScene.h"
 #include "utils.h"
+#include "AudioEngine.h" 
 
 USING_NS_CC;
 

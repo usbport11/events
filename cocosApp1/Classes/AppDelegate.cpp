@@ -1,6 +1,7 @@
 #include "AppDelegate.h"
 #include "MainScene.h"
 #include "IntroScene.h"
+#include "MainMenuScene.h"
 #include <iostream>
 
 // #define USE_AUDIO_ENGINE 1
@@ -74,12 +75,16 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     register_all_packages();
 
-    auto mainScene = MMainScene::createScene();
+    MMainScene* mainScene = (MMainScene*)MMainScene::createScene();
     if (!mainScene) return false;
+    MMainMenuScene* mainMenuScene = (MMainMenuScene*)MMainMenuScene::createScene();
+    if (!mainMenuScene) return false;
+    if (!mainMenuScene->create(mainScene, true)) return false;
     auto introScene = MIntroScene::createScene();
     if (!introScene) return false;
 
     director->pushScene(mainScene);
+    director->pushScene(mainMenuScene);
     director->pushScene(introScene);
     //director->runWithScene(mainScene);
 

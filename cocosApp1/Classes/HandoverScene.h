@@ -6,6 +6,7 @@
 class MMainScene;
 class MAdventurer;
 class MHand;
+class MenuItemImageExt;
 
 class MHandoverScene: public cocos2d::Scene {
 private:
@@ -13,6 +14,7 @@ private:
 	int selectedAdventurer;
 	MMainScene* pMainScene;
 	MAdventurer* pAdventurer;
+	MenuItemImageExt* btnSubmit;
 	std::vector<MHand*> hands;
 	cocos2d::Vector<cocos2d::MenuItem*> cardItems;
 	cocos2d::Vector<cocos2d::MenuItem*> adventurerItems;
