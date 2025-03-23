@@ -56,7 +56,7 @@ std::list<MArea*> MArea::getAllFloodedNeighbors() {
 	for (std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
 		if ((*it)->getFloodLevel() == 1) dn.push_back(*it);
 	}
-	dn.push_back(this);//is it ok?
+	//dn.push_back(this);//what is it for?
 	return dn;
 }
 std::list<MArea*> MArea::getDirectFloodedNeighbors() {
@@ -64,7 +64,7 @@ std::list<MArea*> MArea::getDirectFloodedNeighbors() {
 	for (std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
 		if (!isDiagonal(*it) && (*it)->getFloodLevel() == 1) dn.push_back(*it);
 	}
-	dn.push_back(this);//is it ok?
+	//dn.push_back(this);//what is it for?
 	return dn;
 }
 void MArea::addNeighbor(MArea* area) {
