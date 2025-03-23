@@ -31,9 +31,8 @@ private:
     std::vector<MHand*> hands;
     std::map<std::string, cocos2d::Sprite*> adventurerSprite;
 
-    cocos2d::Vec2 speed;
-    bool moving;
-    void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
+    //cocos2d::Vec2 speed;
+    //void moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination);
 
     bool initVisual();
     bool updateAreas();
@@ -57,6 +56,7 @@ public:
     bool sumbitHandover(MAdventurer* adventurer, int cardNumber);
     bool startFly();
     bool startSwim();
+    bool startMoveOther();
 
     bool reset();
     void adventurerClicked(const std::string& name);

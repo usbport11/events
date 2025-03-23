@@ -19,7 +19,7 @@ private:
 	void menuExtractCallback(cocos2d::Ref* pSender);
 	void menuFlyCallback(cocos2d::Ref* pSender);
 	void menuSwimCallback(cocos2d::Ref* pSender);
-	//void menuSkipCallback(cocos2d::Ref* pSender);
+	void menuMoveOtherCallback(cocos2d::Ref* pSender);
 
 	void selectMenuItem(cocos2d::Ref* pSender);
 public:

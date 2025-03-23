@@ -76,15 +76,13 @@ void MMenu::menuSwimCallback(cocos2d::Ref* pSender) {
     }
 }
 
-/*
-void MMenu::menuSkipCallback(cocos2d::Ref* pSender) {
+void MMenu::menuMoveOtherCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
-    std::cout << " [Menu] Menu item 'skip' selected" << std::endl;
-    if (!pMainScene->skip()) {
-        std::cout << " [Menu] item 'skip' failed!" << std::endl;
+    std::cout << " [Menu] Menu item 'move other' selected" << std::endl;
+    if (!pMainScene->startMoveOther()) {
+        std::cout << " [Menu] item 'move other' failed!" << std::endl;
     }
 }
-*/
 
 bool MMenu::create(MMainScene* _pMainScene) {
     if (!_pMainScene) {
@@ -93,7 +91,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
 
     pMainScene = _pMainScene;
 
-    std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract", "Fly", "Swim"};//, "Skip"
+    std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract", "Fly", "Swim", "MoveOther"};//, "Skip"
     std::map<std::string, ccMenuCallback> menuCallback;
     menuCallback["EndTurn"] = CC_CALLBACK_1(MMenu::menuEndTurnCallback, this);
     menuCallback["Move"] = CC_CALLBACK_1(MMenu::menuMoveCallback, this);
@@ -103,7 +101,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
     menuCallback["Extract"] = CC_CALLBACK_1(MMenu::menuExtractCallback, this);
     menuCallback["Fly"] = CC_CALLBACK_1(MMenu::menuFlyCallback, this);
     menuCallback["Swim"] = CC_CALLBACK_1(MMenu::menuSwimCallback, this);
-    //menuCallback["Skip"] = CC_CALLBACK_1(MMenu::menuSkipCallback, this);
+    menuCallback["MoveOther"] = CC_CALLBACK_1(MMenu::menuMoveOtherCallback, this);
 
     float topOffset = pMainScene->getContentSize().height - 30;
     const std::string btnBackPng[3] = { "back_off_2.png", "back_on_2.png", "back_dis_2.png"};
@@ -131,7 +129,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
         pMainScene->addChild(itemLabel, 2);
 
         menuItem->setPosition(itemPosition);
-        std::transform(nameList[i].begin(), nameList[i].end(), nameList[i].begin(), std::tolower);
+        std::transform(nameList[i].begin(), nameList[i].end(), nameList[i].begin(), std::tolower);//lower
         menuItem->setName(nameList[i]);
         menuItems.pushBack(menuItem);
         
@@ -172,6 +170,7 @@ void MMenu::updateStatuses(std::vector<std::string> availableActions) {
     MenuItemImageExt* menuItem;
     for (int i = 0; i < items.size(); i++) {
         menuItem = (MenuItemImageExt*)items.at(i);
+        menuItem->setColor(cocos2d::Color3B(255, 255, 255));
         if (std::find(availableActions.begin(), availableActions.end(), menuItem->getName()) != availableActions.end()) {
             menuItem->setEnabled(true);
         }

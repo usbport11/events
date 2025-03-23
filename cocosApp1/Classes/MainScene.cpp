@@ -167,12 +167,10 @@ bool MMainScene::startAbfluss() {
     std::list<MArea*> areas;
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (!adventurer) return false;
-    if (adventurer->canUseDiagonal()) {
-        areas = adventurer->getArea()->getAllFloodedNeighbors();
-    }
+    if (adventurer->canUseDiagonal()) areas = adventurer->getArea()->getAllFloodedNeighbors();
     else areas = adventurer->getArea()->getDirectFloodedNeighbors();
+    if (adventurer->getArea()->getFloodLevel() == 1) areas.push_back(adventurer->getArea());
     if (areas.empty()) {
-        //currentAction = "";
         std::cout << " [MainScene] no available to abfluss areas" << std::endl;
         return false;
     }
@@ -388,6 +386,26 @@ bool MMainScene::startSwim() {
     }
     
     currentAction = "swim";
+    return true;
+}
+
+bool MMainScene::startMoveOther() {
+    MAdventurer* adventurer;
+    cocos2d::Sprite* sp;
+    updateAreas();
+    gridMap.clearAreaLimit();
+    std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
+    for(int i=0; i<activeAdventurers.size(); i++) {
+        if(activeAdventurers[i] == processor.getCurrentAdventurer()->getName()) continue;
+        adventurer = processor.findAdventurer(activeAdventurers[i]);
+        if (!adventurer) return false;
+        gridMap.addAreaLimit(adventurer->getArea()->getIndex()[0] * gridSize + adventurer->getArea()->getIndex()[1]);
+        sp = gridMap.getSpriteByAreaName(adventurer->getArea()->getName());
+        if (!sp) return false;
+        sp->setColor(cocos2d::Color3B(128, 255, 128));
+    }
+    currentAction = "";
+    //currentAction = "moveOther_selectAdventurer";
     return true;
 }
 
@@ -739,8 +757,7 @@ bool MMainScene::init() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-    speed = cocos2d::Vec2(2, 2);
-    moving = false;
+    //speed = cocos2d::Vec2(2, 2);
     gridSize = 6;//need get from processor
 
     cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
@@ -753,7 +770,7 @@ bool MMainScene::init() {
     keybordListener->onKeyReleased = CC_CALLBACK_2(MMainScene::onKeyReleased, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
 
-    if (!initVisual()) return false; //need check this for some reasons
+    if (!initVisual()) return false; //need check this for some reasons?
 
     if (!reset()) return false;
 
@@ -766,6 +783,7 @@ void MMainScene::update(float delta) {
     updateActionNumber();
 }
 
+/*
 void MMainScene::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) {
     cocos2d::Vec2 direction = gridMap.sign(destination - sprite->getPosition());
     cocos2d::Vec2 step = cocos2d::Vec2(speed.x * direction.x, speed.y * direction.y);
@@ -779,6 +797,7 @@ void MMainScene::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) 
         sprite->setPosition(nextPos);
     }
 }
+*/
 
 void MMainScene::onMouseMove(cocos2d::Event* event) {
     cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
@@ -799,12 +818,13 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         if (!gridMap.cellCheck(cell)) {
             return;
         }
-        //why check this? previous check not pass here
+        
         MAdventurer* adventurer = processor.getCurrentAdventurer();
-        if(gridMap.getCellByCoordinates(adventurerSprite[adventurer->getName()]->getPosition()) == cell) {
-            return;
-        }
         if (currentAction == "move" || currentAction == "fly" || currentAction == "swim") {
+            if (gridMap.getCellByCoordinates(adventurerSprite[adventurer->getName()]->getPosition()) == cell) {
+                std::cout << "[MainScene] Can't " << currentAction << " to same cell" << std::endl;
+                return;
+            }
             if (!processor.execFunction(currentAction, adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
                 std::cout << "[MainScene] failed to "<< currentAction <<" adventurer!" << std::endl;
                 return;
@@ -821,6 +841,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
 
             //update menu items
             menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+            updateAreas();
             currentAction = "";
         }
         if (currentAction == "abfluss") {
@@ -828,9 +849,63 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
                 std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
                 return;
             }
+            //update menu items
+            menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+            updateAreas();
+            currentAction = "";
+        }
+        if (currentAction == "moveOther_selectAdventurer") {
+            //need change logic of selection
+            //if area hold more than one adventurer - first will be selected
+            moveAdventurer = "";
+            MArea* area = processor.getAreaByIndex(cell.x, cell.y);
+            std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
+            for (int i = 0; i < activeAdventurers.size(); i++) {
+                if (activeAdventurers[i] == processor.getCurrentAdventurer()->getName()) continue;
+                adventurer = processor.findAdventurer(activeAdventurers[i]);
+                if (adventurer) {
+                    moveAdventurer = adventurer->getName();
+                    break;
+                }
+            }
+            if (moveAdventurer == "") {
+                currentAction = "";
+                return;
+            }
+            
+            updateAreas();
+            gridMap.clearAreaLimit();
+            MArea* area;
+            cocos2d::Sprite* sp;
+            std::vector<std::string> swimAreas;
+            processor.getSwimAreas(adventurer->getArea(), swimAreas);
+            for (int i = 0; i < swimAreas.size(); i++) {
+                area = processor.findArea(swimAreas[i]);
+                gridMap.addAreaLimit(area->getIndex()[0] * gridSize + area->getIndex()[1]);
+                sp = gridMap.getSpriteByAreaName(area->getName());
+                if (!sp) return;
+                sp->setColor(cocos2d::Color3B(128, 255, 128));
+            }
+
+            currentAction = "moveOther_selectArea";
+        }
+        if (currentAction == "moveOther_selectArea") {
+            if (!processor.execFunction("move", moveAdventurer + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+                std::cout << "[MainScene] failed to move adventurer!" << std::endl;
+                return;
+            }
+
+            int pos[2];
+            int num = getAdventurerNumber(adventurer->getName());
+            pos[0] = (num / 2);
+            pos[0] = pos[0] * 32 - 16;
+            pos[1] = 16 - (num % 2) * 32;
+            cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
+            adventurerSprite[adventurer->getName()]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
 
             //update menu items
             menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+            updateAreas();
             currentAction = "";
         }
     }

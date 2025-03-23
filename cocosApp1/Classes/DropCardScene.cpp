@@ -186,13 +186,6 @@ void MDropCardScene::card6Callback(cocos2d::Ref* pSender) {
 }
 
 void MDropCardScene::menuCloseCallback(cocos2d::Ref* pSender) {
-	//if cards by some reason <= 0 activate button
-	//send cards list to mainScene
-	//how call function in mainScene after this?
-	//may be call function in MainScene from here?
-		//processor exec function draw card for current adventurer
-		//hide sprite in hand slot for current adventurer that was draw
-	//return to mainScene;
 	pMainScene->discard(pAdventurer, selectedCards);
 	Director::getInstance()->popScene();
 }
