@@ -393,7 +393,12 @@ bool MProcessor::moveOther() {
   if(argsLessLimit(3)) return false;
   std::cout<<"Move "<<vargs[1]<<" by "<<vargs[0]<<" to the "<<vargs[2]<<std::endl;
   usedActions.push_back("moveother");
-  return execFunction("move", vargs[1] + " " + vargs[2]);
+  MAdventurer* adventurer = findAdventurer(vargs[1]);
+  MArea* area = findArea(vargs[2]);
+  if (!adventurer) return false;
+  if (!area) return false;
+  adventurer->setArea(area);
+  //return execFunction("move", vargs[1] + " " + vargs[2]); //this calculated as additional action - it's wrong
 }
 bool MProcessor::swim() {
   if(argsLessLimit(2)) return false;
@@ -700,7 +705,7 @@ void MProcessor::setAdventurersNumber(int number) {
     else adventurersNumber = number;
 }
 
-bool MProcessor::execFunction(const std::string& name, const std::string& _sargs) {
+bool MProcessor::execFunction(const std::string& name, const std::string& _sargs, bool increase) {
   parseArgs(_sargs);
   std::map<std::string, bptr>::iterator mit = functions.find(name);
   if(mit == functions.end()) {
@@ -709,8 +714,13 @@ bool MProcessor::execFunction(const std::string& name, const std::string& _sargs
   }
   if(!call(name)) return false;
   if (adventureStarted && actionsSwitches.find(name) != actionsSwitches.end()) {
-      currentActionNumber ++;
-      std::cout << "Increase action number" << std::endl;
+      if (increase) {
+          currentActionNumber++;
+          std::cout << "Increase action number" << std::endl;
+      }
+      else {
+          std::cout << "Increase action number skiped" << std::endl;
+      }
   }
   return true;
 }

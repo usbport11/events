@@ -51,6 +51,29 @@ std::list<MArea*> MArea::getDirectActiveNeighbors() {
   }
   return dn;
 }
+std::list<MArea*> MArea::getDirectActiveNeighbors2() {
+  std::list<MArea*> dn, middle;
+
+  for (std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {
+	if (!isDiagonal(*it) && (*it)->getFloodLevel() < 2) middle.push_back(*it);
+  }
+  
+  for (std::list<MArea*>::iterator it = middle.begin(); it != middle.end(); it++) {
+	std::list<MArea*> subDn = (*it)->getDirectActiveNeighbors();
+	for (std::list<MArea*>::iterator it2 = subDn.begin(); it2 != subDn.end(); it2++) {
+	  if (std::find(dn.begin(), dn.end(), *it2) == dn.end()) {
+		dn.push_back(*it2);
+	  }
+	}
+  }
+  
+  for (std::list<MArea*>::iterator it = middle.begin(); it != middle.end(); it++) {
+    if (std::find(dn.begin(), dn.end(), *it) == dn.end()) {
+      if (!isDiagonal(*it) && (*it)->getFloodLevel() < 2) dn.push_back(*it);
+    }
+  }
+  return dn;
+}
 std::list<MArea*> MArea::getAllFloodedNeighbors() {
 	std::list<MArea*> dn;
 	for (std::list<MArea*>::iterator it = neighbors.begin(); it != neighbors.end(); it++) {

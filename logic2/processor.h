@@ -98,7 +98,7 @@ public:
   MProcessor();
   ~MProcessor();
 
-  bool execFunction(const std::string& name, const std::string& _sargs="");
+  bool execFunction(const std::string& name, const std::string& _sargs="", bool increase=true);
 
   bool adventureFailed();
   void setAdventurersNumber(int number);

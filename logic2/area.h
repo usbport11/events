@@ -20,6 +20,7 @@ public:
   std::list<MArea*> getAllNeighbors();
   std::list<MArea*> getAllActiveNeighbors();
   std::list<MArea*> getDirectActiveNeighbors();
+  std::list<MArea*> getDirectActiveNeighbors2();
   std::list<MArea*> getAllFloodedNeighbors();
   std::list<MArea*> getDirectFloodedNeighbors();
   void addNeighbor(MArea* area);
