@@ -709,6 +709,8 @@ bool MMainScene::reset() {
     cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
     if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
     currentAction = "";
+    moveAdventurer = "";
+    abflussNumber = 0;
 
     if (!adventurerMenu.init(processor.getActiveAdventurers())) return false;
     adventurerMenuSelected = processor.getCurrentAdventurer()->getName();
@@ -845,14 +847,24 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
             return;
         }
         if (currentAction == "abfluss") {
-            if (!processor.execFunction("abfluss", adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+            abflussNumber ++;
+            if (!processor.execFunction("abfluss", adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName(), abflussNumber - 2)) {
                 std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
+                return;
+            }
+            if (adventurer->getName() == "engineer" && abflussNumber < 2) {
+                std::cout << "[MainScene] call second abluss by engineer" << std::endl;
+                menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+                updateAreas();
+                currentAction = "";
+                startAbfluss();
                 return;
             }
             //update menu items
             menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
             updateAreas();
             currentAction = "";
+            abflussNumber = 0;
             return;
         }
         if (currentAction == "moveOther_selectAdventurer") {
@@ -882,16 +894,16 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
             gridMap.clearAreaLimit();
 
             cocos2d::Sprite* sp;
-            std::map<std::string, MObject*> areas = processor.getAreas();
-            for (std::map<std::string, MObject*>::iterator it = areas.begin(); it != areas.end(); it++) {
-                area = (MArea*)it->second;
-                if (!area) return;
-                if (area->getFloodLevel() <= 2 && adventurer->getArea() != area) {
-                    gridMap.addAreaLimit(area->getIndex()[0] * gridSize + area->getIndex()[1]);
-                    sp = gridMap.getSpriteByAreaName(area->getName());
-                    if (!sp) return;
-                    sp->setColor(cocos2d::Color3B(128, 255, 128));
-                }
+            std::list<MArea*> areas = adventurer->getArea()->getDirectActiveNeighbors2();
+            if (areas.empty()) {
+                std::cout << " [MainScene] no available to move areas" << std::endl;
+                return;
+            }
+            for (std::list<MArea*>::iterator it = areas.begin(); it != areas.end(); it++) {
+                gridMap.addAreaLimit((*it)->getIndex()[0] * gridSize + (*it)->getIndex()[1]);
+                sp = gridMap.getSpriteByAreaName((*it)->getName());
+                if (!sp) return;
+                sp->setColor(cocos2d::Color3B(128, 255, 128));
             }
 
             currentAction = "moveOther_selectArea";
@@ -933,6 +945,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         gridMap.clearAreaLimit();
         menu.unselectMenuAll();
         currentAction = "";
+        moveAdventurer = "";
         return;
     }
 }

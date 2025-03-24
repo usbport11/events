@@ -23,6 +23,8 @@ private:
     MAdventurerMenu adventurerMenu;
     std::string adventurerMenuSelected;
     
+    std::string moveAdventurer;
+    int abflussNumber;
     int gridSize;
     std::map<std::string, std::string> cardFrame;
     std::map<std::string, std::string> floodSprite;
