@@ -21,7 +21,8 @@ bool MDropCardScene::init() {
 
 	menuName = "dropCardMenu";
 	selectedCards.clear();
-	sourceCards.clear();
+	//sourceCards.clear();
+	sourceCardFrames.clear();
 	selectedCardsNumber = 0;
 	cardsLimit = 5;
 	totalCardsLimit = 7;
@@ -98,25 +99,19 @@ void MDropCardScene::setMainScene(MMainScene* _pMainScene) {
 	pMainScene = _pMainScene;
 }
 
-bool MDropCardScene::setCards(std::vector<std::string> _sourceCards) {
-	sourceCards = _sourceCards;
-	
-	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-    if (!cache) {
-        return false;
-    }
-	
+bool MDropCardScene::setCardFrames(std::vector<cocos2d::SpriteFrame*> _cardFrames) {
+	sourceCardFrames = _cardFrames;
+
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	cocos2d::Node* node = this->getChildByName(menuName);
-    cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
+	cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
 	cocos2d::Sprite* sp;
-	int offset = (visibleSize.width - (items.at(0)->getContentSize().width + 20) * sourceCards.size()) / 2 + (items.at(0)->getContentSize().width + 20) / 2;
+	int offset = (visibleSize.width - (items.at(0)->getContentSize().width + 20) * sourceCardFrames.size()) / 2 + (items.at(0)->getContentSize().width + 20) / 2;
 
-    for (int i = 0; i < items.size() - 1; i++) {
-		//MenuItemImageExt* item = (MenuItemImageExt*) items.at(i);
+	for (int i = 0; i < items.size() - 1; i++) {
 		MenuItemImage* item = (MenuItemImage*)items.at(i);
-		if (i < sourceCards.size()) {
-			sp = cocos2d::Sprite::createWithSpriteFrame(cache->getSpriteFrameByName(sourceCards[i]));
+		if (i < sourceCardFrames.size()) {
+			sp = cocos2d::Sprite::createWithSpriteFrame(sourceCardFrames[i]);
 			if (!sp) {
 				return false;
 			}
@@ -127,8 +122,8 @@ bool MDropCardScene::setCards(std::vector<std::string> _sourceCards) {
 		else {
 			item->setVisible(false);
 		}
-    }
-	
+	}
+
 	return true;
 }
 
@@ -140,8 +135,7 @@ bool MDropCardScene::setAdventurer(MAdventurer* _pAdventurer) {
 
 void MDropCardScene::selectMenuItem(cocos2d::Ref* pSender, int number) {
 	if (number >= totalCardsLimit ) return;
-	if (number >= sourceCards.size()) return;
-	if (sourceCards[number] == "card1") return;
+	if (number >= sourceCardFrames.size()) return;
 
 	MenuItemImageExt* menuItem = (MenuItemImageExt*)pSender;
 	if (menuItem->getColor() == cocos2d::Color3B(255, 0, 0)) {
@@ -153,7 +147,7 @@ void MDropCardScene::selectMenuItem(cocos2d::Ref* pSender, int number) {
 		selectedCards.push_back(number);
 	}
 
-	if (sourceCards.size() - selectedCards.size() == cardsLimit) closeItem->setEnabled(true);
+	if (sourceCardFrames.size() - selectedCards.size() == cardsLimit) closeItem->setEnabled(true);
 	else closeItem->setEnabled(false);
 }
 

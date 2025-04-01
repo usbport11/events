@@ -4,7 +4,7 @@
 #include "cocos2d.h"
 #include "gridMap.h"
 #include "deck.h"
-#include "hand.h"
+#include "hand2.h"
 #include "waterLevel.h"
 #include "menu.h"
 #include "AdventurerMenu.h"
@@ -20,17 +20,16 @@ private:
     MDeck floodDeck;
     MWaterLevel waterLevel;
     MMenu menu;
-    MAdventurerMenu adventurerMenu;
-    std::string adventurerMenuSelected;
+    MAdventurerMenu advMenu;
+    MAdventurer* advMenuAdventurer;
     
     std::string moveAdventurer;
     int abflussNumber;
     int gridSize;
-    std::map<std::string, std::string> cardFrame;
     std::map<std::string, std::string> floodSprite;
     std::map<std::string, std::string> artifactSprite;
-    std::map<std::string, MHand*> adventurerHand;
-    std::vector<MHand*> hands;
+    std::vector<MHand2*> hands2;
+    std::map<MAdventurer*, MHand2*> adventurerHand2;
     std::map<std::string, cocos2d::Sprite*> adventurerSprite;
 
     //cocos2d::Vec2 speed;
@@ -61,14 +60,19 @@ public:
     bool startMoveOther();
 
     bool reset();
+    void adventurerClicked(MAdventurer* adventurer);
     void adventurerClicked(const std::string& name);
     int getAdventurerNumber(const std::string& name);
     MAdventurer* getCurrentAdventurer();
-    MHand* getAdventurerHand(const std::string& name);
+    MHand2* getAdventurerHand2(MAdventurer* adventurer);
     MAdventurerMenu* getAdventurerMenu();
+
+    void lbmGridProcess(cocos2d::Event* event);
+    void rbmGridProcess(cocos2d::Event* event);
 
     void onMouseMove(cocos2d::Event* event);
     void onMouseDown(cocos2d::Event* event);
+    void onMouseUp(cocos2d::Event* event);
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     CREATE_FUNC(MMainScene);

@@ -7,55 +7,67 @@ MHand2::MHand2() {
   limit = 5;
   scale = 1;
   offset = 0;
+  selectedCardSprite = nullptr;
+  prevHoverCardSprite = nullptr;
+  visible = true;
+  enabled = false;
 }
 MHand2::~MHand2() {
   cards.clear();
   cardFrame.clear();
 }
-bool MHand2::initCards(cocos2d::Scene* pScene, MAdventurer* adventurer, float _offset) {
+bool MHand2::initCards(cocos2d::Scene* _pScene, MAdventurer* adventurer, float _offset) {
   if(!pScene) return false;
+  pScene = _pScene;
   if(!adventurer) return false;
+
+  visible = true;
+  selectedCardSprite = nullptr;
+  prevHoverCardSprite = nullptr;
   offset = _offset;
-  
-  cards.clear();
-  
   visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-  
+
+  for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+	  if(it->sp) pScene->removeChild(it->sp);
+  }
+  cards.clear();
+
   cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
   if (!cache) return false;
   
   cardFrame = {
-		{"helicopter_0", cache->getSpriteFrameByName("card8")},
-		{"helicopter_1", cache->getSpriteFrameByName("card8")},
-		{"sandbag_0", cache->getSpriteFrameByName("card7")},
-		{"sandbag_1", cache->getSpriteFrameByName("card7")},
-		{"crystal_0", cache->getSpriteFrameByName("card5")},
-		{"crystal_1", cache->getSpriteFrameByName("card5")},
-		{"crystal_2", cache->getSpriteFrameByName("card5")},
-		{"crystal_3", cache->getSpriteFrameByName("card5")},
-		{"crystal_4", cache->getSpriteFrameByName("card5")},
-		{"sphere_0", cache->getSpriteFrameByName("card3")},
-		{"sphere_1", cache->getSpriteFrameByName("card3")},
-		{"sphere_2", cache->getSpriteFrameByName("card3")},
-		{"sphere_3", cache->getSpriteFrameByName("card3")},
-		{"sphere_4", cache->getSpriteFrameByName("card3")},
-		{"lion_0", cache->getSpriteFrameByName("card4")},
-		{"lion_1", cache->getSpriteFrameByName("card4")},
-		{"lion_2", cache->getSpriteFrameByName("card4")},
-		{"lion_3", cache->getSpriteFrameByName("card4")},
-		{"lion_4", cache->getSpriteFrameByName("card4")},
-		{"bowl_0", cache->getSpriteFrameByName("card2")},
-		{"bowl_1", cache->getSpriteFrameByName("card2")},
-		{"bowl_2", cache->getSpriteFrameByName("card2")},
-		{"bowl_3", cache->getSpriteFrameByName("card2")},
-		{"bowl_4", cache->getSpriteFrameByName("card2")}
+		{"helicopter0", cache->getSpriteFrameByName("card8")},
+		{"helicopter1", cache->getSpriteFrameByName("card8")},
+		{"sandbag0", cache->getSpriteFrameByName("card7")},
+		{"sandbag1", cache->getSpriteFrameByName("card7")},
+		{"crystal0", cache->getSpriteFrameByName("card5")},
+		{"crystal1", cache->getSpriteFrameByName("card5")},
+		{"crystal2", cache->getSpriteFrameByName("card5")},
+		{"crystal3", cache->getSpriteFrameByName("card5")},
+		{"crystal4", cache->getSpriteFrameByName("card5")},
+		{"sphere0", cache->getSpriteFrameByName("card3")},
+		{"sphere1", cache->getSpriteFrameByName("card3")},
+		{"sphere2", cache->getSpriteFrameByName("card3")},
+		{"sphere3", cache->getSpriteFrameByName("card3")},
+		{"sphere4", cache->getSpriteFrameByName("card3")},
+		{"lion0", cache->getSpriteFrameByName("card4")},
+		{"lion1", cache->getSpriteFrameByName("card4")},
+		{"lion2", cache->getSpriteFrameByName("card4")},
+		{"lion3", cache->getSpriteFrameByName("card4")},
+		{"lion4", cache->getSpriteFrameByName("card4")},
+		{"bowl0", cache->getSpriteFrameByName("card2")},
+		{"bowl1", cache->getSpriteFrameByName("card2")},
+		{"bowl2", cache->getSpriteFrameByName("card2")},
+		{"bowl3", cache->getSpriteFrameByName("card2")},
+		{"bowl4", cache->getSpriteFrameByName("card2")}
   };
   
   std::vector<MCard*> sourceCards = adventurer->getAllCards();
   for (std::vector<MCard*>::iterator it = sourceCards.begin(); it != sourceCards.end(); it++) {
     if(!addCard(*it)) return false;
-    pScene->addChild(cards.back().sp);
   }
+
+  enabled = true;
   
   return true;
 }
@@ -76,15 +88,23 @@ void MHand2::repositionCards() {
   cocos2d::Vec2 pos = (cards.front().sp->getPosition() + cards.back().sp->getPosition()) / 2 - cocos2d::Vec2(size.width / 2, size.height / 2);
   totalRect = cocos2d::Rect(pos.x, pos.y, size.width, size.height);
 }
+bool MHand2::cardAlredyAdded(MCard* card) {
+	for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+		if (it->card == card) return true;
+	}
+	return false;
+}
 bool MHand2::coordsInHand(float x, float y) {
 	return totalRect.containsPoint(cocos2d::Vec2(x, y));
 }
 bool MHand2::addCard(MCard* card) {
-  if(!card) return false;
-  if(cardFrame.find(card->getName()) == cardFrame.end()) return false;
-  if(!cardFrame[card->getName()]) return false;
+  if (!card) return false;
+  if (cardAlredyAdded(card)) return false;
+  if (cardFrame.find(card->getName()) == cardFrame.end()) return false;
+  if (!cardFrame[card->getName()]) return false;
   cocos2d::Sprite* sp = cocos2d::Sprite::createWithSpriteFrame(cardFrame[card->getName()]);
   if(!sp) return false;
+  pScene->addChild(sp);
   stCard _card = stCard(card, cardFrame[card->getName()], sp);
   cards.push_back(_card);
   cards.back().sp->setScale(1);//new
@@ -98,6 +118,7 @@ bool MHand2::removeCard(MCard* card) {
   if(!card) return false;
   for(std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
     if(it->card == card) {
+	  pScene->removeChild(it->sp);
 	  cards.erase(it);
 	  repositionCards();
 	  return true;
@@ -109,12 +130,33 @@ bool MHand2::removeCard(const std::string& name) {
   if(name.empty()) return false;
   for(std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
     if(it->card->getName() == name) {
+	  pScene->removeChild(it->sp);
 	  cards.erase(it);
 	  repositionCards();
 	  return true;
 	}
   }
   return false;
+}
+bool MHand2::removeCardByMask(const std::string& mask) {
+	if (mask.empty()) return false;
+	for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+		if (it->card->getName().find(mask) != std::string::npos) {
+			pScene->removeChild(it->sp);
+			cards.erase(it);
+			repositionCards();
+			return true;
+		}
+	}
+	return false;
+}
+bool MHand2::removeCardByNumber(int i) {
+	if (i < 0 || i >= cards.size()) return false;
+	std::list<stCard>::iterator it = cards.begin();
+	std::advance(it, i);
+	it->sp->setVisible(false);
+	pScene->removeChild(it->sp);
+	cards.erase(it);
 }
 cocos2d::SpriteFrame* MHand2::getCardSpriteFrame(const std::string& name) {
   if(name.empty()) return nullptr;
@@ -157,6 +199,7 @@ cocos2d::Sprite* MHand2::getCardSpriteByCoord(float x, float y) {
 	cocos2d::Vec2 pos;
 	cocos2d::Rect rect;
 	for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+		if (!it->sp) return nullptr;
 		size = it->sp->getContentSize();//new
 		pos = it->sp->getPosition() - cocos2d::Vec2(size.width / 2, size.height / 2);
 		rect = cocos2d::Rect(pos.x, pos.y, size.width, size.height);
@@ -185,20 +228,47 @@ cocos2d::Sprite* MHand2::getCardSpriteByNumber(int i) {
   std::advance(it, i);
   return it->sp;
 }
+std::vector<cocos2d::SpriteFrame*> MHand2::getCardFrames() {
+	std::vector<cocos2d::SpriteFrame*> frames;
+	for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+		frames.push_back(it->spf);
+	}
+	return frames;
+}
+std::vector<cocos2d::Sprite*> MHand2::getCardSprites() {
+	std::vector<cocos2d::Sprite*> sprites;
+	for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+		sprites.push_back(it->sp);
+	}
+	return sprites;
+}
+void MHand2::disable() {
+	enabled = false;
+}
+void MHand2::enable() {
+	enabled = true;
+}
 void MHand2::hide() {
   for(std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
     it->sp->setVisible(false);
   }
+  visible = false;
 }
 void MHand2::show() {
   for(std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
     it->sp->setVisible(true);
   }
+  visible = true;
 }
 bool MHand2::needDiscard() {
   return cards.size() > limit;
 }
+bool MHand2::getCardHold() {
+	return selectedCardSprite != nullptr;
+}
 void MHand2::update(float delta) {
+	if (!enabled) return;
+	if (!visible) return;
 	if (selectedCardSprite) {
 		selectedCardSprite->setPosition(cardMousePos);
 	}
@@ -223,6 +293,7 @@ void MHand2::update(float delta) {
 	}
 }
 void MHand2::onMouseDown(cocos2d::Event* event) {
+	if (!visible) return;
 	cocos2d::EventMouse* e = (cocos2d::EventMouse*)event;
 	selectedCardSprite = getCardSpriteByCoord(e->getCursorX(), e->getCursorY());
 	if (selectedCardSprite) {
@@ -230,12 +301,14 @@ void MHand2::onMouseDown(cocos2d::Event* event) {
 	}
 }
 void MHand2::onMouseUp(cocos2d::Event* event) {
+	if (!visible) return;
 	if (selectedCardSprite) {
 		selectedCardSprite->setPosition(cardOriginPos);
 		selectedCardSprite = nullptr;
 	}
 }
 void MHand2::onMouseMove(cocos2d::Event* event) {
+	if (!visible) return;
 	cocos2d::EventMouse* e = (cocos2d::EventMouse*)event;
 	cardMousePos = cocos2d::Vec2(e->getCursorX(), e->getCursorY());
 }

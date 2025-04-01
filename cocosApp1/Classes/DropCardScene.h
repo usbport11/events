@@ -13,12 +13,11 @@ private:
 	MAdventurer* pAdventurer;
 
 	std::list<int> selectedCards;
-	std::vector<std::string> sourceCards;
+	std::vector<cocos2d::SpriteFrame*> sourceCardFrames;
 	int selectedCardsNumber;
 	int cardsLimit;
 	int totalCardsLimit;
 	MenuItemImageExt* closeItem;
-	//cocos2d::MenuItemImage* closeItem;
 	std::string menuName;
 
 	void selectMenuItem(cocos2d::Ref* pSender, int number);
@@ -35,7 +34,8 @@ public:
     static cocos2d::Scene* createScene();
 	virtual bool init();
 	void setMainScene(MMainScene* _pMainScene);
-	bool setCards(std::vector<std::string> _sourceCards);
+	//bool setCards(std::vector<std::string> _sourceCards);
+	bool setCardFrames(std::vector<cocos2d::SpriteFrame*> _cardFrames);
 	bool setAdventurer(MAdventurer* _pAdventurer);
     CREATE_FUNC(MDropCardScene);
 };

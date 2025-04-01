@@ -8,12 +8,25 @@
 
 MAdventurer::MAdventurer():MObject() {
   startArea = "";
+  description = "";
 }
 MAdventurer::MAdventurer(const std::string& _name):MObject(_name) {
   startArea = "";
+  if (_name == "explorer") description = "can diag move or abfluss";
+  if (_name == "pilot") description = "one time can move anywhere";
+  if (_name == "engineer") description = "can abluss one or two areas";
+  if (_name == "liaison") description = "can handover on any distance";
+  if (_name == "navigator") description = "can move other adventurer on one or two areas";
+  if (_name == "diver") description = "can move on any number abfluss or none areas";
 }
 MAdventurer::MAdventurer(const std::string& _name, const std::string& _startArea):MObject(_name) {
   startArea = _startArea;
+  if (_name == "explorer") description = "can diag move or abfluss";
+  if (_name == "pilot") description = "one time can move anywhere";
+  if (_name == "engineer") description = "can abluss one or two areas";
+  if (_name == "liaison") description = "can handover on any distance";
+  if (_name == "navigator") description = "can move other adventurer on one or two areas";
+  if (_name == "diver") description = "can move on any number abfluss or none areas";
 }
 MAdventurer::~MAdventurer() {
   artifacts.clear();
@@ -101,4 +114,7 @@ bool MAdventurer::hasCard(const std::string& cardName) {
     if (cards[i]->getName() == cardName) return true;
   }
   return false;
+}
+std::string MAdventurer::getDescription() {
+  return description;
 }

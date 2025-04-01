@@ -5,7 +5,6 @@
 
 class MMainScene;
 class MAdventurer;
-class MHand;
 class MenuItemImageExt;
 
 class MHandoverScene: public cocos2d::Scene {
@@ -15,7 +14,7 @@ private:
 	MMainScene* pMainScene;
 	MAdventurer* pAdventurer;
 	MenuItemImageExt* btnSubmit;
-	std::vector<MHand*> hands;
+	std::map<MAdventurer*, std::vector<cocos2d::Sprite*>> adventurerCardSpites;
 	cocos2d::Vector<cocos2d::MenuItem*> cardItems;
 	cocos2d::Vector<cocos2d::MenuItem*> adventurerItems;
 	std::map<int, MAdventurer*> numberAdventurer;
@@ -36,6 +35,9 @@ private:
 	void sourceCard2Select(cocos2d::Ref* pSender);
 	void sourceCard3Select(cocos2d::Ref* pSender);
 	void sourceCard4Select(cocos2d::Ref* pSender);
+	//show/hide
+	void showAdventurerCards(MAdventurer*);
+	void hideAdventurerCards(MAdventurer*);
 public:
 	MHandoverScene();
 	~MHandoverScene();

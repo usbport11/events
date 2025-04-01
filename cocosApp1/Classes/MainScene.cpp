@@ -21,28 +21,26 @@ MProcessor* MMainScene::getProcessor() {
 }
 
 MMainScene::~MMainScene() {
-    cardFrame.clear();
     floodSprite.clear();
     artifactSprite.clear();
-    adventurerHand.clear();
-    for (int i = 0; i < hands.size(); i++) {
-        if (hands[i]) delete hands[i];
+    adventurerHand2.clear();
+    for (int i = 0; i < hands2.size(); i++) {
+        if (hands2[i]) delete hands2[i];
     }
-    hands.clear();
+    hands2.clear();
     adventurerSprite.clear();
 }
 
 bool MMainScene::endTurn() {
-    //exec function
     MAdventurer* adventurer = processor.getCurrentAdventurer();
-    MHand* hand = adventurerHand[adventurer->getName()];
+    MHand2* hand2 = adventurerHand2[adventurer];
     adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 255, 255));
     if(!processor.execFunction("endturn", adventurer->getName())) return false;
 
     //update hand current adventurer
     std::vector<MCard*> cards = adventurer->getAllCards();
-    for (int i = hand->getUsedSize(); i < cards.size(); i++) {
-        if (!hand->addCard(cardFrame[cards[i]->getName()])) return false;
+    for (int i = hand2->getCardsNumber(); i < cards.size(); i++) {
+        if (!hand2->addCard(cards[i])) return false;
     }
 
     //display top card at flood drop deck
@@ -80,13 +78,13 @@ bool MMainScene::endTurn() {
         Director::getInstance()->pushScene(endScene);
     }
 
-    if(hand->getUsedSize() > 5) {
+    if (hand2->getCardsNumber() > 5) {
         //move to separate function
         std::cout << "Drop cards for: " << adventurer->getName() << std::endl;//important! current adveturer is changed in processor!
         MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
         if (!dropCardScene) return false;
         dropCardScene->setMainScene(this);
-        if (!dropCardScene->setCards(hand->getNotEmptyCards())) return false;
+        if (!dropCardScene->setCardFrames(hand2->getCardFrames())) return false;
         if (!dropCardScene->setAdventurer(adventurer)) return false;
         Director::getInstance()->pushScene(dropCardScene);
     }
@@ -96,12 +94,15 @@ bool MMainScene::endTurn() {
     adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
 
     //change hand
-    adventurerClicked(adventurer->getName());
-    adventurerMenu.selectByName(adventurer->getName());
+    adventurerClicked(adventurer);
+    advMenu.selectByName(adventurer->getName());
 
     //display name of next adventurer
-    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
-    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+    cocos2d::Label* label;
+    label = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+    if (label) label->setString(processor.getCurrentAdventurer()->getName());
+    //label = (cocos2d::Label*)this->getChildByName("lblAdventurerDescription");
+    //if (label) label->setString(processor.getCurrentAdventurer()->getDescription());
 
     //update wather level
     waterLevel.setCurrent(processor.getFloodLevel());
@@ -225,9 +226,9 @@ bool MMainScene::getArtifact() {
         if (artifactCards.size() >= 4) {
             if(!processor.execFunction("getartifact", adventurer->getName() + " " + it->first)) return false;
             for (int i=0; i < 4; i++) {
-                MHand* hand = adventurerHand[adventurer->getName()];
-                if (!hand->removeCard(cardFrame[it->first + "0"])) return false; //hand not matter real card name
-                itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
+                MHand2* hand2 = adventurerHand2[adventurer];
+                if (!hand2->removeCardByMask(it->first)) return false; //hand not matter real card name
+                //itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
             }
             cocos2d::Sprite* sp = (cocos2d::Sprite*)this->getChildByName(artifactSprite[it->first]);
             if (sp) sp->setColor(cocos2d::Color3B(0, 255, 0));
@@ -250,15 +251,15 @@ bool MMainScene::discard(MAdventurer* adventurer, std::list<int> cards) {
     if (!adventurer) return false;
     if (cards.back() >= cardsR.size()) return false;
 
-    MHand* hand = adventurerHand[adventurer->getName()];
+    MHand2* hand2 = adventurerHand2[adventurer];
     MCard* card;
 
     for (std::list<int>::iterator it = cards.begin(); it != cards.end(); it++) {
         card = adventurer->getCardByNumber(*it - removed);//wrong card after delete
         if (!card) return false;
         if (!processor.execFunction("discard", adventurer->getName() + " " + card->getName())) return false; //error!
-        if (!hand->removeCard(*it - removed)) return false; //hand not matter real card name
-        itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
+        if (!hand2->removeCard(card)) return false; //hand not matter real card name
+        //itemDeck.setTopCard("itm_" + cardFrame[processor.getItemDropDeck().front()]);//need to fix prefix
         removed++;
     }
     currentAction = "";
@@ -270,7 +271,7 @@ bool MMainScene::startHandover() {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
-    if (adventurerHand.size() <= 1) return false;
+    if (adventurerHand2.size() <= 1) return false;
     
     MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
 
@@ -303,17 +304,17 @@ bool MMainScene::sumbitHandover(MAdventurer* adventurer, int cardNumber) {
     MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
     MCard* srcCard = srcAdventurer->getCardByNumber(cardNumber);
     if (!processor.execFunction("handover", srcAdventurer->getName() + " " + adventurer->getName() + " " + srcCard->getName())) return false;
-    adventurerHand[srcAdventurer->getName()]->removeCard(cardFrame[srcCard->getName()]);
-    adventurerHand[adventurer->getName()]->addCard(cardFrame[srcCard->getName()]);
+    adventurerHand2[srcAdventurer]->removeCard(srcCard);
+    adventurerHand2[adventurer]->addCard(srcCard);
 
     //NOT TESTED!
     //if destination adventurer hand has more than 5 cards - must be call drop card scene
-    if (adventurerHand[adventurer->getName()]->getUsedSize() > 5) {
+    if (adventurerHand2[adventurer]->getCardsNumber() > 5) {
         std::cout << "Drop cards after submit for: " << adventurer->getName() << std::endl;
         MDropCardScene* dropCardScene = (MDropCardScene*)MDropCardScene::createScene();
         if (!dropCardScene) return false;
         dropCardScene->setMainScene(this);
-        if (!dropCardScene->setCards(adventurerHand[adventurer->getName()]->getNotEmptyCards())) return false;
+        if (!dropCardScene->setCardFrames(adventurerHand2[adventurer]->getCardFrames())) return false;
         if (!dropCardScene->setAdventurer(adventurer)) return false;
         Director::getInstance()->pushScene(dropCardScene);
     }
@@ -479,27 +480,18 @@ bool MMainScene::initAdventurers() {
 }
 
 bool MMainScene::initHand() {
-    adventurerHand.clear();
-    for (int i=0; i < hands.size(); i++) {
-        hands[i]->reset();
-        hands[i]->setVisible(false);
-    }
+    adventurerHand2.clear();
+    MAdventurer* adventurer;
     std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
     for (int i=0; i < activeAdventurers.size(); i++) {
-        adventurerHand[activeAdventurers[i]] = hands[i];
-        MAdventurer* adventurer = processor.findAdventurer(activeAdventurers[i]);
-        if (!adventurer) {
-            return false;
-        }
-        if (i == 0) {
-            hands[i]->setVisible(true);
-        }
-        std::vector<MCard*> cards = adventurer->getAllCards();
-        for (int j = 0; j < cards.size(); j++) {
-            if (!hands[i]->addCard(cardFrame[cards[j]->getName()])) return false;
+        adventurer = processor.findAdventurer(activeAdventurers[i]);
+        if (!adventurer) return false;
+        adventurerHand2[adventurer] = hands2[i];
+        if (!adventurerHand2[adventurer]->initCards(this, adventurer, -200)) return false;
+        if (i > 0) {
+            hands2[i]->hide();
         }
     }
-    
     return true;
 }
 
@@ -514,6 +506,7 @@ bool MMainScene::initVisual() {
     //artifacts
     cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
     if (!cache) return false;
+
     cache->addSpriteFramesWithFile("anim/artifacts.plist");
     char buffer[32];
     cocos2d::Sprite* artSprite;
@@ -542,52 +535,16 @@ bool MMainScene::initVisual() {
     this->addChild(glass, 2);
     if (!waterLevel.create(this, "anim_water", "water_back", cocos2d::Vec2(964, 464), cocos2d::Size(64, 64))) return false;//464 -> 592//496 -> 624
 
-    tCardsMap itemCards = {
-        {"itm_back", {{"listName", "card0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
-        {"itm_no_left", {{"listName", "card1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"itm_no_right", {{"listName", "card1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"itm_card2", {{"listName", "card2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card3", {{"listName", "card3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card4", {{"listName", "card4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card5", {{"listName", "card5"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card6", {{"listName", "card6"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card7", {{"listName", "card7"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"itm_card8", {{"listName", "card8"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-    };
-    tCardsMap floodCards = {
-        {"fld_back", {{"listName", "flood0"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "2"}}},
-        {"fld_no_left", {{"listName", "flood1"}, {"pos", "left"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"fld_no_right", {{"listName", "flood1"}, {"pos", "right"}, {"visible", "1"}, {"zOrder", "1"}}},
-        {"fld_card0", {{"listName", "flood2"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card1", {{"listName", "flood3"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card2", {{"listName", "flood4"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card3", {{"listName", "flood5"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card4", {{"listName", "flood6"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card5", {{"listName", "flood7"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card6", {{"listName", "flood8"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card7", {{"listName", "flood9"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card8", {{"listName", "flood10"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card9", {{"listName", "flood11"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card10", {{"listName", "flood12"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card11", {{"listName", "flood13"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card12", {{"listName", "flood14"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card13", {{"listName", "flood15"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card14", {{"listName", "flood16"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card15", {{"listName", "flood17"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card16", {{"listName", "flood18"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card17", {{"listName", "flood19"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card18", {{"listName", "flood20"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card19", {{"listName", "flood21"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card20", {{"listName", "flood22"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card21", {{"listName", "flood23"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card22", {{"listName", "flood24"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-        {"fld_card23", {{"listName", "flood25"}, {"pos", "right"}, {"visible", "0"}, {"zOrder", "2"}}},
-    };
-    if (!itemDeck.create(this, "anim/cards.plist", "Item deck", cocos2d::Vec2(800, 170), itemCards, "itm_no_right")) return false;//850
+    cache->addSpriteFramesWithFile("anim/cards.plist");
+    cache->addSpriteFramesWithFile("anim/floods.plist");
+
+    //decks
+    if (!itemDeck.create(this, "Item deck", cocos2d::Vec2(800, 170), "itm_no_right", "item")) return false;//850
     if (!itemDeck.setCardNames("itm_card%d", "itm_back")) return false;
-    if (!floodDeck.create(this, "anim/floods.plist", "Flood deck", cocos2d::Vec2(600, 170), floodCards, "fld_no_right")) return false;//650
+    if (!floodDeck.create(this, "Flood deck", cocos2d::Vec2(600, 170), "fld_no_right", "flood")) return false;//650
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
 
+    //grid
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
     //hands + adventurers sprites
@@ -595,9 +552,8 @@ bool MMainScene::initVisual() {
     std::vector<std::string> advs;
     int i = 0;
     for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
-        hands.push_back(new MHand);
-        if(!hands[i]->create(this, 5, 7, it->first + "_hand%d", "card1", cocos2d::Vec2(100, 100))) return false;
-        i ++;
+        hands2.push_back(new MHand2);
+        //adventurerHand2[processor.findAdventurer(it->first)] = hands2.back();
         if (!createAnimSpriteFromPlist(this, "anim/adven1.plist", it->first + "_anim", "adven", 4, 0.2f)) {
             return false;
         }
@@ -608,37 +564,12 @@ bool MMainScene::initVisual() {
         advs.push_back(it->first);
     }
 
-    if (!menu.create(this)) return false;
-    if (!adventurerMenu.create(this, "anim/adventurers.plist", advs)) return false;
+    //adventurers menu
+    if (!advMenu.create(this, "anim/adventurers.plist", advs)) return false;
     advs.clear();
 
-    cardFrame = { {"crystal0", "card5"},
-        {"crystal1", "card5"},
-        {"crystal2", "card5"},
-        {"crystal3", "card5"},
-        {"crystal4", "card5"},
-        {"sphere0", "card3"},
-        {"sphere1", "card3"},
-        {"sphere2", "card3"},
-        {"sphere3", "card3"},
-        {"sphere4", "card3"},
-        {"lion0", "card4"},
-        {"lion1", "card4"},
-        {"lion2", "card4"},
-        {"lion3", "card4"},
-        {"lion4", "card4"},
-        {"bowl0", "card2"},
-        {"bowl1", "card2"},
-        {"bowl2", "card2"},
-        {"bowl3", "card2"},
-        {"bowl4", "card2"},
-        {"helicopter0", "card8"},
-        {"helicopter1", "card8"},
-        {"sandbag0", "card7"},
-        {"sandbag1", "card7"},
-        {"flood0", "card6"},
-        {"flood1", "card6"},
-        {"flood2", "card6"} };
+    //menu
+    if (!menu.create(this)) return false;
 
     floodSprite = {
         {"temple_of_the_moon", "fld_card0"},
@@ -673,11 +604,17 @@ bool MMainScene::initVisual() {
         {"bowl", "artifact0"},
     };
 
-    cocos2d::Label* advLabel = Label::createWithTTF("some_name", "fonts/Marker Felt.ttf", 24);
-    if (!advLabel) return false;
-    advLabel->setName("lblAdventurerName");
-    advLabel->setPosition(100, 25);
-    this->addChild(advLabel);
+    cocos2d::Label* label;
+    label = Label::createWithTTF("some_name", "fonts/Marker Felt.ttf", 24);
+    if (!label) return false;
+    label->setName("lblAdventurerName");
+    label->setPosition(100, 25);
+    this->addChild(label);
+    //label = Label::createWithTTF("some_description", "fonts/Marker Felt.ttf", 24);
+    //if (!label) return false;
+    //label->setName("lblAdventurerDescrition");
+    //label->setPosition(100, 15);
+    //this->addChild(label);
 
     cocos2d::Label* actLabel = Label::createWithTTF("Action: 0", "fonts/Marker Felt.ttf", 24);
     if (!actLabel) return false;
@@ -706,14 +643,17 @@ bool MMainScene::reset() {
     if (!initHand()) return false;
     floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
     //show adventurer name
-    cocos2d::Label* advLabel = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
-    if (advLabel) advLabel->setString(processor.getCurrentAdventurer()->getName());
+    cocos2d::Label* label;
+    label = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+    if (label) label->setString(processor.getCurrentAdventurer()->getName());
+    //label = (cocos2d::Label*)this->getChildByName("lblAdventurerDescrition");
+    //if (label) label->setString(processor.getCurrentAdventurer()->getDescription());
     currentAction = "";
     moveAdventurer = "";
     abflussNumber = 0;
 
-    if (!adventurerMenu.init(processor.getActiveAdventurers())) return false;
-    adventurerMenuSelected = processor.getCurrentAdventurer()->getName();
+    if (!advMenu.init(processor.getActiveAdventurers())) return false;
+    advMenuAdventurer = processor.getCurrentAdventurer();
     adventurerSprite[processor.getCurrentAdventurer()->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
 
     //update menu items
@@ -722,11 +662,16 @@ bool MMainScene::reset() {
     return true;
 }
 
+void MMainScene::adventurerClicked(MAdventurer* adventurer) {
+    if (!adventurer) return;
+    if (advMenuAdventurer == adventurer) return;
+    adventurerHand2[advMenuAdventurer]->hide();
+    adventurerHand2[adventurer]->show();
+    advMenuAdventurer = adventurer;
+}
+
 void MMainScene::adventurerClicked(const std::string& name) {
-    if (adventurerMenuSelected == name) return;
-    adventurerHand[adventurerMenuSelected]->setVisible(false);
-    adventurerHand[name]->setVisible(true);
-    adventurerMenuSelected = name;
+    adventurerClicked(processor.findAdventurer(name));
 }
 
 int MMainScene::getAdventurerNumber(const std::string& name) {
@@ -741,13 +686,20 @@ MAdventurer* MMainScene::getCurrentAdventurer() {
     return processor.getCurrentAdventurer();
 }
 
+/*
 MHand* MMainScene::getAdventurerHand(const std::string& name) {
     if (adventurerHand.find(name) != adventurerHand.end()) return adventurerHand[name];
     return nullptr;
 }
+*/
+
+MHand2* MMainScene::getAdventurerHand2(MAdventurer* adventurer) {
+    if (adventurerHand2.find(adventurer) != adventurerHand2.end()) return adventurerHand2[adventurer];
+    return nullptr;
+}
 
 MAdventurerMenu* MMainScene::getAdventurerMenu() {
-    return &adventurerMenu;
+    return &advMenu;
 }
 
 bool MMainScene::init() {
@@ -764,6 +716,7 @@ bool MMainScene::init() {
     cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
     mouseListener->onMouseMove = CC_CALLBACK_1(MMainScene::onMouseMove, this);
     mouseListener->onMouseDown = CC_CALLBACK_1(MMainScene::onMouseDown, this);
+    mouseListener->onMouseUp = CC_CALLBACK_1(MMainScene::onMouseUp, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 
     cocos2d::EventListenerKeyboard* keybordListener = EventListenerKeyboard::create();
@@ -771,7 +724,7 @@ bool MMainScene::init() {
     keybordListener->onKeyReleased = CC_CALLBACK_2(MMainScene::onKeyReleased, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(keybordListener, this);
 
-    if (!initVisual()) return false; //need check this for some reasons?
+    if (!initVisual()) return false;
 
     if (!reset()) return false;
 
@@ -782,6 +735,7 @@ bool MMainScene::init() {
 
 void MMainScene::update(float delta) {
     updateActionNumber();
+    adventurerHand2[advMenuAdventurer]->update(delta);
 }
 
 /*
@@ -800,7 +754,145 @@ void MMainScene::moveSprite(cocos2d::Sprite* sprite, cocos2d::Vec2 destination) 
 }
 */
 
+void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
+    cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
+    if (!gridMap.cellCheck(cell)) {
+        return;
+    }
+
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (currentAction == "move" || currentAction == "fly" || currentAction == "swim") {
+        if (gridMap.getCellByCoordinates(adventurerSprite[adventurer->getName()]->getPosition()) == cell) {
+            std::cout << "[MainScene] Can't " << currentAction << " to same cell" << std::endl;
+            return;
+        }
+        if (!processor.execFunction(currentAction, adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+            std::cout << "[MainScene] failed to " << currentAction << " adventurer!" << std::endl;
+            return;
+        }
+        //position of adventurer must be 1/N adventurers number (max N = 4)
+        //16px and 32px must be calculated
+        int pos[2];
+        int num = getAdventurerNumber(adventurer->getName());
+        pos[0] = (num / 2);
+        pos[0] = pos[0] * 32 - 16;
+        pos[1] = 16 - (num % 2) * 32;
+        cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
+        adventurerSprite[adventurer->getName()]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
+
+        //update menu items
+        menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+        updateAreas();
+        currentAction = "";
+        return;
+    }
+    if (currentAction == "abfluss") {
+        abflussNumber++;
+        if (!processor.execFunction("abfluss", adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName(), abflussNumber - 2)) {
+            std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
+            return;
+        }
+        if (adventurer->getName() == "engineer" && abflussNumber < 2) {
+            std::cout << "[MainScene] call second abluss by engineer" << std::endl;
+            menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+            updateAreas();
+            currentAction = "";
+            startAbfluss();
+            return;
+        }
+        //update menu items
+        menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+        updateAreas();
+        currentAction = "";
+        abflussNumber = 0;
+        return;
+    }
+    if (currentAction == "moveOther_selectAdventurer") {
+        //need change logic of selection
+        //if area hold more than one adventurer - first will be selected
+        moveAdventurer = "";
+        MArea* area = processor.getAreaByIndex(cell.x, cell.y);
+        if (!area) return;
+        std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
+        for (int i = 0; i < activeAdventurers.size(); i++) {
+            if (activeAdventurers[i] == processor.getCurrentAdventurer()->getName()) continue;
+            adventurer = processor.findAdventurer(activeAdventurers[i]);
+            if (adventurer) {
+                if (adventurer->getArea() == area) {
+                    moveAdventurer = adventurer->getName();
+                    std::cout << "Selected to moveOther action: " << moveAdventurer << std::endl;
+                    break;
+                }
+            }
+        }
+        if (moveAdventurer == "") {
+            currentAction = "";
+            return;
+        }
+
+        updateAreas();
+        gridMap.clearAreaLimit();
+
+        cocos2d::Sprite* sp;
+        std::list<MArea*> areas = adventurer->getArea()->getDirectActiveNeighbors2();
+        if (areas.empty()) {
+            std::cout << " [MainScene] no available to move areas" << std::endl;
+            return;
+        }
+        for (std::list<MArea*>::iterator it = areas.begin(); it != areas.end(); it++) {
+            gridMap.addAreaLimit((*it)->getIndex()[0] * gridSize + (*it)->getIndex()[1]);
+            sp = gridMap.getSpriteByAreaName((*it)->getName());
+            if (!sp) return;
+            sp->setColor(cocos2d::Color3B(128, 255, 128));
+        }
+
+        currentAction = "moveOther_selectArea";
+        return;
+    }
+    if (currentAction == "moveOther_selectArea") {
+        if (moveAdventurer == "") {
+            currentAction = "";
+            return;
+        }
+
+        if (gridMap.getCellByCoordinates(adventurerSprite[moveAdventurer]->getPosition()) == cell) {
+            std::cout << "[MainScene] Can't move other to same cell" << std::endl;
+            return;
+        }
+
+        if (!processor.execFunction("moveother", processor.getCurrentAdventurer()->getName() + " " + moveAdventurer + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+            std::cout << "[MainScene] failed to move other adventurer!" << std::endl;
+            return;
+        }
+
+        int pos[2];
+        int num = getAdventurerNumber(moveAdventurer);
+        pos[0] = (num / 2);
+        pos[0] = pos[0] * 32 - 16;
+        pos[1] = 16 - (num % 2) * 32;
+        cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
+        adventurerSprite[moveAdventurer]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
+
+        //update menu items
+        menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+        updateAreas();
+        currentAction = "";
+        return;
+    }
+}
+void  MMainScene::rbmGridProcess(cocos2d::Event* event) {
+    updateAreas();
+    gridMap.clearAreaLimit();
+    menu.unselectMenuAll();
+    currentAction = "";
+    moveAdventurer = "";
+    return;
+}
+
 void MMainScene::onMouseMove(cocos2d::Event* event) {
+    adventurerHand2[advMenuAdventurer]->onMouseMove(event);
+    if (adventurerHand2[advMenuAdventurer]->getCardHold()) return;
+
     cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
     if (!gridMap.cellCheck(cell)) {
         this->getChildByName("selection")->setVisible(false);
@@ -815,145 +907,19 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
     if (!mouseEvent) return;
 
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_LEFT) {
-        cocos2d::Vec2 cell = gridMap.getCellUnderMouse(event);
-        if (!gridMap.cellCheck(cell)) {
-            return;
-        }
-        
-        MAdventurer* adventurer = processor.getCurrentAdventurer();
-        if (currentAction == "move" || currentAction == "fly" || currentAction == "swim") {
-            if (gridMap.getCellByCoordinates(adventurerSprite[adventurer->getName()]->getPosition()) == cell) {
-                std::cout << "[MainScene] Can't " << currentAction << " to same cell" << std::endl;
-                return;
-            }
-            if (!processor.execFunction(currentAction, adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
-                std::cout << "[MainScene] failed to "<< currentAction <<" adventurer!" << std::endl;
-                return;
-            }
-            //position of adventurer must be 1/N adventurers number (max N = 4)
-            //16px and 32px must be calculated
-            int pos[2];
-            int num = getAdventurerNumber(adventurer->getName());
-            pos[0] = (num / 2);
-            pos[0] = pos[0] * 32 - 16;
-            pos[1] = 16 - (num % 2) * 32;
-            cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
-            adventurerSprite[adventurer->getName()]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
-
-            //update menu items
-            menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
-            updateAreas();
-            currentAction = "";
-            return;
-        }
-        if (currentAction == "abfluss") {
-            abflussNumber ++;
-            if (!processor.execFunction("abfluss", adventurer->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName(), abflussNumber - 2)) {
-                std::cout << "[MainScene] failed to abluss by adventurer!" << std::endl;
-                return;
-            }
-            if (adventurer->getName() == "engineer" && abflussNumber < 2) {
-                std::cout << "[MainScene] call second abluss by engineer" << std::endl;
-                menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
-                updateAreas();
-                currentAction = "";
-                startAbfluss();
-                return;
-            }
-            //update menu items
-            menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
-            updateAreas();
-            currentAction = "";
-            abflussNumber = 0;
-            return;
-        }
-        if (currentAction == "moveOther_selectAdventurer") {
-            //need change logic of selection
-            //if area hold more than one adventurer - first will be selected
-            moveAdventurer = "";
-            MArea* area = processor.getAreaByIndex(cell.x, cell.y);
-            if (!area) return;
-            std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
-            for (int i = 0; i < activeAdventurers.size(); i++) {
-                if (activeAdventurers[i] == processor.getCurrentAdventurer()->getName()) continue;
-                adventurer = processor.findAdventurer(activeAdventurers[i]);
-                if (adventurer) {
-                    if (adventurer->getArea() == area) {
-                        moveAdventurer = adventurer->getName();
-                        std::cout<<"Selected to moveOther action: " << moveAdventurer << std::endl;
-                        break;
-                    }
-                }
-            }
-            if (moveAdventurer == "") {
-                currentAction = "";
-                return;
-            }
-            
-            updateAreas();
-            gridMap.clearAreaLimit();
-
-            cocos2d::Sprite* sp;
-            std::list<MArea*> areas = adventurer->getArea()->getDirectActiveNeighbors2();
-            if (areas.empty()) {
-                std::cout << " [MainScene] no available to move areas" << std::endl;
-                return;
-            }
-            for (std::list<MArea*>::iterator it = areas.begin(); it != areas.end(); it++) {
-                gridMap.addAreaLimit((*it)->getIndex()[0] * gridSize + (*it)->getIndex()[1]);
-                sp = gridMap.getSpriteByAreaName((*it)->getName());
-                if (!sp) return;
-                sp->setColor(cocos2d::Color3B(128, 255, 128));
-            }
-
-            currentAction = "moveOther_selectArea";
-            return;
-        }
-        if (currentAction == "moveOther_selectArea") {
-            if (moveAdventurer == "") {
-                currentAction = "";
-                return;
-            }
-
-            if (gridMap.getCellByCoordinates(adventurerSprite[moveAdventurer]->getPosition()) == cell) {
-                std::cout << "[MainScene] Can't move other to same cell" << std::endl;
-                return;
-            }
-
-            if (!processor.execFunction("moveother", processor.getCurrentAdventurer()->getName() + " " + moveAdventurer + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
-                std::cout << "[MainScene] failed to move other adventurer!" << std::endl;
-                return;
-            }
-
-            int pos[2];
-            int num = getAdventurerNumber(moveAdventurer);
-            pos[0] = (num / 2);
-            pos[0] = pos[0] * 32 - 16;
-            pos[1] = 16 - (num % 2) * 32;
-            cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
-            adventurerSprite[moveAdventurer]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
-
-            //update menu items
-            menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
-            updateAreas();
-            currentAction = "";
-            return;
-        }
+        adventurerHand2[advMenuAdventurer]->onMouseDown(event);
+        lbmGridProcess(event);
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-        updateAreas();
-        gridMap.clearAreaLimit();
-        menu.unselectMenuAll();
-        currentAction = "";
-        moveAdventurer = "";
-        return;
+        rbmGridProcess(event);
     }
 }
 
+void MMainScene::onMouseUp(cocos2d::Event* event) {
+    adventurerHand2[advMenuAdventurer]->onMouseUp(event);
+}
+
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
-    if (keyCode == EventKeyboard::KeyCode::KEY_R) {
-        if(!reset()) return;
-    }
     if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE) {
         MMainMenuScene* mainMenuScene = (MMainMenuScene*)MMainMenuScene::createScene();
         if (!mainMenuScene) return;

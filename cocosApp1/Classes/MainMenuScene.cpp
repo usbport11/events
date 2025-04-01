@@ -1,6 +1,7 @@
 #include "MainMenuScene.h"
 #include "MenuItemImageExt.h"
 #include "MainScene.h"
+#include "CreditsScene.h"
 #include <iostream>
 
 USING_NS_CC;
@@ -98,7 +99,9 @@ void MMainMenuScene::settingsCallback(cocos2d::Ref* pSender) {
 }
 
 void MMainMenuScene::creditsCallback(cocos2d::Ref* pSender) {
-	//todo
+	MCreditsScene* creditsScene = (MCreditsScene*)MCreditsScene::createScene();
+	if (!creditsScene) return;
+	Director::getInstance()->pushScene(creditsScene);
 }
 
 void MMainMenuScene::quitCallback(cocos2d::Ref* pSender) {

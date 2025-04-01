@@ -10,12 +10,12 @@ class MArea;
 
 class MAdventurer: public MObject {
 private:
+  std::string description;
   std::string startArea;
   std::vector<MArtifact*> artifacts;
   std::vector<MCard*> cards;
   MArea* area;
   std::string color;
-  //std::vector<std::string> usedActions;
 public:
   MAdventurer();
   MAdventurer(const std::string& _name);
@@ -38,9 +38,7 @@ public:
   std::vector<MCard*> getArtifactCards(const std::string& name="");
   bool canUseDiagonal();
   bool hasCard(const std::string& cardName);
-  //void clearUsedActions();
-  //void addUsedActions(const std::string& action);
-  //bool actionWasUsed(const std::string& action);
+  std::string getDescription();
 };
 
 #endif

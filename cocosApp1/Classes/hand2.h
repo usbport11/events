@@ -24,6 +24,7 @@ struct stCard {
 
 class MHand2 {
 private:
+  cocos2d::Scene* pScene;
   cocos2d::Sprite* selectedCardSprite;
   cocos2d::Sprite* hoverCardSprite;
   cocos2d::Sprite* prevHoverCardSprite;
@@ -37,14 +38,19 @@ private:
   std::list<stCard> cards;
   std::map<std::string, cocos2d::SpriteFrame*> cardFrame;
   void repositionCards();
+  bool visible;
+  bool enabled;
 public:
   MHand2();
   ~MHand2();
+  bool cardAlredyAdded(MCard* card);
   bool coordsInHand(float x, float y);
-  bool initCards(cocos2d::Scene* pScene, MAdventurer* adventurer, float _offset=0);
+  bool initCards(cocos2d::Scene* _pScene, MAdventurer* adventurer, float _offset=0);
   bool addCard(MCard* card);
   bool removeCard(MCard* card);
   bool removeCard(const std::string& name);
+  bool removeCardByMask(const std::string& mask);
+  bool removeCardByNumber(int i);
   cocos2d::SpriteFrame* getCardSpriteFrame(const std::string& name);
   cocos2d::SpriteFrame* getCardSpriteFrame(MCard* card);
   cocos2d::Sprite* getCardSprite(const std::string& name);
@@ -54,9 +60,14 @@ public:
   MCard* getCardByNumber(int i);
   cocos2d::SpriteFrame* getCardSpriteFrameByNumber(int i);
   cocos2d::Sprite* getCardSpriteByNumber(int i);
+  std::vector<cocos2d::SpriteFrame*> getCardFrames();
+  std::vector<cocos2d::Sprite*> getCardSprites();
+  void disable();
+  void enable();
   void hide();
   void show();
   bool needDiscard();
+  bool getCardHold();
   void update(float delta);
   void onMouseDown(cocos2d::Event* event);
   void onMouseUp(cocos2d::Event* event);
