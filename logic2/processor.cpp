@@ -724,6 +724,7 @@ bool MProcessor::execFunction(const std::string& name, const std::string& _sargs
   }
   return true;
 }
+/*
 bool MProcessor::tryMomentCard(MAdventurer* adventurer) {
   MCard* card;
   bool used = false;
@@ -736,6 +737,7 @@ bool MProcessor::tryMomentCard(MAdventurer* adventurer) {
   }
   return used;
 }
+*/
 void MProcessor::getSwimAreas(MArea* area, std::vector<std::string>& result, int level) {
   level ++;
   std::list<MArea*> neighbors = area->getDirectActiveNeighbors();

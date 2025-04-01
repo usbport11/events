@@ -26,6 +26,7 @@ public:
 	bool init(std::vector<std::string> activeAdventurers);
 	void selectByName(const std::string& name);
 	cocos2d::Sprite* getAdventurerSprite(const std::string& adventurerName);
+	cocos2d::MenuItemImage* getAdventurerMenuImage(const std::string& adventurerName);
 };
 
 #endif

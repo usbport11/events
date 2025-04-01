@@ -12,10 +12,10 @@ bool createAnimSpriteFromPlist(cocos2d::Scene* scene, const std::string& fileNam
     cocos2d::Vector<cocos2d::SpriteFrame*> animFrames;
     spritecache->addSpriteFramesWithFile(fileName);
     std::string key;
-    char buffer[10];
+    char buffer[32];
     for (int i = 0; i < count; i++) {
-        memset(buffer, 0, 10);
-        snprintf(buffer, 10, "%d", i);
+        memset(buffer, 0, 32);
+        snprintf(buffer, 32, "%d", i);
         key = prefix + buffer;
         animFrames.pushBack(spritecache->getSpriteFrameByName(key));
     }

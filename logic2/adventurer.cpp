@@ -6,27 +6,26 @@
 #include <algorithm>
 #include <iostream>
 
+void MAdventurer::initDescription() {
+    if (getName() == "explorer") description = "Can diag move or abfluss";
+    if (getName() == "pilot") description = "One time can move anywhere";
+    if (getName() == "engineer") description = "Can abluss one or two areas";
+    if (getName() == "liaison") description = "Can handover on any distance";
+    if (getName() == "navigator") description = "Can move other adventurer on one or two areas";
+    if (getName() == "diver") description = "Can move on any number abfluss or none areas";
+}
+
 MAdventurer::MAdventurer():MObject() {
   startArea = "";
   description = "";
 }
 MAdventurer::MAdventurer(const std::string& _name):MObject(_name) {
   startArea = "";
-  if (_name == "explorer") description = "can diag move or abfluss";
-  if (_name == "pilot") description = "one time can move anywhere";
-  if (_name == "engineer") description = "can abluss one or two areas";
-  if (_name == "liaison") description = "can handover on any distance";
-  if (_name == "navigator") description = "can move other adventurer on one or two areas";
-  if (_name == "diver") description = "can move on any number abfluss or none areas";
+  initDescription();
 }
 MAdventurer::MAdventurer(const std::string& _name, const std::string& _startArea):MObject(_name) {
   startArea = _startArea;
-  if (_name == "explorer") description = "can diag move or abfluss";
-  if (_name == "pilot") description = "one time can move anywhere";
-  if (_name == "engineer") description = "can abluss one or two areas";
-  if (_name == "liaison") description = "can handover on any distance";
-  if (_name == "navigator") description = "can move other adventurer on one or two areas";
-  if (_name == "diver") description = "can move on any number abfluss or none areas";
+  initDescription();
 }
 MAdventurer::~MAdventurer() {
   artifacts.clear();
@@ -81,6 +80,7 @@ MCard* MAdventurer::getCardByNumber(int number) {
   if (number < 0 || number >= cards.size()) nullptr;
   else return cards[number];
 }
+/*
 std::vector<MCard*> MAdventurer::getMomentCards() {
   std::vector<MCard*> resCards;
   for(int i=0; i<cards.size(); i++) {
@@ -90,6 +90,7 @@ std::vector<MCard*> MAdventurer::getMomentCards() {
   }
   return resCards;
 }
+*/
 std::vector<MCard*> MAdventurer::getArtifactCards(const std::string& name) {
   std::vector<MCard*> resCards;
   for(int i=0; i < cards.size() && i < 4; i++) {
@@ -99,9 +100,9 @@ std::vector<MCard*> MAdventurer::getArtifactCards(const std::string& name) {
           resCards.push_back(cards[i]);
         }
       }
-      else {
-        resCards.push_back(cards[i]);
-      }
+      //else {
+      //  resCards.push_back(cards[i]);
+      //}
     }
   }
   return resCards;

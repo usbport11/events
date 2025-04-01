@@ -16,6 +16,7 @@ private:
   std::vector<MCard*> cards;
   MArea* area;
   std::string color;
+  void initDescription();
 public:
   MAdventurer();
   MAdventurer(const std::string& _name);
@@ -34,7 +35,7 @@ public:
   MArea* getArea();
   std::vector<MCard*> getAllCards();
   MCard* getCardByNumber(int number);
-  std::vector<MCard*> getMomentCards();
+  //std::vector<MCard*> getMomentCards();
   std::vector<MCard*> getArtifactCards(const std::string& name="");
   bool canUseDiagonal();
   bool hasCard(const std::string& cardName);

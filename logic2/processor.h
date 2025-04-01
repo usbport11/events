@@ -90,7 +90,7 @@ private:
 
   void createItemCards(const std::string& _name, const std::string& type, int number);
   bool initAreas();
-  bool tryMomentCard(MAdventurer* adventurer);
+  //bool tryMomentCard(MAdventurer* adventurer);
   
   void changeCurrentAdventurer();
 

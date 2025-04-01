@@ -100,9 +100,9 @@ bool MMainScene::endTurn() {
     //display name of next adventurer
     cocos2d::Label* label;
     label = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
-    if (label) label->setString(processor.getCurrentAdventurer()->getName());
-    //label = (cocos2d::Label*)this->getChildByName("lblAdventurerDescription");
-    //if (label) label->setString(processor.getCurrentAdventurer()->getDescription());
+    if (label) label->setString(processor.getCurrentAdventurer()->getNameU());
+    label = (cocos2d::Label*)this->getChildByName("lblAdventurerDescription");
+    if (label) label->setString(processor.getCurrentAdventurer()->getDescription());
 
     //update wather level
     waterLevel.setCurrent(processor.getFloodLevel());
@@ -168,8 +168,14 @@ bool MMainScene::startAbfluss() {
     std::list<MArea*> areas;
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (!adventurer) return false;
-    if (adventurer->canUseDiagonal()) areas = adventurer->getArea()->getAllFloodedNeighbors();
-    else areas = adventurer->getArea()->getDirectFloodedNeighbors();
+    if (adventurer->canUseDiagonal()) {
+        areas = adventurer->getArea()->getAllFloodedNeighbors();
+        std::cout << "adventurer can use diagonal" << std::endl;
+    }
+    else {
+        areas = adventurer->getArea()->getDirectFloodedNeighbors();
+        std::cout << "adventurer can not use diagonal" << std::endl;
+    }
     if (adventurer->getArea()->getFloodLevel() == 1) areas.push_back(adventurer->getArea());
     if (areas.empty()) {
         std::cout << " [MainScene] no available to abfluss areas" << std::endl;
@@ -455,6 +461,7 @@ bool MMainScene::initAdventurers() {
     std::map<std::string, MObject*> adventurers = processor.getAdventurers();
     for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
         adventurerSprite[it->first]->setVisible(false);
+        adventurerSprite[it->first]->setColor(cocos2d::Color3B(255, 255, 255));
     }
 
     int pos[2];
@@ -487,7 +494,7 @@ bool MMainScene::initHand() {
         adventurer = processor.findAdventurer(activeAdventurers[i]);
         if (!adventurer) return false;
         adventurerHand2[adventurer] = hands2[i];
-        if (!adventurerHand2[adventurer]->initCards(this, adventurer, -200)) return false;
+        if (!adventurerHand2[adventurer]->initCards(this, adventurer, -250)) return false;
         if (i > 0) {
             hands2[i]->hide();
         }
@@ -496,6 +503,12 @@ bool MMainScene::initHand() {
 }
 
 bool MMainScene::initVisual() {
+    if (!createAnimSpriteFromPlist(this, "anim/advsel.plist", "adv_selection", "advs", 4, 0.2f)) {
+        return false;
+    }
+    this->getChildByName("adv_selection")->setLocalZOrder(5);
+    this->getChildByName("adv_selection")->setVisible(false);
+
     if (!createAnimSpriteFromPlist(this, "anim/out.plist", "selection", "pt", 4, 0.2f)) {
         return false;
     }
@@ -608,18 +621,20 @@ bool MMainScene::initVisual() {
     label = Label::createWithTTF("some_name", "fonts/Marker Felt.ttf", 24);
     if (!label) return false;
     label->setName("lblAdventurerName");
-    label->setPosition(100, 25);
+    label->setAnchorPoint(cocos2d::Vec2(0, 0));
+    label->setPosition(20, 28);
     this->addChild(label);
-    //label = Label::createWithTTF("some_description", "fonts/Marker Felt.ttf", 24);
-    //if (!label) return false;
-    //label->setName("lblAdventurerDescrition");
-    //label->setPosition(100, 15);
-    //this->addChild(label);
+    label = Label::createWithTTF("some_description", "fonts/Marker Felt.ttf", 24);
+    if (!label) return false;
+    label->setName("lblAdventurerDescrition");
+    label->setAnchorPoint(cocos2d::Vec2(0, 0));
+    label->setPosition(20, 4);
+    this->addChild(label);
 
     cocos2d::Label* actLabel = Label::createWithTTF("Action: 0", "fonts/Marker Felt.ttf", 24);
     if (!actLabel) return false;
     actLabel->setName("lblActionNumber");
-    actLabel->setPosition(250, 25);
+    actLabel->setPosition(250, 740);//250,25
     this->addChild(actLabel);
 
     return true;
@@ -644,20 +659,23 @@ bool MMainScene::reset() {
     floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
     //show adventurer name
     cocos2d::Label* label;
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
     label = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
-    if (label) label->setString(processor.getCurrentAdventurer()->getName());
-    //label = (cocos2d::Label*)this->getChildByName("lblAdventurerDescrition");
-    //if (label) label->setString(processor.getCurrentAdventurer()->getDescription());
+    if (label) label->setString(adventurer->getNameU());
+    label = (cocos2d::Label*)this->getChildByName("lblAdventurerDescrition");
+    if (label) label->setString(adventurer->getDescription());
     currentAction = "";
     moveAdventurer = "";
     abflussNumber = 0;
 
     if (!advMenu.init(processor.getActiveAdventurers())) return false;
-    advMenuAdventurer = processor.getCurrentAdventurer();
-    adventurerSprite[processor.getCurrentAdventurer()->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
+    advMenuAdventurer = adventurer;
+    adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
+    this->getChildByName("adv_selection")->setPosition(advMenu.getAdventurerMenuImage(adventurer->getName())->getPosition());
+    this->getChildByName("adv_selection")->setVisible(true);
 
     //update menu items
-    menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
+    menu.updateStatuses(processor.getAvailableActions(adventurer));
 
     return true;
 }
@@ -668,6 +686,13 @@ void MMainScene::adventurerClicked(MAdventurer* adventurer) {
     adventurerHand2[advMenuAdventurer]->hide();
     adventurerHand2[adventurer]->show();
     advMenuAdventurer = adventurer;
+    //change label
+    cocos2d::Label* label;
+    label = (cocos2d::Label*)this->getChildByName("lblAdventurerName");
+    if (label) label->setString(advMenuAdventurer->getNameU());
+    label = (cocos2d::Label*)this->getChildByName("lblAdventurerDescrition");
+    if (label) label->setString(advMenuAdventurer->getDescription());
+    this->getChildByName("adv_selection")->setPosition(advMenu.getAdventurerMenuImage(adventurer->getName())->getPosition());
 }
 
 void MMainScene::adventurerClicked(const std::string& name) {

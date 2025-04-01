@@ -10,6 +10,7 @@ public:
   MObject();
   MObject(const std::string& _name);
   std::string getName();
+  std::string getNameU();
 };
 
 #endif

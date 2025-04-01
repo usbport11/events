@@ -175,3 +175,15 @@ cocos2d::Sprite* MAdventurerMenu::getAdventurerSprite(const std::string& adventu
 	if (adventurerSprite.find(adventurerName) == adventurerSprite.end()) return nullptr;
 	return adventurerSprite[adventurerName];
 }
+cocos2d::MenuItemImage* MAdventurerMenu::getAdventurerMenuImage(const std::string& adventurerName) {
+	cocos2d::Node* node = pMainScene->getChildByName("adventurerMenu");
+	cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
+	cocos2d::MenuItemImage* menuItem;
+	for (int i = 0; i < items.size(); i++) {
+		menuItem = (cocos2d::MenuItemImage*)items.at(i);
+		if (menuItem->getName() == advNameFrame[adventurerName]) {
+			return menuItem;
+		}
+	}
+	return nullptr;
+}
