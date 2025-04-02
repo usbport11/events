@@ -9,9 +9,12 @@
 #include "menu.h"
 #include "AdventurerMenu.h"
 #include "logic/processor.h"
+#include <fstream>
 
 class MMainScene: public cocos2d::Scene {
 private:
+    std::ofstream logStream;
+
     MProcessor processor;
     std::string currentAction;
 

@@ -4,6 +4,7 @@
 #include "MainMenuScene.h"
 #include "TestScene.h"
 #include <iostream>
+#include <fstream>
 
 //#define USE_AUDIO_ENGINE 1
 
@@ -50,8 +51,12 @@ static int register_all_packages() {
 }
 
 bool AppDelegate::applicationDidFinishLaunching() {
+    std::ofstream logStream;
+    logStream.open("app.log", std::ios::out);
+
     designResolutionSize = mediumResolutionSize;
 
+    logStream << "Create OpenGL view" << std::endl;
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
     if(!glview) {
@@ -62,6 +67,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     director->setDisplayStats(false);//true
     director->setAnimationInterval(1.0f / 60);
 
+    logStream << "Set scale" << std::endl;
     glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::NO_BORDER);
     auto frameSize = glview->getFrameSize();
     if (frameSize.height > mediumResolutionSize.height) {        
@@ -74,21 +80,21 @@ bool AppDelegate::applicationDidFinishLaunching() {
         director->setContentScaleFactor(MIN(smallResolutionSize.height/designResolutionSize.height, smallResolutionSize.width/designResolutionSize.width));
     }
 
+    logStream << "Register packages" << std::endl;
     register_all_packages();
 
-    //MTestScene* testScene = (MTestScene*)MTestScene::createScene();
-    //if (!testScene) return false;
-    //director->runWithScene(testScene);
-    //return true;
-
+    logStream << "Create main scene" << std::endl;
     MMainScene* mainScene = (MMainScene*)MMainScene::createScene();
     if (!mainScene) return false;
+    logStream << "Create mainmenu scene" << std::endl;
     MMainMenuScene* mainMenuScene = (MMainMenuScene*)MMainMenuScene::createScene();
     if (!mainMenuScene) return false;
     if (!mainMenuScene->create(mainScene, true)) return false;
+    logStream << "Create intro scene" << std::endl;
     MIntroScene* introScene = (MIntroScene*)MIntroScene::createScene();
     if (!introScene) return false;
 
+    logStream << "Push scenes" << std::endl;
     director->pushScene(mainScene);
     director->pushScene(mainMenuScene);
     director->pushScene(introScene);

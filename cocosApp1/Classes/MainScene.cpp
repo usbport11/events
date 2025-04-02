@@ -33,6 +33,9 @@ MMainScene::~MMainScene() {
 
 bool MMainScene::endTurn() {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return false;
+    logStream << "Acton 'end turn' called for: " << adventurer->getName() << std::endl;
+
     MHand2* hand2 = adventurerHand2[adventurer];
     adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 255, 255));
     if(!processor.execFunction("endturn", adventurer->getName())) return false;
@@ -114,6 +117,10 @@ bool MMainScene::endTurn() {
 }
 
 bool MMainScene::startMove() {
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return false;
+    logStream << "Acton 'start move' called for: " << adventurer->getName() << std::endl;
+
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
@@ -128,8 +135,6 @@ bool MMainScene::startMove() {
 
     cocos2d::Sprite* sp;
     std::list<MArea*> areas;
-    MAdventurer* adventurer = processor.getCurrentAdventurer();
-    if (!adventurer) return false;
     if (adventurer->canUseDiagonal()) {
         areas = adventurer->getArea()->getAllActiveNeighbors();
     }
@@ -152,6 +157,10 @@ bool MMainScene::startMove() {
 }
 
 bool MMainScene::startAbfluss() {
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return false;
+    logStream << "Acton 'start abfluss' called for: " << adventurer->getName() << std::endl;
+
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
@@ -166,9 +175,7 @@ bool MMainScene::startAbfluss() {
 
     cocos2d::Sprite* sp;
     std::list<MArea*> areas;
-    MAdventurer* adventurer = processor.getCurrentAdventurer();
-    if (!adventurer) return false;
-    if (adventurer->canUseDiagonal()) {
+        if (adventurer->canUseDiagonal()) {
         areas = adventurer->getArea()->getAllFloodedNeighbors();
         std::cout << "adventurer can use diagonal" << std::endl;
     }
@@ -195,11 +202,15 @@ bool MMainScene::startAbfluss() {
 }
 
 bool MMainScene::extract() {
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return false;
+    logStream << "Acton 'extract' called for: " << adventurer->getName() << std::endl;
+
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
-    MAdventurer* adventurer = processor.getCurrentAdventurer();
+
     if (!adventurer) return false;
     if (adventurer->hasCard("helicopter") && processor.allActiveAdventurersOnArea("adventurers_circle") && processor.allArifactsCollected()) {
         if (!processor.execFunction("extract")) {
@@ -221,11 +232,14 @@ bool MMainScene::extract() {
     return true;
 }
 bool MMainScene::getArtifact() {
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    logStream << "Acton 'get artifact' called for: " << adventurer->getName() << std::endl;
+
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
-    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    
     std::map<std::string, MObject*> artifacts = processor.getArtifacts();
     for (std::map<std::string, MObject*>::iterator it = artifacts.begin(); it != artifacts.end(); it++) {
         std::vector<MCard*> artifactCards = adventurer->getArtifactCards(it->first);
@@ -249,10 +263,12 @@ bool MMainScene::getArtifact() {
 
 bool MMainScene::discard(MAdventurer* adventurer, std::list<int> cards) {
     if (!adventurer) return false;
+    logStream << "Discard card(s) for: " << adventurer->getName() << std::endl;
+    
     int removed = 0;
     cards.sort();//important!
 
-    std::cout << "Drop cards for: " << adventurer->getName() << std::endl;
+    std::cout << "Discard card(s) for: " << adventurer->getName() << std::endl;
     std::vector<MCard*> cardsR = adventurer->getAllCards();
     if (!adventurer) return false;
     if (cards.back() >= cardsR.size()) return false;
@@ -273,13 +289,18 @@ bool MMainScene::discard(MAdventurer* adventurer, std::list<int> cards) {
 }
 
 bool MMainScene::startHandover() {
+    MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
+    if (!srcAdventurer) return false;
+    logStream << "Acton 'start handover' called for: " << srcAdventurer->getName() << std::endl;
+
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
-    if (adventurerHand2.size() <= 1) return false;
-    
-    MAdventurer* srcAdventurer = processor.getCurrentAdventurer();
+    if (adventurerHand2.size() <= 1) {
+        std::cout << "Adventurer is alone" << std::endl;
+        return false;
+    }
 
     MArea* area = srcAdventurer->getArea();
     std::vector<std::string> adventurers = processor.getActiveAdventurers();
@@ -304,6 +325,8 @@ bool MMainScene::startHandover() {
 }
 
 bool MMainScene::sumbitHandover(MAdventurer* adventurer, int cardNumber) {
+    logStream << "Submit handover" << std::endl;
+
     if (!adventurer || cardNumber < 0 || cardNumber >= 5) {
         return false;
     }
@@ -333,6 +356,7 @@ bool MMainScene::sumbitHandover(MAdventurer* adventurer, int cardNumber) {
 bool MMainScene::startFly() {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (adventurer->getName() != "pilot") return false;
+    logStream << "Acton 'start fly' called for pilot" << std::endl;
 
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
@@ -367,6 +391,7 @@ bool MMainScene::startSwim() {
     //need check available area calculation
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (adventurer->getName() != "diver") return false;
+    logStream << "Acton 'start swim' called for diver" << std::endl;
 
     if (processor.actionNumberLimitReached()) {
         std::cout << "Can't action. Limit reached" << std::endl;
@@ -397,6 +422,9 @@ bool MMainScene::startSwim() {
 }
 
 bool MMainScene::startMoveOther() {
+    if (processor.getCurrentAdventurer()->getName() != "navigator") return false;
+    logStream << "Acton 'start move other' called for navigator" << std::endl;
+
     MAdventurer* adventurer;
     cocos2d::Sprite* sp;
     updateAreas();
@@ -490,7 +518,10 @@ bool MMainScene::initHand() {
     adventurerHand2.clear();
     MAdventurer* adventurer;
     std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
+    if (activeAdventurers.empty()) return false;
+    logStream << "Init cards in hands. Adventurers: " << activeAdventurers.size() << std::endl;
     for (int i=0; i < activeAdventurers.size(); i++) {
+        logStream << "Init adventurer hand: " << activeAdventurers[i] << std::endl;
         adventurer = processor.findAdventurer(activeAdventurers[i]);
         if (!adventurer) return false;
         adventurerHand2[adventurer] = hands2[i];
@@ -503,6 +534,7 @@ bool MMainScene::initHand() {
 }
 
 bool MMainScene::initVisual() {
+    logStream << "Create selection srpires" << std::endl;
     if (!createAnimSpriteFromPlist(this, "anim/advsel.plist", "adv_selection", "advs", 4, 0.2f)) {
         return false;
     }
@@ -520,6 +552,7 @@ bool MMainScene::initVisual() {
     cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
     if (!cache) return false;
 
+    logStream << "Create artifacts sprites" << std::endl;
     cache->addSpriteFramesWithFile("anim/artifacts.plist");
     char buffer[32];
     cocos2d::Sprite* artSprite;
@@ -533,6 +566,7 @@ bool MMainScene::initVisual() {
         this->addChild(artSprite);
     }
 
+    logStream << "Create water panel" << std::endl;
     //move prep to waterlevel class?
     if (!createAnimSpriteFromPlist(this, "anim/water.plist", "anim_water", "water", 4, 0.1f)) {
         return false;
@@ -548,25 +582,26 @@ bool MMainScene::initVisual() {
     this->addChild(glass, 2);
     if (!waterLevel.create(this, "anim_water", "water_back", cocos2d::Vec2(964, 464), cocos2d::Size(64, 64))) return false;//464 -> 592//496 -> 624
 
+    logStream << "Create decks" << std::endl;
     cache->addSpriteFramesWithFile("anim/cards.plist");
     cache->addSpriteFramesWithFile("anim/floods.plist");
-
     //decks
     if (!itemDeck.create(this, "Item deck", cocos2d::Vec2(800, 170), "itm_no_right", "item")) return false;//850
     if (!itemDeck.setCardNames("itm_card%d", "itm_back")) return false;
     if (!floodDeck.create(this, "Flood deck", cocos2d::Vec2(600, 170), "fld_no_right", "flood")) return false;//650
     if (!floodDeck.setCardNames("fld_card%d", "fld_back")) return false;
 
+    logStream << "Create grid" << std::endl;
     //grid
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
+    logStream << "Create adventurers menu and empty hands" << std::endl;
     //hands + adventurers sprites
     std::map<std::string, MObject*> adventurers = processor.getAdventurers();
     std::vector<std::string> advs;
     int i = 0;
     for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
         hands2.push_back(new MHand2);
-        //adventurerHand2[processor.findAdventurer(it->first)] = hands2.back();
         if (!createAnimSpriteFromPlist(this, "anim/adven1.plist", it->first + "_anim", "adven", 4, 0.2f)) {
             return false;
         }
@@ -581,6 +616,7 @@ bool MMainScene::initVisual() {
     if (!advMenu.create(this, "anim/adventurers.plist", advs)) return false;
     advs.clear();
 
+    logStream << "Create menu" << std::endl;
     //menu
     if (!menu.create(this)) return false;
 
@@ -617,6 +653,7 @@ bool MMainScene::initVisual() {
         {"bowl", "artifact0"},
     };
 
+    logStream << "Create labels" << std::endl;
     cocos2d::Label* label;
     label = Label::createWithTTF("some_name", "fonts/Marker Felt.ttf", 24);
     if (!label) return false;
@@ -641,21 +678,30 @@ bool MMainScene::initVisual() {
 }
 
 bool MMainScene::reset() {
-    itemDeck.reset();
-    floodDeck.reset();
-    waterLevel.reset();
-
     std::cout << "##############################################################################" << std::endl;
     std::cout << "###  Next start" << std::endl;
     std::cout << "##############################################################################" << std::endl;
 
+    
+    itemDeck.reset();
+    floodDeck.reset();
+    waterLevel.reset();
+
     processor.setAdventurersNumber(3);
+
+    logStream << "##############################################################################" << std::endl;
+    logStream << "Exec start" << std::endl;
     if (!processor.execFunction("start")) return false;
+    logStream << "Init grid" << std::endl;
     if (!gridMap.init()) return false;
+    logStream << "Update areas" << std::endl;
     if (!updateAreas()) return false;
     gridMap.clearAreaLimit();
+    logStream << "Init adventurers" << std::endl;
     if (!initAdventurers()) return false;
-    if (!initHand()) return false;
+    logStream << "Init hand" << std::endl;
+    if (!initHand()) return false;//error here in release
+
     floodDeck.setTopCard(floodSprite[processor.getFloodDropDeck().front()]);
     //show adventurer name
     cocos2d::Label* label;
@@ -668,6 +714,7 @@ bool MMainScene::reset() {
     moveAdventurer = "";
     abflussNumber = 0;
 
+    logStream << "Init adventurers menu" << std::endl;
     if (!advMenu.init(processor.getActiveAdventurers())) return false;
     advMenuAdventurer = adventurer;
     adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
@@ -675,12 +722,14 @@ bool MMainScene::reset() {
     this->getChildByName("adv_selection")->setVisible(true);
 
     //update menu items
+    logStream << "Set available menu actions" << std::endl;
     menu.updateStatuses(processor.getAvailableActions(adventurer));
 
     return true;
 }
 
 void MMainScene::adventurerClicked(MAdventurer* adventurer) {
+    logStream << "Adventurer menu clicked" << std::endl;
     if (!adventurer) return;
     if (advMenuAdventurer == adventurer) return;
     adventurerHand2[advMenuAdventurer]->hide();
@@ -732,18 +781,22 @@ bool MMainScene::init() {
         return false;
     }
 
+    logStream.open("game.log", std::ios::out);
+
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     //speed = cocos2d::Vec2(2, 2);
     gridSize = 6;//need get from processor
 
+    logStream << "Init mouse" << std::endl;
     cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
     mouseListener->onMouseMove = CC_CALLBACK_1(MMainScene::onMouseMove, this);
     mouseListener->onMouseDown = CC_CALLBACK_1(MMainScene::onMouseDown, this);
     mouseListener->onMouseUp = CC_CALLBACK_1(MMainScene::onMouseUp, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 
+    logStream << "Init keyboard" << std::endl;
     cocos2d::EventListenerKeyboard* keybordListener = EventListenerKeyboard::create();
     keybordListener->onKeyPressed = CC_CALLBACK_2(MMainScene::onKeyPressed, this);
     keybordListener->onKeyReleased = CC_CALLBACK_2(MMainScene::onKeyReleased, this);
@@ -751,8 +804,7 @@ bool MMainScene::init() {
 
     if (!initVisual()) return false;
 
-    if (!reset()) return false;
-
+    logStream << "Schedule update" << std::endl;
     this->scheduleUpdate();
 
     return true;
@@ -906,6 +958,7 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
     }
 }
 void  MMainScene::rbmGridProcess(cocos2d::Event* event) {
+    logStream << "RBM clicked. Clear" << std::endl;
     updateAreas();
     gridMap.clearAreaLimit();
     menu.unselectMenuAll();
@@ -946,6 +999,7 @@ void MMainScene::onMouseUp(cocos2d::Event* event) {
 
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {
     if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE) {
+        logStream << "Main menu called" << std::endl;
         MMainMenuScene* mainMenuScene = (MMainMenuScene*)MMainMenuScene::createScene();
         if (!mainMenuScene) return;
         if (!mainMenuScene->create(this, false)) return;

@@ -82,6 +82,7 @@ bool MMainMenuScene::create(MMainScene* _pMainScene, bool begin) {
 }
 
 void MMainMenuScene::startCallback(cocos2d::Ref* pSender) {
+	pMainScene->reset();
 	Director::getInstance()->popScene();
 }
 

@@ -3,6 +3,7 @@
 #include "logic/adventurer.h"
 #include <iostream>
 
+
 MHand2::MHand2() {
   limit = 5;
   scale = 1;
@@ -11,13 +12,14 @@ MHand2::MHand2() {
   prevHoverCardSprite = nullptr;
   visible = true;
   enabled = false;
+  pScene = nullptr;
 }
 MHand2::~MHand2() {
   cards.clear();
   cardFrame.clear();
 }
 bool MHand2::initCards(cocos2d::Scene* _pScene, MAdventurer* adventurer, float _offset) {
-  if(!pScene) return false;
+  if(!_pScene) return false;
   pScene = _pScene;
   if(!adventurer) return false;
 
