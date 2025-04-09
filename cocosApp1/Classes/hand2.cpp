@@ -13,6 +13,7 @@ MHand2::MHand2() {
   visible = true;
   enabled = false;
   pScene = nullptr;
+  releasedCard = nullptr;
 }
 MHand2::~MHand2() {
   cards.clear();
@@ -26,6 +27,7 @@ bool MHand2::initCards(cocos2d::Scene* _pScene, MAdventurer* adventurer, float _
   visible = true;
   selectedCardSprite = nullptr;
   prevHoverCardSprite = nullptr;
+  releasedCard = nullptr;
   offset = _offset;
   visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
 
@@ -218,6 +220,12 @@ MCard* MHand2::getCardByNumber(int i) {
   std::advance(it, i);
   return it->card;
 }
+MCard* MHand2::getCardBySprite(cocos2d::Sprite* sprite) {
+  for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+    if (it->sp == sprite) return it->card;
+  }
+  return nullptr;
+}
 cocos2d::SpriteFrame* MHand2::getCardSpriteFrameByNumber(int i) {
   if(i<0 || i>=cards.size()) return nullptr;
   std::list<stCard>::iterator it = cards.begin();
@@ -295,6 +303,7 @@ void MHand2::update(float delta) {
 	}
 }
 void MHand2::onMouseDown(cocos2d::Event* event) {
+	if (!enabled) return;
 	if (!visible) return;
 	cocos2d::EventMouse* e = (cocos2d::EventMouse*)event;
 	selectedCardSprite = getCardSpriteByCoord(e->getCursorX(), e->getCursorY());
@@ -303,14 +312,39 @@ void MHand2::onMouseDown(cocos2d::Event* event) {
 	}
 }
 void MHand2::onMouseUp(cocos2d::Event* event) {
+	if (!enabled) return;
 	if (!visible) return;
 	if (selectedCardSprite) {
+		releasedCard = getCardBySprite(selectedCardSprite);
 		selectedCardSprite->setPosition(cardOriginPos);
 		selectedCardSprite = nullptr;
 	}
 }
 void MHand2::onMouseMove(cocos2d::Event* event) {
+	if (!enabled) return;
 	if (!visible) return;
 	cocos2d::EventMouse* e = (cocos2d::EventMouse*)event;
 	cardMousePos = cocos2d::Vec2(e->getCursorX(), e->getCursorY());
+}
+MCard* MHand2::getReleasedCard() {
+	return releasedCard;
+}
+void MHand2::hideCard(MCard* card) {
+	for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+		if (it->card == card) {
+			it->sp->setVisible(false);
+			return;
+		}
+	}
+}
+void MHand2::showCard(MCard* card) {
+	for (std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
+		if (it->card == card) {
+			it->sp->setVisible(true);
+			return;
+		}
+	}
+}
+void MHand2::clearReleasedCard() {
+	releasedCard = nullptr;
 }

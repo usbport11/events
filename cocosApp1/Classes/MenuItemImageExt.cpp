@@ -24,7 +24,7 @@ void MenuItemImageExt::onMouseMove(Event *event) {
     Size size = getContentSize();
     Vec2 pos = getPosition();
     Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());
-    Rect r = Rect(pos.x - size.width/2, pos.y - size.height/2, size.width, size.height);
+    Rect r = Rect(pos.x - size.width/2, pos.y - size.height/2, size.width - 1, size.height - 1);
     if(r.containsPoint(mousePos)) {
         this->selected();
     }

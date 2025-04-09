@@ -8,6 +8,7 @@ class MMainScene;
 class MAdventurerMenu {
 private:
 	MMainScene* pMainScene;
+	cocos2d::Menu* menu;
 	std::map<int, std::string> numberAdventurer;
 	std::map<std::string, std::string> advNameFrame;
 	std::map<std::string, cocos2d::Sprite*> adventurerSprite; 
@@ -27,6 +28,8 @@ public:
 	void selectByName(const std::string& name);
 	cocos2d::Sprite* getAdventurerSprite(const std::string& adventurerName);
 	cocos2d::MenuItemImage* getAdventurerMenuImage(const std::string& adventurerName);
+	void disable();
+	void enable();
 };
 
 #endif

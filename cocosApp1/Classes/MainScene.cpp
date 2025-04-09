@@ -718,6 +718,7 @@ bool MMainScene::reset() {
     if (!advMenu.init(processor.getActiveAdventurers())) return false;
     advMenuAdventurer = adventurer;
     adventurerSprite[adventurer->getName()]->setColor(cocos2d::Color3B(255, 128, 128));
+    advMenu.selectByName(adventurer->getName());
     this->getChildByName("adv_selection")->setPosition(advMenu.getAdventurerMenuImage(adventurer->getName())->getPosition());
     this->getChildByName("adv_selection")->setVisible(true);
 
@@ -759,13 +760,6 @@ int MMainScene::getAdventurerNumber(const std::string& name) {
 MAdventurer* MMainScene::getCurrentAdventurer() {
     return processor.getCurrentAdventurer();
 }
-
-/*
-MHand* MMainScene::getAdventurerHand(const std::string& name) {
-    if (adventurerHand.find(name) != adventurerHand.end()) return adventurerHand[name];
-    return nullptr;
-}
-*/
 
 MHand2* MMainScene::getAdventurerHand2(MAdventurer* adventurer) {
     if (adventurerHand2.find(adventurer) != adventurerHand2.end()) return adventurerHand2[adventurer];
@@ -990,11 +984,39 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
         rbmGridProcess(event);
+        //half ready
+        if (currentAction.find("use_card") == std::string::npos) {
+            advMenu.enable();
+            MAdventurer* adventurer = processor.getCurrentAdventurer();
+            adventurerHand2[adventurer]->enable();
+            MCard* card = adventurerHand2[adventurer]->getReleasedCard();
+            adventurerHand2[adventurer]->showCard(card);
+            adventurerHand2[adventurer]->clearReleasedCard();
+        }
     }
 }
 
 void MMainScene::onMouseUp(cocos2d::Event* event) {
     adventurerHand2[advMenuAdventurer]->onMouseUp(event);
+    //half ready
+    MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (advMenuAdventurer == adventurer && currentAction == "") {
+        MCard* card = adventurerHand2[adventurer]->getReleasedCard();
+        if (card) {
+            if (card->getType() == "item") {
+                advMenu.disable();
+                adventurerHand2[adventurer]->disable();
+                adventurerHand2[adventurer]->hideCard(card);
+                if (card->getName() == "sandbag") {
+                    currentAction = "use_card_sandbag";
+                }
+                if (card->getType() == "item" && card->getName() == "helicopter") {
+                    //some sort
+                    currentAction = "use_card_helicopter";
+                }
+            }
+        }
+    }
 }
 
 void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event) {

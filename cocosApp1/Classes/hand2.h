@@ -31,6 +31,7 @@ private:
   cocos2d::Vec2 cardOriginPos;
   cocos2d::Vec2 cardMousePos;
   cocos2d::Size visibleSize;
+  MCard* releasedCard;
   int limit;
   float scale;
   float offset;
@@ -58,6 +59,7 @@ public:
   cocos2d::Sprite* getCardSpriteByCoord(float x, float y);
   int getCardsNumber();
   MCard* getCardByNumber(int i);
+  MCard* getCardBySprite(cocos2d::Sprite* sprite);
   cocos2d::SpriteFrame* getCardSpriteFrameByNumber(int i);
   cocos2d::Sprite* getCardSpriteByNumber(int i);
   std::vector<cocos2d::SpriteFrame*> getCardFrames();
@@ -72,6 +74,11 @@ public:
   void onMouseDown(cocos2d::Event* event);
   void onMouseUp(cocos2d::Event* event);
   void onMouseMove(cocos2d::Event* event);
+  MCard* MHand2::getReleasedCard();
+  void MHand2::hideCard(MCard* card);
+  void MHand2::showCard(MCard* card);
+  void clearReleasedCard();
+
 };
 
 #endif

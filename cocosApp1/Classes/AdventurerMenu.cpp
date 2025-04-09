@@ -43,7 +43,7 @@ void MAdventurerMenu::menuAdv4Callback(cocos2d::Ref* pSender) {
 void MAdventurerMenu::menuAdv5Callback(cocos2d::Ref* pSender) {
 	selectMenuItem(pSender);
 	pMainScene->adventurerClicked(numberAdventurer[5]);
-}
+} 
 
 bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFile, std::vector<std::string> adventurers) {
     if (!_pMainScene) {
@@ -82,7 +82,7 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
 	}
 
 	//create menu
-    cocos2d::Menu* menu = cocos2d::Menu::createWithArray(menuItems);
+    menu = cocos2d::Menu::createWithArray(menuItems);
     if(!menu) {
         return false;
     }
@@ -96,16 +96,18 @@ bool MAdventurerMenu::create(MMainScene* _pMainScene, const std::string& pListFi
 
 bool MAdventurerMenu::init(std::vector<std::string> activeAdventurers) {
 	numberAdventurer.clear();
+	for (std::map<std::string, cocos2d::Sprite*>::iterator it=adventurerSprite.begin(); it != adventurerSprite.end();  it++) {
+		if (it->second) pMainScene->removeChild(it->second);
+	}
 	adventurerSprite.clear();
-	unselectMenuAll();
-
+	//unselectMenuAll();
 	
 	cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
 	if (!cache) return false;
 
 	cocos2d::SpriteFrame* spriteFrame;
 	cocos2d::Sprite* sprite;
-	cocos2d::Node* node = pMainScene->getChildByName("adventurerMenu");
+	cocos2d::Node* node = menu;
 	if(!node) return false;
     cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
 	cocos2d::MenuItemImage* menuItem;
@@ -120,10 +122,10 @@ bool MAdventurerMenu::init(std::vector<std::string> activeAdventurers) {
 			menuItem->setEnabled(true);
 			menuItem->setNormalImage(sprite);
 			menuItem->setSelectedImage(sprite);
-			if(i == 0) {
-				menuItem->setSelectedImage(sprite);
-				menuItem->setColor(cocos2d::Color3B(0, 255, 0));
-			}
+			//if(i == 0) {
+			//	menuItem->setSelectedImage(sprite);
+			//	menuItem->setColor(cocos2d::Color3B(0, 255, 0));
+			//}
 
 			numberAdventurer[i] = activeAdventurers[i];
 			adventurerSprite[activeAdventurers[i]] = sprite;
@@ -138,7 +140,7 @@ bool MAdventurerMenu::init(std::vector<std::string> activeAdventurers) {
 }
 
 void MAdventurerMenu::unselectMenuAll() {
-    cocos2d::Node* node = pMainScene->getChildByName("adventurerMenu");
+	cocos2d::Node* node = menu;
     cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
 	cocos2d::MenuItemImage* menuItem;
     for (int i = 0; i < items.size(); i++) {
@@ -149,16 +151,16 @@ void MAdventurerMenu::unselectMenuAll() {
 }
 
 void MAdventurerMenu::selectMenuItem(cocos2d::Ref* pSender) {
-    unselectMenuAll();
-	cocos2d::MenuItemImage* menuItem = (cocos2d::MenuItemImage*)pSender;
-    menuItem->setColor(cocos2d::Color3B(0, 255, 0));
-    menuItem->selected();
+    //unselectMenuAll();
+	//cocos2d::MenuItemImage* menuItem = (cocos2d::MenuItemImage*)pSender;
+    //menuItem->setColor(cocos2d::Color3B(0, 255, 0));
+    //menuItem->selected();
 }
 
 void MAdventurerMenu::selectByName(const std::string& name) {
 	unselectMenuAll();
 
-	cocos2d::Node* node = pMainScene->getChildByName("adventurerMenu");
+	cocos2d::Node* node = menu;
 	cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
 	cocos2d::MenuItemImage* menuItem;
 	for (int i = 0; i < items.size(); i++) {
@@ -175,8 +177,9 @@ cocos2d::Sprite* MAdventurerMenu::getAdventurerSprite(const std::string& adventu
 	if (adventurerSprite.find(adventurerName) == adventurerSprite.end()) return nullptr;
 	return adventurerSprite[adventurerName];
 }
+
 cocos2d::MenuItemImage* MAdventurerMenu::getAdventurerMenuImage(const std::string& adventurerName) {
-	cocos2d::Node* node = pMainScene->getChildByName("adventurerMenu");
+	cocos2d::Node* node = menu;
 	cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
 	cocos2d::MenuItemImage* menuItem;
 	for (int i = 0; i < items.size(); i++) {
@@ -186,4 +189,12 @@ cocos2d::MenuItemImage* MAdventurerMenu::getAdventurerMenuImage(const std::strin
 		}
 	}
 	return nullptr;
+}
+
+void MAdventurerMenu::disable() {
+	menu->setEnabled(false);
+}
+
+void MAdventurerMenu::enable() {
+	menu->setEnabled(true);
 }
