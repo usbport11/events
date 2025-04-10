@@ -156,7 +156,7 @@ bool MMainScene::startMove() {
     return true;
 }
 
-bool MMainScene::startAbfluss() {
+bool MMainScene::startAbfluss(bool itemUse) {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (!adventurer) return false;
     logStream << "Acton 'start abfluss' called for: " << adventurer->getName() << std::endl;
@@ -186,6 +186,14 @@ bool MMainScene::startAbfluss() {
     if (adventurer->getArea()->getFloodLevel() == 1) areas.push_back(adventurer->getArea());
     if (areas.empty()) {
         std::cout << " [MainScene] no available to abfluss areas" << std::endl;
+        if (itemUse) {
+            MCard* card = adventurerHand2[adventurer]->getReleasedCard();
+            adventurerHand2[adventurer]->clearReleasedCard();
+            adventurerHand2[adventurer]->showCard(card);
+            adventurerHand2[adventurer]->enable();
+            advMenu.enable();
+            currentAction = "";
+        }
         return false;
     }
     for (std::list<MArea*>::iterator it = areas.begin(); it != areas.end(); it++) {
@@ -196,7 +204,8 @@ bool MMainScene::startAbfluss() {
         sp->setColor(cocos2d::Color3B(128, 255, 128));
     }
     std::cout << " [MainScene] hightlight available to abfluss areas" << std::endl;
-    currentAction = "abfluss";
+    if(!itemUse) currentAction = "abfluss";
+    else currentAction = "use_card_sandbag_abfluss";
 
     return true;
 }
@@ -878,6 +887,20 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
         abflussNumber = 0;
         return;
     }
+    if(currentAction == "use_card_sandbag_abfluss") {
+        MCard* card = adventurerHand2[adventurer]->getReleasedCard();
+        if (!card) return;
+        if (!processor.execFunction("usecard", adventurer->getName() + " " + card->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+            std::cout << "[MainScene] failed to use card sandbag by adventurer!" << std::endl;
+            return;
+        }
+        adventurerHand2[adventurer]->clearReleasedCard();
+        adventurerHand2[adventurer]->removeCard(card);
+        adventurerHand2[adventurer]->enable();
+        advMenu.enable();
+        updateAreas();
+        currentAction = "";
+    }
     if (currentAction == "moveOther_selectAdventurer") {
         //need change logic of selection
         //if area hold more than one adventurer - first will be selected
@@ -983,14 +1006,13 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         lbmGridProcess(event);
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-        //half ready
-        if (currentAction.find("use_card") != std::string::npos) {
-            advMenu.enable();
+        if (currentAction.find("use_card") != std::string::npos) { 
             MAdventurer* adventurer = processor.getCurrentAdventurer();
-            adventurerHand2[adventurer]->enable();
             MCard* card = adventurerHand2[adventurer]->getReleasedCard();
-            adventurerHand2[adventurer]->showCard(card);
             adventurerHand2[adventurer]->clearReleasedCard();
+            adventurerHand2[adventurer]->showCard(card);
+            adventurerHand2[adventurer]->enable();
+            advMenu.enable();
         }
         rbmGridProcess(event);
     }
@@ -998,22 +1020,21 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
 
 void MMainScene::onMouseUp(cocos2d::Event* event) {
     adventurerHand2[advMenuAdventurer]->onMouseUp(event);
-    //half ready
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (advMenuAdventurer == adventurer && currentAction == "") {
         MCard* card = adventurerHand2[adventurer]->getReleasedCard();
-        if (card) {
-            if (card->getType() == "item") {
-                advMenu.disable();
-                adventurerHand2[adventurer]->disable();
-                adventurerHand2[adventurer]->hideCard(card);
-                if (card->getName().find("sandbag") != std::string::npos) {
-                    currentAction = "use_card_sandbag";
-                }
-                if (card->getName().find("helicopter") != std::string::npos) {
-                    //some sort
-                    currentAction = "use_card_helicopter";
-                }
+        if (!card) return;
+        if (card->getType() == "item") {
+            advMenu.disable();
+            adventurerHand2[adventurer]->disable();
+            adventurerHand2[adventurer]->hideCard(card);
+            if (card->getName().find("sandbag") != std::string::npos) {
+                startAbfluss(true);
+            }
+            if (card->getName().find("helicopter") != std::string::npos) {
+                //not ready
+                //need some sort of card selection
+                currentAction = "use_card_helicopter";
             }
         }
     }

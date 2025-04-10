@@ -52,7 +52,7 @@ public:
 
     bool endTurn();
     bool startMove();//start move instead move because it complex
-    bool startAbfluss();//start abluss instead abluss because it complex
+    bool startAbfluss(bool itemUse=false);//start abluss instead abluss because it complex
     bool extract();
     bool getArtifact();
     bool discard(MAdventurer* adventurer, std::list<int> cards);

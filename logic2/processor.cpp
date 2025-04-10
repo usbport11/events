@@ -305,13 +305,12 @@ bool MProcessor::useCard() {
   if(!adventurer) return false;
   if(!card) return false;
   if(card->getType() == "item") {
-    if(card->getName().find("helicopter") != std::string::npos) {
-      if (argsLessLimit(4)) return false;
-      if (!execFunction("move", vargs[2] + " " + vargs[3])) return false;
-    }
     if (card->getName().find("sandbag") != std::string::npos) {
-      if (argsLessLimit(3)) return false;
-      if (!execFunction("abfluss", vargs[2])) return false;
+      if (!execFunction("abfluss", vargs[0] + " " + vargs[2], false)) return false;
+    }
+    if(card->getName().find("helicopter") != std::string::npos) {
+      //helicopter can move or extract - need extend logic
+      if (!execFunction("move", vargs[2] + " " + vargs[3], false)) return false;
     }
   }
   else {
