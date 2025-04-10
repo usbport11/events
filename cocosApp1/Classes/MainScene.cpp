@@ -683,6 +683,8 @@ bool MMainScene::initVisual() {
     actLabel->setPosition(250, 740);//250,25
     this->addChild(actLabel);
 
+    if(!doubleCardMenu.create(this, cocos2d::Vec2(200, 250))) return false;
+
     return true;
 }
 
@@ -1047,6 +1049,12 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         if (!mainMenuScene) return;
         if (!mainMenuScene->create(this, false)) return;
         Director::getInstance()->pushScene(mainMenuScene);
+    }
+    if (keyCode == EventKeyboard::KeyCode::KEY_D) {
+        //not ready
+        cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+        if (!cache) return;
+        if (!doubleCardMenu.reset(cache->getSpriteFrameByName("card8"), cache->getSpriteFrameByName("card7"))) return;
     }
 }
 

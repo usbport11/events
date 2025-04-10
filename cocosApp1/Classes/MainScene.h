@@ -8,6 +8,7 @@
 #include "waterLevel.h"
 #include "menu.h"
 #include "AdventurerMenu.h"
+#include "DoubleCardMenu.h"
 #include "logic/processor.h"
 #include <fstream>
 
@@ -25,6 +26,7 @@ private:
     MMenu menu;
     MAdventurerMenu advMenu;
     MAdventurer* advMenuAdventurer;
+    MDoubleCardMenu doubleCardMenu;
     
     std::string moveAdventurer;
     int abflussNumber;
