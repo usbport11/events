@@ -983,9 +983,8 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         lbmGridProcess(event);
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-        rbmGridProcess(event);
         //half ready
-        if (currentAction.find("use_card") == std::string::npos) {
+        if (currentAction.find("use_card") != std::string::npos) {
             advMenu.enable();
             MAdventurer* adventurer = processor.getCurrentAdventurer();
             adventurerHand2[adventurer]->enable();
@@ -993,6 +992,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
             adventurerHand2[adventurer]->showCard(card);
             adventurerHand2[adventurer]->clearReleasedCard();
         }
+        rbmGridProcess(event);
     }
 }
 
@@ -1007,10 +1007,10 @@ void MMainScene::onMouseUp(cocos2d::Event* event) {
                 advMenu.disable();
                 adventurerHand2[adventurer]->disable();
                 adventurerHand2[adventurer]->hideCard(card);
-                if (card->getName() == "sandbag") {
+                if (card->getName().find("sandbag") != std::string::npos) {
                     currentAction = "use_card_sandbag";
                 }
-                if (card->getType() == "item" && card->getName() == "helicopter") {
+                if (card->getName().find("helicopter") != std::string::npos) {
                     //some sort
                     currentAction = "use_card_helicopter";
                 }
