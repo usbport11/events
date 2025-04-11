@@ -31,3 +31,27 @@ bool createAnimSpriteFromPlist(cocos2d::Scene* scene, const std::string& fileNam
 
     return true;
 }
+
+cocos2d::Sprite* combineSprites(cocos2d::SpriteFrame* spfA, cocos2d::SpriteFrame* spfB) {
+    cocos2d::Sprite* spC = nullptr;
+
+    cocos2d::Texture2D* textureA = spfA->getTexture();
+    cocos2d::Rect rectA = spfA->getRect();
+    cocos2d::Sprite* spriteA = cocos2d::Sprite::createWithTexture(textureA, rectA);
+    spriteA->setPosition(32, 48);
+    spriteA->setFlippedY(true);
+    cocos2d::Texture2D* textureB = spfB->getTexture();
+    cocos2d::Rect rectB = spfB->getRect();
+    cocos2d::Sprite* spriteB = cocos2d::Sprite::createWithTexture(textureB, rectB);
+    spriteB->setPosition(32, 48);
+    spriteB->setFlippedY(true);
+
+    cocos2d::RenderTexture* texture = cocos2d::RenderTexture::create(64, 96, cocos2d::PixelFormat::RGBA8888);
+    texture->begin();
+    spriteA->visit();
+    spriteB->visit();
+    texture->end();
+    spC = cocos2d::Sprite::createWithTexture(texture->getSprite()->getTexture(), cocos2d::Rect(0, 0, 64, 96));
+
+    return spC;
+}

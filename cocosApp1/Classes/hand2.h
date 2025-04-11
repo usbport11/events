@@ -41,6 +41,7 @@ private:
   void repositionCards();
   bool visible;
   bool enabled;
+  float originY;
 public:
   MHand2();
   ~MHand2();

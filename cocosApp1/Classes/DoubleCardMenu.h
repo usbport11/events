@@ -16,6 +16,8 @@ public:
 	~MDoubleCardMenu();
 	bool create(cocos2d::Scene* _pScene, cocos2d::Vec2 _position);
 	bool reset(cocos2d::SpriteFrame* card1SpriteFrame, cocos2d::SpriteFrame* card2SpriteFrame);
+	void hide();
+	void show();
 };
 
 #endif

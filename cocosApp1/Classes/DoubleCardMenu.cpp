@@ -11,6 +11,8 @@ void MDoubleCardMenu::card2Callback(cocos2d::Ref* pSender) {
 MDoubleCardMenu::MDoubleCardMenu() {
 	pScene = nullptr;
 	menu = nullptr;
+	sprites[0] = nullptr;
+	sprites[1] = nullptr;
 }
 MDoubleCardMenu::~MDoubleCardMenu() {
 	if (sprites[0]) pScene->removeChild(sprites[0]);
@@ -28,12 +30,10 @@ bool MDoubleCardMenu::create(cocos2d::Scene* _pScene, cocos2d::Vec2 _position) {
 	cocos2d::Sprite* sp;
 	cocos2d::MenuItemImage* menuItem;
 	cocos2d::Vector<cocos2d::MenuItem*> menuItems;
-	int i = 0;
 	for(int i=0; i < callbacks.size(); i++) {
-		menuItem = cocos2d::MenuItemImage::create("no_image.png", "", callbacks[i]);
+		menuItem = cocos2d::MenuItemImage::create("empty_card.png", "", callbacks[i]);
 		if (!menuItem) return false;
 		menuItems.pushBack(menuItem);
-		i ++;
 	}
 	
 	menu = cocos2d::Menu::createWithArray(menuItems);
@@ -70,10 +70,16 @@ bool MDoubleCardMenu::reset(cocos2d::SpriteFrame* card1SpriteFrame, cocos2d::Spr
 		if(!sprites[i]) return false;
 		menuItem->setNormalImage(sprites[i]);
 		menuItem->setSelectedImage(sprites[i]);
-		offset = position.x + menuItem->getContentSize().width * items.size() / 4;
-		menuItem->setPosition(offset + i * menuItem->getContentSize().width, position.y);
+		offset = position.x + (menuItem->getContentSize().width + 10) * items.size() / 4;
+		menuItem->setPosition(offset + i * (menuItem->getContentSize().width + 10), position.y);
 	}
 	menu->setVisible(true);
 
 	return true;
+}
+void MDoubleCardMenu::hide() {
+	if (menu) menu->setVisible(false);
+}
+void MDoubleCardMenu::show() {
+	if (menu) menu->setVisible(true);
 }

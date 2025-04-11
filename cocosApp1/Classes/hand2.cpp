@@ -86,6 +86,7 @@ void MHand2::repositionCards() {
   for(std::list<stCard>::iterator it = cards.begin(); it != cards.end(); it++) {
 	posX = center + i * cs_sp;
 	it->sp->setPosition(posX, posY);
+	originY = posY;
 	i ++;
   }
   cocos2d::Size size = cocos2d::Size(cs_sp * cardsNumber, cards.front().sp->getContentSize().height);
@@ -285,7 +286,7 @@ void MHand2::update(float delta) {
 	else {
 		if (!coordsInHand(cardMousePos.x, cardMousePos.y)) {
 			if (prevHoverCardSprite) {
-				prevHoverCardSprite->setPosition(prevHoverCardSprite->getPosition() - cocos2d::Vec2(0, 20));
+				prevHoverCardSprite->setPosition(prevHoverCardSprite->getPosition().x, originY);
 				prevHoverCardSprite = nullptr;
 			}
 			return;
@@ -296,7 +297,7 @@ void MHand2::update(float delta) {
 			hoverCardSprite->setPosition(hoverCardSprite->getPosition() + cocos2d::Vec2(0, 20));
 			if (prevHoverCardSprite) {
 				prevHoverCardSprite->setLocalZOrder(1);
-				prevHoverCardSprite->setPosition(prevHoverCardSprite->getPosition() - cocos2d::Vec2(0, 20));
+				prevHoverCardSprite->setPosition(prevHoverCardSprite->getPosition().x, originY);
 			}
 			prevHoverCardSprite = hoverCardSprite;
 		}
@@ -346,5 +347,9 @@ void MHand2::showCard(MCard* card) {
 	}
 }
 void MHand2::clearReleasedCard() {
+	if (prevHoverCardSprite == getCardSprite(releasedCard)) {
+		prevHoverCardSprite->setPosition(prevHoverCardSprite->getPosition().x, originY);
+		prevHoverCardSprite = nullptr;
+	}
 	releasedCard = nullptr;
 }

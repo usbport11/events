@@ -592,7 +592,7 @@ bool MMainScene::initVisual() {
     if (!waterLevel.create(this, "anim_water", "water_back", cocos2d::Vec2(964, 464), cocos2d::Size(64, 64))) return false;//464 -> 592//496 -> 624
 
     logStream << "Create decks" << std::endl;
-    cache->addSpriteFramesWithFile("anim/cards.plist");
+    cache->addSpriteFramesWithFile("anim/cards2.plist");//cards.plist
     cache->addSpriteFramesWithFile("anim/floods.plist");
     //decks
     if (!itemDeck.create(this, "Item deck", cocos2d::Vec2(800, 170), "itm_no_right", "item")) return false;//850
@@ -683,7 +683,7 @@ bool MMainScene::initVisual() {
     actLabel->setPosition(250, 740);//250,25
     this->addChild(actLabel);
 
-    if(!doubleCardMenu.create(this, cocos2d::Vec2(200, 250))) return false;
+    if(!doubleCardMenu.create(this, cocos2d::Vec2(180, 250))) return false;
 
     return true;
 }
@@ -1017,6 +1017,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
             advMenu.enable();
         }
         rbmGridProcess(event);
+        doubleCardMenu.hide();
     }
 }
 
@@ -1054,7 +1055,12 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         //not ready
         cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
         if (!cache) return;
-        if (!doubleCardMenu.reset(cache->getSpriteFrameByName("card8"), cache->getSpriteFrameByName("card7"))) return;
+        //if (!doubleCardMenu.reset(cache->getSpriteFrameByName("card9"), cache->getSpriteFrameByName("card10"))) return;
+        //cocos2d::Sprite* sp = combineSprites(cache->getSpriteFrameByName("card9"), cache->getSpriteFrameByName("card11"));
+        //if (sp) {
+        //    sp->setPosition(250, 200);
+        //    this->addChild(sp);
+        //}
     }
 }
 

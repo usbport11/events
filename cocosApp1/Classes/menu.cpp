@@ -136,7 +136,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
         num ++;
     }
 
-    cocos2d::Menu* menu = Menu::createWithArray(menuItems);
+    menu = Menu::createWithArray(menuItems);
     if(!menu) {
         return false;
     }
@@ -149,7 +149,7 @@ bool MMenu::create(MMainScene* _pMainScene) {
 }
 
 void MMenu::unselectMenuAll() {
-    cocos2d::Node* node = pMainScene->getChildByName(name);
+    cocos2d::Node* node = menu;
     cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
     for (int i = 0; i < items.size(); i++) {
         items.at(i)->setColor(cocos2d::Color3B(255, 255, 255));
@@ -165,7 +165,7 @@ void MMenu::selectMenuItem(cocos2d::Ref* pSender) {
 
 void MMenu::updateStatuses(std::vector<std::string> availableActions) {
     //not tested
-    cocos2d::Node* node = pMainScene->getChildByName(name);
+    cocos2d::Node* node = menu;
     cocos2d::Vector<cocos2d::Node*> items = node->getChildren();
     MenuItemImageExt* menuItem;
     for (int i = 0; i < items.size(); i++) {
@@ -178,4 +178,12 @@ void MMenu::updateStatuses(std::vector<std::string> availableActions) {
             menuItem->setEnabled(false);
         }
     }
+}
+
+void MMenu::disable() {
+    menu->setEnabled(false);
+}
+
+void MMenu::enable() {
+    menu->setEnabled(true);
 }

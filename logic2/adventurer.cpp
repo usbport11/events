@@ -80,17 +80,6 @@ MCard* MAdventurer::getCardByNumber(int number) {
   if (number < 0 || number >= cards.size()) nullptr;
   else return cards[number];
 }
-/*
-std::vector<MCard*> MAdventurer::getMomentCards() {
-  std::vector<MCard*> resCards;
-  for(int i=0; i<cards.size(); i++) {
-    if(cards[i]->getMomentUse()) {
-      resCards.push_back(cards[i]);
-	}
-  }
-  return resCards;
-}
-*/
 std::vector<MCard*> MAdventurer::getArtifactCards(const std::string& name) {
   std::vector<MCard*> resCards;
   for(int i=0; i < cards.size() && i < 4; i++) {

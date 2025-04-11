@@ -15,6 +15,17 @@ MenuItemImageExt* MenuItemImageExt::create(const std::string &normalImage, const
     return nullptr;
 }
 
+MenuItemImageExt* MenuItemImageExt::create(cocos2d::Sprite* normalSprite, cocos2d::Sprite* seletedSprite, cocos2d::Sprite* disabledSprite, const ccMenuCallback& callback) {
+    MenuItemImageExt* ret = new (std::nothrow) MenuItemImageExt();
+    if (ret && ret->initWithNormalSprite(normalSprite, seletedSprite, disabledSprite, callback)) {
+        ret->setMouseListener();
+        ret->autorelease();
+        return ret;
+    }
+    CC_SAFE_DELETE(ret);
+    return nullptr;
+}
+
 void MenuItemImageExt::onMouseMove(Event *event) {
     if (!isEnabled()) {
         return;
