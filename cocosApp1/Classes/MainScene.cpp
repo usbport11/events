@@ -175,7 +175,7 @@ bool MMainScene::startAbfluss(bool itemUse) {
 
     cocos2d::Sprite* sp;
     std::list<MArea*> areas;
-        if (adventurer->canUseDiagonal()) {
+    if (adventurer->canUseDiagonal()) {
         areas = adventurer->getArea()->getAllFloodedNeighbors();
         std::cout << "adventurer can use diagonal" << std::endl;
     }
@@ -452,8 +452,27 @@ bool MMainScene::startMoveOther() {
     return true;
 }
 
-bool MMainScene::selectDoubleCard(int number) {
+bool MMainScene::selectDoubleCard(const std::string& value) {
     //not ready
+    doubleCardMenu.hide();
+    if (value == "card9") {
+        if (!processor.execFunction("extract")) {
+            std::cout << "[MainScene] failed to extract!" << std::endl;
+            return false;
+        }
+        MEndScene* endScene = (MEndScene*)MEndScene::createScene();
+        if (!endScene) return false;
+        endScene->setMainScene(this);
+        endScene->setMessage("Congratulations!");
+        Director::getInstance()->pushScene(endScene);
+        return true;
+    }
+    if (value == "card10") {
+        //moveOther
+        currentAction = "moveOther_selectAdventurer_helicopter";
+        return true;
+    }
+    return false;
 }
 
 bool MMainScene::updateAreas() {
@@ -747,8 +766,9 @@ bool MMainScene::reset() {
 void MMainScene::adventurerClicked(MAdventurer* adventurer) {
     logStream << "Adventurer menu clicked" << std::endl;
     if (!adventurer) return;
-    if (advMenuAdventurer == adventurer) return;
-    adventurerHand2[advMenuAdventurer]->hide();
+    for (std::map<MAdventurer*, MHand2*>::iterator it = adventurerHand2.begin(); it != adventurerHand2.end(); it++) {
+        it->second->hide();
+    }
     adventurerHand2[adventurer]->show();
     advMenuAdventurer = adventurer;
     //change label
@@ -1012,7 +1032,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         lbmGridProcess(event);
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-        if (currentAction.find("use_card") != std::string::npos) { 
+        if (currentAction.find("use_card") != std::string::npos || currentAction == "moveOther_selectAdventurer_helicopter") {
             MAdventurer* adventurer = processor.getCurrentAdventurer();
             MCard* card = adventurerHand2[adventurer]->getReleasedCard();
             adventurerHand2[adventurer]->clearReleasedCard();
@@ -1028,6 +1048,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
 void MMainScene::onMouseUp(cocos2d::Event* event) {
     adventurerHand2[advMenuAdventurer]->onMouseUp(event);
     MAdventurer* adventurer = processor.getCurrentAdventurer();
+    if (!adventurer) return;
     if (advMenuAdventurer == adventurer && currentAction == "") {
         MCard* card = adventurerHand2[adventurer]->getReleasedCard();
         if (!card) return;
@@ -1036,12 +1057,16 @@ void MMainScene::onMouseUp(cocos2d::Event* event) {
             adventurerHand2[adventurer]->disable();
             adventurerHand2[adventurer]->hideCard(card);
             if (card->getName().find("sandbag") != std::string::npos) {
+                //set current action in startAbfluss function
                 startAbfluss(true);
             }
             if (card->getName().find("helicopter") != std::string::npos) {
-                if (!doubleCardMenu.reset("card9", "card10", "card11", true, true)) return;
+                bool canExtract = false;
+                if (adventurer->hasCard("helicopter") && processor.allActiveAdventurersOnArea("adventurers_circle") && processor.allArifactsCollected()) {
+                    canExtract = true;
+                }
+                if (!doubleCardMenu.reset("card9", "card10", "card11", canExtract, true)) return;
                 currentAction = "use_card_helicopter";
-                //not ready
             }
         }
     }

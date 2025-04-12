@@ -63,7 +63,7 @@ public:
     bool startFly();
     bool startSwim();
     bool startMoveOther();
-    bool selectDoubleCard(int number);
+    bool selectDoubleCard(const std::string& value);
 
     bool reset();
     void adventurerClicked(MAdventurer* adventurer);
