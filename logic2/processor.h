@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include <list>
 #include <deque>
 #include <string>
 #include <random>
