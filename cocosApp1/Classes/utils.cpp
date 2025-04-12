@@ -59,12 +59,19 @@ cocos2d::Sprite* combineSpritesFromFrames(cocos2d::SpriteFrame* spfA, cocos2d::S
 cocos2d::Sprite* combineSprites(cocos2d::Sprite* spA, cocos2d::Sprite* spB) {
     cocos2d::Sprite* spC = nullptr;
 
+    cocos2d::Vec2 pos[2] = { spA->getPosition(), spB->getPosition() };
+    spA->setPosition(spA->getTextureRect().size.width / 2, spA->getTextureRect().size.height / 2);
+    spB->setPosition(spB->getTextureRect().size.width / 2, spB->getTextureRect().size.height / 2);
+
     cocos2d::RenderTexture* texture = cocos2d::RenderTexture::create(spA->getTextureRect().size.width, spA->getTextureRect().size.height, cocos2d::PixelFormat::RGBA8888);
     texture->begin();
     spA->visit();
     spB->visit();
     texture->end();
     spC = cocos2d::Sprite::createWithTexture(texture->getSprite()->getTexture(), cocos2d::Rect(0, 0, spA->getTextureRect().size.width, spA->getTextureRect().size.height));
+
+    spA->setPosition(pos[0]);
+    spB->setPosition(pos[1]);
 
     return spC;
 }
