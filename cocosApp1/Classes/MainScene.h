@@ -62,7 +62,7 @@ public:
     bool sumbitHandover(MAdventurer* adventurer, int cardNumber);
     bool startFly();
     bool startSwim();
-    bool startMoveOther();
+    bool startMoveOther(bool itemUse = false);
     bool selectDoubleCard(const std::string& value);
 
     bool reset();

@@ -112,6 +112,7 @@ public:
   std::map<std::string, MObject*> getAdventurers();
 
   std::vector<std::string> getActiveAdventurers();
+  std::list<MArea*> getActiveAreas();
   std::deque<std::string> getItemDropDeck();
   std::deque<std::string> getFloodDropDeck();
 

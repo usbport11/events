@@ -777,6 +777,16 @@ std::vector<std::string> MProcessor::getActiveAdventurers() {
     return activeAdventurers;
 }
 
+std::list<MArea*> MProcessor::getActiveAreas() {
+    std::list<MArea*> result;
+    MArea* area;
+    for (std::map<std::string, MObject*>::iterator it = areas.begin(); it != areas.end(); it++) {
+        area = (MArea*)it->second;
+        if (area->getFloodLevel() < 2) result.push_back(area);
+    }
+    return result;
+}
+
 std::deque<std::string> MProcessor::getItemDropDeck() {
     return itemDropDeck;
 }

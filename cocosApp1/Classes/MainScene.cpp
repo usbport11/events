@@ -430,7 +430,7 @@ bool MMainScene::startSwim() {
     return true;
 }
 
-bool MMainScene::startMoveOther() {
+bool MMainScene::startMoveOther(bool itemUse) {
     if (processor.getCurrentAdventurer()->getName() != "navigator") return false;
     logStream << "Acton 'start move other' called for navigator" << std::endl;
 
@@ -448,14 +448,15 @@ bool MMainScene::startMoveOther() {
         if (!sp) return false;
         sp->setColor(cocos2d::Color3B(128, 255, 128));
     }
-    currentAction = "moveOther_selectAdventurer";
+    if(!itemUse) currentAction = "moveOther_selectAdventurer";
+    else currentAction = "moveOther_selectAdventurer_helicopter";
     return true;
 }
 
 bool MMainScene::selectDoubleCard(const std::string& value) {
-    //not ready
     doubleCardMenu.hide();
     if (value == "card9") {
+        //not tested
         if (!processor.execFunction("extract")) {
             std::cout << "[MainScene] failed to extract!" << std::endl;
             return false;
@@ -468,8 +469,8 @@ bool MMainScene::selectDoubleCard(const std::string& value) {
         return true;
     }
     if (value == "card10") {
-        //moveOther
-        currentAction = "moveOther_selectAdventurer_helicopter";
+        //not tested
+        startMoveOther(true);
         return true;
     }
     return false;
@@ -926,8 +927,10 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
         advMenu.enable();
         updateAreas();
         currentAction = "";
+        return;
     }
-    if (currentAction == "moveOther_selectAdventurer") {
+    if (currentAction.find("moveOther_selectAdventurer") != std::string::npos) {
+    //if (currentAction == "moveOther_selectAdventurer") {
         //need change logic of selection
         //if area hold more than one adventurer - first will be selected
         moveAdventurer = "";
@@ -953,12 +956,22 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
         updateAreas();
         gridMap.clearAreaLimit();
 
-        cocos2d::Sprite* sp;
-        std::list<MArea*> areas = adventurer->getArea()->getDirectActiveNeighbors2();
-        if (areas.empty()) {
-            std::cout << " [MainScene] no available to move areas" << std::endl;
-            return;
+        std::list<MArea*> areas;
+        if (currentAction == "moveOther_selectAdventurer") {
+            areas = adventurer->getArea()->getDirectActiveNeighbors2();
+            if (areas.empty()) {
+                std::cout << " [MainScene] no available to move areas" << std::endl;
+                return;
+            }
         }
+        if (currentAction == "moveOther_selectAdventurer_helicopter") {
+            areas = processor.getActiveAreas();
+            if (areas.empty()) {
+                std::cout << " [MainScene] no available to move areas" << std::endl;
+                return;
+            }
+        }
+        cocos2d::Sprite* sp;
         for (std::list<MArea*>::iterator it = areas.begin(); it != areas.end(); it++) {
             gridMap.addAreaLimit((*it)->getIndex()[0] * gridSize + (*it)->getIndex()[1]);
             sp = gridMap.getSpriteByAreaName((*it)->getName());
