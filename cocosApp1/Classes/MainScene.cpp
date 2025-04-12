@@ -452,6 +452,10 @@ bool MMainScene::startMoveOther() {
     return true;
 }
 
+bool MMainScene::selectDoubleCard(int number) {
+    //not ready
+}
+
 bool MMainScene::updateAreas() {
     MArea* area;
     cocos2d::Sprite* sp;
@@ -1015,9 +1019,9 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
             adventurerHand2[adventurer]->showCard(card);
             adventurerHand2[adventurer]->enable();
             advMenu.enable();
+            doubleCardMenu.hide();
         }
         rbmGridProcess(event);
-        doubleCardMenu.hide();
     }
 }
 
@@ -1035,10 +1039,9 @@ void MMainScene::onMouseUp(cocos2d::Event* event) {
                 startAbfluss(true);
             }
             if (card->getName().find("helicopter") != std::string::npos) {
-                cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-                if (!cache) return;
                 if (!doubleCardMenu.reset("card9", "card10", "card11", true, true)) return;
                 currentAction = "use_card_helicopter";
+                //not ready
             }
         }
     }

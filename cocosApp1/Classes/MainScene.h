@@ -63,6 +63,7 @@ public:
     bool startFly();
     bool startSwim();
     bool startMoveOther();
+    bool selectDoubleCard(int number);
 
     bool reset();
     void adventurerClicked(MAdventurer* adventurer);
