@@ -32,26 +32,39 @@ bool createAnimSpriteFromPlist(cocos2d::Scene* scene, const std::string& fileNam
     return true;
 }
 
-cocos2d::Sprite* combineSprites(cocos2d::SpriteFrame* spfA, cocos2d::SpriteFrame* spfB) {
+cocos2d::Sprite* combineSpritesFromFrames(cocos2d::SpriteFrame* spfA, cocos2d::SpriteFrame* spfB) {
     cocos2d::Sprite* spC = nullptr;
 
     cocos2d::Texture2D* textureA = spfA->getTexture();
     cocos2d::Rect rectA = spfA->getRect();
     cocos2d::Sprite* spriteA = cocos2d::Sprite::createWithTexture(textureA, rectA);
-    spriteA->setPosition(32, 48);
+    spriteA->setPosition(rectA.size.width / 2, rectA.size.height / 2);
     spriteA->setFlippedY(true);
     cocos2d::Texture2D* textureB = spfB->getTexture();
     cocos2d::Rect rectB = spfB->getRect();
     cocos2d::Sprite* spriteB = cocos2d::Sprite::createWithTexture(textureB, rectB);
-    spriteB->setPosition(32, 48);
+    spriteB->setPosition(rectB.size.width / 2, rectB.size.height / 2);
     spriteB->setFlippedY(true);
 
-    cocos2d::RenderTexture* texture = cocos2d::RenderTexture::create(64, 96, cocos2d::PixelFormat::RGBA8888);
+    cocos2d::RenderTexture* texture = cocos2d::RenderTexture::create(rectA.size.width, rectA.size.height, cocos2d::PixelFormat::RGBA8888);
     texture->begin();
     spriteA->visit();
     spriteB->visit();
     texture->end();
-    spC = cocos2d::Sprite::createWithTexture(texture->getSprite()->getTexture(), cocos2d::Rect(0, 0, 64, 96));
+    spC = cocos2d::Sprite::createWithTexture(texture->getSprite()->getTexture(), cocos2d::Rect(0, 0, rectA.size.width, rectA.size.height));
+
+    return spC;
+}
+
+cocos2d::Sprite* combineSprites(cocos2d::Sprite* spA, cocos2d::Sprite* spB) {
+    cocos2d::Sprite* spC = nullptr;
+
+    cocos2d::RenderTexture* texture = cocos2d::RenderTexture::create(spA->getTextureRect().size.width, spA->getTextureRect().size.height, cocos2d::PixelFormat::RGBA8888);
+    texture->begin();
+    spA->visit();
+    spB->visit();
+    texture->end();
+    spC = cocos2d::Sprite::createWithTexture(texture->getSprite()->getTexture(), cocos2d::Rect(0, 0, spA->getTextureRect().size.width, spA->getTextureRect().size.height));
 
     return spC;
 }

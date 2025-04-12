@@ -682,7 +682,7 @@ bool MMainScene::initVisual() {
     actLabel->setName("lblActionNumber");
     actLabel->setPosition(250, 740);//250,25
     this->addChild(actLabel);
-
+    
     if(!doubleCardMenu.create(this, cocos2d::Vec2(180, 250))) return false;
 
     return true;
@@ -1035,8 +1035,9 @@ void MMainScene::onMouseUp(cocos2d::Event* event) {
                 startAbfluss(true);
             }
             if (card->getName().find("helicopter") != std::string::npos) {
-                //not ready
-                //need some sort of card selection
+                cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
+                if (!cache) return;
+                if (!doubleCardMenu.reset("card9", "card10", "card11", true, true)) return;
                 currentAction = "use_card_helicopter";
             }
         }
@@ -1050,17 +1051,6 @@ void MMainScene::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::
         if (!mainMenuScene) return;
         if (!mainMenuScene->create(this, false)) return;
         Director::getInstance()->pushScene(mainMenuScene);
-    }
-    if (keyCode == EventKeyboard::KeyCode::KEY_D) {
-        //not ready
-        cocos2d::SpriteFrameCache* cache = cocos2d::SpriteFrameCache::getInstance();
-        if (!cache) return;
-        //if (!doubleCardMenu.reset(cache->getSpriteFrameByName("card9"), cache->getSpriteFrameByName("card10"))) return;
-        //cocos2d::Sprite* sp = combineSprites(cache->getSpriteFrameByName("card9"), cache->getSpriteFrameByName("card11"));
-        //if (sp) {
-        //    sp->setPosition(250, 200);
-        //    this->addChild(sp);
-        //}
     }
 }
 
