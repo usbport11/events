@@ -71,6 +71,7 @@ private:
   bool getFloodCard();
   bool discard();
   bool useCard();
+  bool useDoubleCard();
   //bool skip();
 
   bool handOver();

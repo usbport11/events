@@ -306,12 +306,10 @@ bool MProcessor::useCard() {
   if(!card) return false;
   if(card->getType() == "item") {
     if (card->getName().find("sandbag") != std::string::npos) {
+      if (argsLessLimit(3)) return false;
       if (!execFunction("abfluss", vargs[0] + " " + vargs[2], false)) return false;
     }
-    if(card->getName().find("helicopter") != std::string::npos) {
-      //helicopter can move or extract - need extend logic
-      if (!execFunction("move", vargs[2] + " " + vargs[3], false)) return false;
-    }
+    return false;
   }
   else {
     return false;
@@ -319,6 +317,33 @@ bool MProcessor::useCard() {
   itemDropDeck.push_front(card->getName());
   adventurer->removeCard(card);
   return true;
+}
+bool MProcessor::useDoubleCard() {
+    if (argsLessLimit(3)) return false;
+    std::cout << "Use double card: " << vargs[1] << "(" << vargs[2] <<")" << " by " << vargs[0] << std::endl;
+    MAdventurer* adventurer = findAdventurer(vargs[0]);
+    MCard* card = findItemCard(vargs[1]);
+    if (!adventurer) return false;
+    if (!card) return false;
+    if (card->getType() == "item") {
+        if (card->getName().find("helicopter") != std::string::npos) {
+            if (vargs[2] == "moveother") {
+                if (argsLessLimit(5)) return false;
+                if (!execFunction("moveother", vargs[3] + " " + vargs[4], false)) return false;
+            }
+            if (vargs[2] == "extract") {
+                if (!execFunction("extract"), false) return false;
+            }
+            return false;
+        }
+        return false;
+    }
+    else {
+        return false;
+    }
+    itemDropDeck.push_front(card->getName());
+    adventurer->removeCard(card);
+    return true;
 }
 //basic actions================================================================
 bool MProcessor::handOver() {

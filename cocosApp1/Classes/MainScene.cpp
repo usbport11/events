@@ -457,7 +457,10 @@ bool MMainScene::selectDoubleCard(const std::string& value) {
     doubleCardMenu.hide();
     if (value == "card9") {
         //not tested
-        if (!processor.execFunction("extract")) {
+        MAdventurer* adventurer = processor.getCurrentAdventurer();
+        MCard* card = adventurerHand2[adventurer]->getReleasedCard();
+        if (!card) return false;
+        if (!processor.execFunction("usedoublecard", processor.getCurrentAdventurer()->getName() + " " + card->getName() + " extract")) {
             std::cout << "[MainScene] failed to extract!" << std::endl;
             return false;
         }
@@ -979,10 +982,12 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
             sp->setColor(cocos2d::Color3B(128, 255, 128));
         }
 
-        currentAction = "moveOther_selectArea";
+        if (currentAction == "moveOther_selectAdventurer") currentAction = "moveOther_selectArea";
+        if (currentAction == "moveOther_selectAdventurer_helicopter") currentAction = "moveOther_selectArea_helicopter";
         return;
     }
-    if (currentAction == "moveOther_selectArea") {
+    if (currentAction.find("moveOther_selectArea") != std::string::npos) {
+    //if (currentAction == "moveOther_selectArea") {
         if (moveAdventurer == "") {
             currentAction = "";
             return;
@@ -993,9 +998,19 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
             return;
         }
 
-        if (!processor.execFunction("moveother", processor.getCurrentAdventurer()->getName() + " " + moveAdventurer + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
-            std::cout << "[MainScene] failed to move other adventurer!" << std::endl;
-            return;
+        if (currentAction == "moveOther_selectArea") {
+            if (!processor.execFunction("moveother", processor.getCurrentAdventurer()->getName() + " " + moveAdventurer + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+                std::cout << "[MainScene] failed to move other adventurer!" << std::endl;
+                return;
+            }
+        }
+        if (currentAction == "moveOther_selectArea_helicopter") {
+            MCard* card = adventurerHand2[adventurer]->getReleasedCard();
+            if (!card) return;
+            if (!processor.execFunction("usedoublecard", processor.getCurrentAdventurer()->getName() + " " + card->getName() + " moveother " + moveAdventurer + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
+                std::cout << "[MainScene] failed to move other adventurer!" << std::endl;
+                return;
+            }
         }
 
         int pos[2];
@@ -1045,7 +1060,7 @@ void MMainScene::onMouseDown(cocos2d::Event* event) {
         lbmGridProcess(event);
     }
     if (mouseEvent->getMouseButton() == cocos2d::EventMouse::MouseButton::BUTTON_RIGHT) {
-        if (currentAction.find("use_card") != std::string::npos || currentAction == "moveOther_selectAdventurer_helicopter") {
+        if (currentAction.find("use_card") != std::string::npos || currentAction == "moveOther_selectAdventurer_helicopter" || currentAction == "moveOther_selectArea_helicopter") {
             MAdventurer* adventurer = processor.getCurrentAdventurer();
             MCard* card = adventurerHand2[adventurer]->getReleasedCard();
             adventurerHand2[adventurer]->clearReleasedCard();
@@ -1070,7 +1085,7 @@ void MMainScene::onMouseUp(cocos2d::Event* event) {
             adventurerHand2[adventurer]->disable();
             adventurerHand2[adventurer]->hideCard(card);
             if (card->getName().find("sandbag") != std::string::npos) {
-                //set current action in startAbfluss function
+                //set currentAction in startAbfluss function
                 startAbfluss(true);
             }
             if (card->getName().find("helicopter") != std::string::npos) {
