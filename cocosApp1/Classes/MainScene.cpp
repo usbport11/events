@@ -210,6 +210,7 @@ bool MMainScene::startAbfluss(bool itemUse) {
     return true;
 }
 
+/*
 bool MMainScene::extract() {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     if (!adventurer) return false;
@@ -240,6 +241,8 @@ bool MMainScene::extract() {
 
     return true;
 }
+*/
+
 bool MMainScene::getArtifact() {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
     logStream << "Acton 'get artifact' called for: " << adventurer->getName() << std::endl;
@@ -431,8 +434,9 @@ bool MMainScene::startSwim() {
 }
 
 bool MMainScene::startMoveOther(bool itemUse) {
-    if (processor.getCurrentAdventurer()->getName() != "navigator") return false;
-    logStream << "Acton 'start move other' called for navigator" << std::endl;
+    if (processor.getCurrentAdventurer()->getName() != "navigator" && !itemUse) return false;
+    if (!itemUse) logStream << "Acton 'start move other' called for navigator" << std::endl;
+    else logStream << "Acton 'start move other' called by double card" << std::endl;
 
     MAdventurer* adventurer;
     cocos2d::Sprite* sp;
@@ -448,14 +452,16 @@ bool MMainScene::startMoveOther(bool itemUse) {
         if (!sp) return false;
         sp->setColor(cocos2d::Color3B(128, 255, 128));
     }
-    if(!itemUse) currentAction = "moveOther_selectAdventurer";
+    if (!itemUse) currentAction = "moveOther_selectAdventurer";
     else currentAction = "moveOther_selectAdventurer_helicopter";
     return true;
 }
 
 bool MMainScene::selectDoubleCard(const std::string& value) {
+    std::cout << "[MainScene] option of double card selected" << std::endl;
     doubleCardMenu.hide();
     if (value == "card9") {
+        std::cout << " card9" << std::endl;
         //not tested
         MAdventurer* adventurer = processor.getCurrentAdventurer();
         MCard* card = adventurerHand2[adventurer]->getReleasedCard();
@@ -472,10 +478,12 @@ bool MMainScene::selectDoubleCard(const std::string& value) {
         return true;
     }
     if (value == "card10") {
+        std::cout << " card10" << std::endl;
         //not tested
         startMoveOther(true);
         return true;
     }
+    std::cout << " unknow card" << std::endl;
     return false;
 }
 
@@ -768,8 +776,9 @@ bool MMainScene::reset() {
 }
 
 void MMainScene::adventurerClicked(MAdventurer* adventurer) {
-    logStream << "Adventurer menu clicked" << std::endl;
+    logStream << "Adventurer menu clicked";
     if (!adventurer) return;
+    logStream << ": " << adventurer->getName() << std::endl;
     for (std::map<MAdventurer*, MHand2*>::iterator it = adventurerHand2.begin(); it != adventurerHand2.end(); it++) {
         it->second->hide();
     }
@@ -921,7 +930,7 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
         MCard* card = adventurerHand2[adventurer]->getReleasedCard();
         if (!card) return;
         if (!processor.execFunction("usecard", adventurer->getName() + " " + card->getName() + " " + processor.getAreaByIndex(cell.x, cell.y)->getName())) {
-            std::cout << "[MainScene] failed to use card sandbag by adventurer!" << std::endl;
+            std::cout << "[MainScene] card sandbag by adventurer!" << std::endl;
             return;
         }
         adventurerHand2[adventurer]->clearReleasedCard();
@@ -1022,6 +1031,14 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
         adventurerSprite[moveAdventurer]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
 
         //update menu items
+        if (currentAction == "moveOther_selectArea_helicopter") {
+            MCard* card = adventurerHand2[adventurer]->getReleasedCard();
+            doubleCardMenu.hide();
+            adventurerHand2[adventurer]->clearReleasedCard();
+            adventurerHand2[adventurer]->removeCard(card);
+            adventurerHand2[adventurer]->enable();
+            advMenu.enable();
+        }
         menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
         updateAreas();
         currentAction = "";

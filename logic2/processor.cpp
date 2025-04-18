@@ -309,7 +309,9 @@ bool MProcessor::useCard() {
       if (argsLessLimit(3)) return false;
       if (!execFunction("abfluss", vargs[0] + " " + vargs[2], false)) return false;
     }
-    return false;
+    else {
+      return false;
+    }
   }
   else {
     return false;
@@ -327,16 +329,20 @@ bool MProcessor::useDoubleCard() {
     if (!card) return false;
     if (card->getType() == "item") {
         if (card->getName().find("helicopter") != std::string::npos) {
+            if (vargs[2] != "moveother" && vargs[2] != "extract") {
+                return false;
+            }
             if (vargs[2] == "moveother") {
                 if (argsLessLimit(5)) return false;
-                if (!execFunction("moveother", vargs[3] + " " + vargs[4], false)) return false;
+                if (!execFunction("moveother", vargs[0] + " " + vargs[3] + " " + vargs[4], false)) return false;
             }
             if (vargs[2] == "extract") {
                 if (!execFunction("extract"), false) return false;
             }
+        }
+        else {
             return false;
         }
-        return false;
     }
     else {
         return false;
@@ -574,6 +580,7 @@ MProcessor::MProcessor():extractionArea("adventurers_circle") {
     {"getfloodcard", &MProcessor::getFloodCard},
     {"discard", &MProcessor::discard},
     {"usecard", &MProcessor::useCard},
+    {"usedoublecard", &MProcessor::useDoubleCard},
     {"getartifact", &MProcessor::getArtifact},
     {"fly", &MProcessor::fly},
     {"moveother", &MProcessor::moveOther},

@@ -52,6 +52,7 @@ void MMenu::menuGetArtifactCallback(cocos2d::Ref* pSender) {
     }
 }
 
+/*
 void MMenu::menuExtractCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
     std::cout << " [Menu] Item 'extract' selected" << std::endl;
@@ -59,6 +60,7 @@ void MMenu::menuExtractCallback(cocos2d::Ref* pSender) {
         std::cout << " [Menu] Item 'extract' failed!" << std::endl;
     }
 }
+*/
 
 void MMenu::menuFlyCallback(cocos2d::Ref* pSender) {
     selectMenuItem(pSender);
@@ -91,14 +93,14 @@ bool MMenu::create(MMainScene* _pMainScene) {
 
     pMainScene = _pMainScene;
 
-    std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Extract", "Fly", "Swim", "MoveOther"};//, "Skip"
+    std::string nameList[] = {"EndTurn", "Move", "Abfluss", "HandOver", "GetArtifact", "Fly", "Swim", "MoveOther"};//, "Skip" "Extract", Fly
     std::map<std::string, ccMenuCallback> menuCallback;
     menuCallback["EndTurn"] = CC_CALLBACK_1(MMenu::menuEndTurnCallback, this);
     menuCallback["Move"] = CC_CALLBACK_1(MMenu::menuMoveCallback, this);
     menuCallback["Abfluss"] = CC_CALLBACK_1(MMenu::menuAbflussCallback, this);
     menuCallback["HandOver"] = CC_CALLBACK_1(MMenu::menuHandOverCallback, this);
     menuCallback["GetArtifact"] = CC_CALLBACK_1(MMenu::menuGetArtifactCallback, this);
-    menuCallback["Extract"] = CC_CALLBACK_1(MMenu::menuExtractCallback, this);
+    //menuCallback["Extract"] = CC_CALLBACK_1(MMenu::menuExtractCallback, this);
     menuCallback["Fly"] = CC_CALLBACK_1(MMenu::menuFlyCallback, this);
     menuCallback["Swim"] = CC_CALLBACK_1(MMenu::menuSwimCallback, this);
     menuCallback["MoveOther"] = CC_CALLBACK_1(MMenu::menuMoveOtherCallback, this);
