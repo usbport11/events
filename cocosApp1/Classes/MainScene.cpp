@@ -161,7 +161,7 @@ bool MMainScene::startAbfluss(bool itemUse) {
     if (!adventurer) return false;
     logStream << "Acton 'start abfluss' called for: " << adventurer->getName() << std::endl;
 
-    if (processor.actionNumberLimitReached()) {
+    if (processor.actionNumberLimitReached() && abflussNumber < 1) {
         std::cout << "Can't action. Limit reached" << std::endl;
         return false;
     }
@@ -175,15 +175,20 @@ bool MMainScene::startAbfluss(bool itemUse) {
 
     cocos2d::Sprite* sp;
     std::list<MArea*> areas;
-    if (adventurer->canUseDiagonal()) {
-        areas = adventurer->getArea()->getAllFloodedNeighbors();
-        std::cout << "adventurer can use diagonal" << std::endl;
+    if (!itemUse) {
+        if (adventurer->canUseDiagonal()) {
+            areas = adventurer->getArea()->getAllFloodedNeighbors();
+            std::cout << "adventurer can use diagonal" << std::endl;
+        }
+        else {
+            areas = adventurer->getArea()->getDirectFloodedNeighbors();
+            std::cout << "adventurer can not use diagonal" << std::endl;
+        }
+        if (adventurer->getArea()->getFloodLevel() == 1) areas.push_back(adventurer->getArea());
     }
     else {
-        areas = adventurer->getArea()->getDirectFloodedNeighbors();
-        std::cout << "adventurer can not use diagonal" << std::endl;
+        areas = processor.getFloodAreas();
     }
-    if (adventurer->getArea()->getFloodLevel() == 1) areas.push_back(adventurer->getArea());
     if (areas.empty()) {
         std::cout << " [MainScene] no available to abfluss areas" << std::endl;
         if (itemUse) {
@@ -209,39 +214,6 @@ bool MMainScene::startAbfluss(bool itemUse) {
 
     return true;
 }
-
-/*
-bool MMainScene::extract() {
-    MAdventurer* adventurer = processor.getCurrentAdventurer();
-    if (!adventurer) return false;
-    logStream << "Acton 'extract' called for: " << adventurer->getName() << std::endl;
-
-    if (processor.actionNumberLimitReached()) {
-        std::cout << "Can't action. Limit reached" << std::endl;
-        return false;
-    }
-
-    if (!adventurer) return false;
-    if (adventurer->hasCard("helicopter") && processor.allActiveAdventurersOnArea("adventurers_circle") && processor.allArifactsCollected()) {
-        if (!processor.execFunction("extract")) {
-            std::cout << "[MainScene] failed to extract!" << std::endl;
-            return false;
-        }
-        MEndScene* endScene = (MEndScene*)MEndScene::createScene();
-        if (!endScene) return false;
-        endScene->setMainScene(this);
-        endScene->setMessage("Congratulations!");
-        Director::getInstance()->pushScene(endScene);
-    }
-    else {
-        std::cout << "[MainScene] can't extract. Some condition failed" << std::endl;
-        return false;
-    }
-    currentAction = "";
-
-    return true;
-}
-*/
 
 bool MMainScene::getArtifact() {
     MAdventurer* adventurer = processor.getCurrentAdventurer();
@@ -942,7 +914,6 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
         return;
     }
     if (currentAction.find("moveOther_selectAdventurer") != std::string::npos) {
-    //if (currentAction == "moveOther_selectAdventurer") {
         //need change logic of selection
         //if area hold more than one adventurer - first will be selected
         moveAdventurer = "";
@@ -996,7 +967,6 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
         return;
     }
     if (currentAction.find("moveOther_selectArea") != std::string::npos) {
-    //if (currentAction == "moveOther_selectArea") {
         if (moveAdventurer == "") {
             currentAction = "";
             return;

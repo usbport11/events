@@ -115,6 +115,7 @@ public:
 
   std::vector<std::string> getActiveAdventurers();
   std::list<MArea*> getActiveAreas();
+  std::list<MArea*> getFloodAreas();
   std::deque<std::string> getItemDropDeck();
   std::deque<std::string> getFloodDropDeck();
 
