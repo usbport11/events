@@ -56,18 +56,10 @@ bool MMainScene::endTurn() {
     //update adventurer positions (in case that area drawn)
     std::vector<std::string> adventurers = processor.getActiveAdventurers();
     MAdventurer* nextAdventurer;
-    int pos[2];
-    int num;
-    cocos2d::Vec2 advPos;
     for (int i = 0; i < adventurers.size(); i++) {
         nextAdventurer = processor.findAdventurer(adventurers[i]);
         if (!nextAdventurer) return false;
-        num = getAdventurerNumber(adventurers[i]);
-        pos[0] = (num / 2);
-        pos[0] = pos[0] * 32 - 16;
-        pos[1] = 16 - (num % 2) * 32;
-        advPos = gridMap.getSpriteByAreaName(nextAdventurer->getArea()->getName())->getPosition();
-        adventurerSprite[adventurers[i]]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
+        moveAdventurerSprite(nextAdventurer, -1, gridMap.getSpriteByAreaName(nextAdventurer->getArea()->getName())->getPosition());
     }   
 
     //remove adventurer if it totaly flooded (sprite on grid, sprite on panel)
@@ -518,12 +510,7 @@ bool MMainScene::initAdventurers() {
         if (!area) return false;
         cocos2d::Sprite* sp = gridMap.getSpriteByCell(area->getIndex()[0], area->getIndex()[1]);
         if (!sp) return false;
-
-        pos[0] = i / 2;
-        pos[0] = pos[0] * 32 - 16;
-        pos[1] = 16 - (i % 2) * 32;
-        adventurerSprite[adventurer->getName()]->setPosition(sp->getPosition().x + pos[0], sp->getPosition().y + pos[1]);
-
+        moveAdventurerSprite(adventurer, i, sp->getPosition());
         adventurerSprite[adventurer->getName()]->setVisible(true);
         gridMap.setCurrentCell(gridMap.getCellByCoordinates(sp->getPosition()));
     }
@@ -547,6 +534,18 @@ bool MMainScene::initHand() {
         }
     }
     return true;
+}
+
+void MMainScene::moveAdventurerSprite(MAdventurer* adventurer, int num, cocos2d::Vec2 advPos) {
+    //position of adventurer must be 1/N adventurers number (max N = 4)
+    //16px and 32px must be calculated
+    if (!adventurer) return;
+    int pos[2];
+    if (num == -1) num = getAdventurerNumber(adventurer->getName());
+    pos[0] = (num / 2);
+    pos[0] = pos[0] * 32 - 16;
+    pos[1] = 16 - (num % 2) * 32;
+    adventurerSprite[adventurer->getName()]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
 }
 
 bool MMainScene::initVisual() {
@@ -861,16 +860,7 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
             std::cout << "[MainScene] failed to " << currentAction << " adventurer!" << std::endl;
             return;
         }
-        //position of adventurer must be 1/N adventurers number (max N = 4)
-        //16px and 32px must be calculated
-        int pos[2];
-        int num = getAdventurerNumber(adventurer->getName());
-        pos[0] = (num / 2);
-        pos[0] = pos[0] * 32 - 16;
-        pos[1] = 16 - (num % 2) * 32;
-        cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
-        adventurerSprite[adventurer->getName()]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
-
+        moveAdventurerSprite(adventurer, -1, gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
         //update menu items
         menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
         updateAreas();
@@ -990,25 +980,15 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
                 std::cout << "[MainScene] failed to move other adventurer!" << std::endl;
                 return;
             }
-        }
 
-        int pos[2];
-        int num = getAdventurerNumber(moveAdventurer);
-        pos[0] = (num / 2);
-        pos[0] = pos[0] * 32 - 16;
-        pos[1] = 16 - (num % 2) * 32;
-        cocos2d::Vec2 advPos = gridMap.getSpriteByCell(cell.x, cell.y)->getPosition();
-        adventurerSprite[moveAdventurer]->setPosition(advPos.x + pos[0], advPos.y + pos[1]);
-
-        //update menu items
-        if (currentAction == "moveOther_selectArea_helicopter") {
-            MCard* card = adventurerHand2[adventurer]->getReleasedCard();
             doubleCardMenu.hide();
             adventurerHand2[adventurer]->clearReleasedCard();
             adventurerHand2[adventurer]->removeCard(card);
             adventurerHand2[adventurer]->enable();
             advMenu.enable();
         }
+        moveAdventurerSprite(adventurer, -1, gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
+        //update menu items
         menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
         updateAreas();
         currentAction = "";

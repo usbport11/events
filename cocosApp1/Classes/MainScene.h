@@ -45,6 +45,7 @@ private:
     bool updateActionNumber();
     bool initAdventurers();
     bool initHand();
+    void moveAdventurerSprite(MAdventurer* adventurer, int num, cocos2d::Vec2 advPos);
 public:
     MProcessor* getProcessor();
     ~MMainScene();
