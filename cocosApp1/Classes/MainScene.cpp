@@ -105,6 +105,7 @@ bool MMainScene::endTurn() {
     //update menu items
     menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
     currentAction = "";
+    abflussNumber = 0;
     return true;
 }
 
