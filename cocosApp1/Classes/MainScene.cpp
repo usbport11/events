@@ -501,8 +501,6 @@ bool MMainScene::initAdventurers() {
         adventurerSprite[it->first]->setColor(cocos2d::Color3B(255, 255, 255));
     }
 
-    int pos[2];
-
     std::vector<std::string> activeAdventurers = processor.getActiveAdventurers();
     for (int i = 0; i < activeAdventurers.size(); i++) {
         MAdventurer* adventurer = processor.findAdventurer(activeAdventurers[i]);

@@ -72,9 +72,14 @@ bool MCreditsScene::init() {
 		label = Label::createWithTTF(credits[i], "fonts/Marker Felt.ttf", 24);
 		if (!label) return false;
 		label->setPosition(visibleSize.width / 2, startHeight - i * 32);
-		this->addChild(label);
+		this->addChild(label, 1);
 		creditsLabels.push_back(label);
 	}
+
+	cocos2d::Sprite* backgroungd = Sprite::create("intro.png");
+	backgroungd->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+	backgroungd->setColor(cocos2d::Color3B(64, 64, 64));
+	this->addChild(backgroungd, 0);
 	
 	this->scheduleUpdate();
 	

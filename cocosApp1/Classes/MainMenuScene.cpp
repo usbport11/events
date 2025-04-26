@@ -2,6 +2,8 @@
 #include "MenuItemImageExt.h"
 #include "MainScene.h"
 #include "CreditsScene.h"
+#include "SettingsScene.h"
+#include "RulesScene.h"
 #include <iostream>
 
 USING_NS_CC;
@@ -28,16 +30,16 @@ bool MMainMenuScene::create(MMainScene* _pMainScene, bool begin) {
 	float offset;
 
 	int len;
-	const std::string nameListBegin[4] = { "Start", "Settings", "Credits", "Quit" };
-	const std::string nameListResume[5] = { "Resume", "Restart", "Settings", "Credits", "Quit" };
+	const std::string nameListBegin[] = { "Start", "Settings", "Rules", "Credits", "Quit" };
+	const std::string nameListResume[] = { "Resume", "Restart", "Settings", "Rules", "Credits", "Quit" };
 	std::string* nameList;
 	if (begin) {
 		nameList = (std::string*)nameListBegin;
-		len = 4;
+		len = 5;
 	}
 	else {
 		nameList = (std::string*)nameListResume;
-		len = 5;
+		len = 6;
 	}
 
 	std::map<std::string, ccMenuCallback> menuCallback;
@@ -45,6 +47,7 @@ bool MMainMenuScene::create(MMainScene* _pMainScene, bool begin) {
 	menuCallback["Resume"] = CC_CALLBACK_1(MMainMenuScene::resumeCallback, this);
 	menuCallback["Restart"] = CC_CALLBACK_1(MMainMenuScene::restartCallback, this);
 	menuCallback["Settings"] = CC_CALLBACK_1(MMainMenuScene::settingsCallback, this);
+	menuCallback["Rules"] = CC_CALLBACK_1(MMainMenuScene::rulesCallback, this);
 	menuCallback["Credits"] = CC_CALLBACK_1(MMainMenuScene::creditsCallback, this);
 	menuCallback["Quit"] = CC_CALLBACK_1(MMainMenuScene::quitCallback, this);
 
@@ -96,13 +99,21 @@ void MMainMenuScene::restartCallback(cocos2d::Ref* pSender) {
 }
 
 void MMainMenuScene::settingsCallback(cocos2d::Ref* pSender) {
-	//todo
+	MSettingsScene* settingsScene = (MSettingsScene*)MSettingsScene::createScene();
+	if (!settingsScene) return;
+	Director::getInstance()->pushScene(settingsScene);
 }
 
 void MMainMenuScene::creditsCallback(cocos2d::Ref* pSender) {
 	MCreditsScene* creditsScene = (MCreditsScene*)MCreditsScene::createScene();
 	if (!creditsScene) return;
 	Director::getInstance()->pushScene(creditsScene);
+}
+
+void MMainMenuScene::rulesCallback(cocos2d::Ref* pSender) {
+	MRulesScene* rulesScene = (MRulesScene*)MRulesScene::createScene();
+	if (!rulesScene) return;
+	Director::getInstance()->pushScene(rulesScene);
 }
 
 void MMainMenuScene::quitCallback(cocos2d::Ref* pSender) {

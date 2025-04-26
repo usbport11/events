@@ -13,6 +13,7 @@ private:
 	void restartCallback(cocos2d::Ref* pSender);
 	void settingsCallback(cocos2d::Ref* pSender);
 	void creditsCallback(cocos2d::Ref* pSender);
+	void rulesCallback(cocos2d::Ref* pSender);
 	void quitCallback(cocos2d::Ref* pSender);
 public:
     static cocos2d::Scene* createScene();
