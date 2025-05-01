@@ -1,4 +1,5 @@
 #include "TestScene.h"
+#include "ui/CocosGUI.h"
 #include <iostream>
 
 USING_NS_CC;
@@ -19,6 +20,7 @@ bool MTestScene::init() {
 	if(!Scene::init()) return false;
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
 	cocos2d::EventListenerMouse* mouseListener = EventListenerMouse::create();
     mouseListener->onMouseDown = CC_CALLBACK_1(MTestScene::onMouseDown, this);

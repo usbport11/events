@@ -610,20 +610,21 @@ bool MMainScene::initVisual() {
     if (!gridMap.create(this, "anim/cells.plist", gridSize, 24, cocos2d::Size(250, 200), cocos2d::Size(96, 96))) return false;
 
     logStream << "Create adventurers menu and empty hands" << std::endl;
+    if (!createAnimSpritePackFromPlist(this, "anim/adven2.plist", "adventurer_", "adven_", 6, 4, 0.2f)) return false;
     //hands + adventurers sprites
     std::map<std::string, MObject*> adventurers = processor.getAdventurers();
     std::vector<std::string> advs;
     int i = 0;
     for (std::map<std::string, MObject*>::iterator it = adventurers.begin(); it != adventurers.end(); it++) {
         hands2.push_back(new MHand2);
-        if (!createAnimSpriteFromPlist(this, "anim/adven1.plist", it->first + "_anim", "adven", 4, 0.2f)) {
-            return false;
-        }
-        adventurerSprite[it->first] = (cocos2d::Sprite*) this->getChildByName(it->first + "_anim");
+        memset(buffer, 0, 32);
+        snprintf(buffer, 32, "adventurer_%d", i);
+        adventurerSprite[it->first] = (cocos2d::Sprite*)this->getChildByName(buffer);
         adventurerSprite[it->first]->setPosition(0, 0);
         adventurerSprite[it->first]->setVisible(false);
-        adventurerSprite[it->first]->setScale(2.0);
+        adventurerSprite[it->first]->setScale(1.5);
         advs.push_back(it->first);
+        i++;
     }
 
     //adventurers menu
@@ -698,12 +699,12 @@ bool MMainScene::reset() {
     std::cout << "###  Next start" << std::endl;
     std::cout << "##############################################################################" << std::endl;
 
-    
     itemDeck.reset();
     floodDeck.reset();
-    waterLevel.reset();
+    waterLevel.setCurrent(2.1);
 
     processor.setAdventurersNumber(3);
+    processor.setFloodLevel(2);
 
     logStream << "##############################################################################" << std::endl;
     logStream << "Exec start" << std::endl;
@@ -986,7 +987,7 @@ void  MMainScene::lbmGridProcess(cocos2d::Event* event) {
             adventurerHand2[adventurer]->enable();
             advMenu.enable();
         }
-        moveAdventurerSprite(adventurer, -1, gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
+        moveAdventurerSprite(processor.findAdventurer(moveAdventurer), -1, gridMap.getSpriteByCell(cell.x, cell.y)->getPosition());
         //update menu items
         menu.updateStatuses(processor.getAvailableActions(processor.getCurrentAdventurer()));
         updateAreas();

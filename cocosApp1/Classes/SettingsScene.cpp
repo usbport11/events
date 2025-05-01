@@ -108,9 +108,7 @@ void MSettingsScene::adventurersNumberTouchCallback(Ref* sender, cocos2d::ui::Wi
 	cocos2d::Label* itemLabel;
 	switch (type) {
 	case ui::Widget::TouchEventType::ENDED:
-		std::cout << "slider stop move at " << slider->getPercent() << "percent" << std::endl;
 		slider->setPercent(floorPercent(slider->getPercent()));
-		std::cout << "Stick to: " << slider->getPercent() << "percent" << std::endl;
 		itemLabel = (cocos2d::Label*)this->getChildByName("lbl_slider_adv");
 		memset(buffer, 0, 32);
 		snprintf(buffer, 32, "Advenurers number: %d", slider->getPercent()/33 + 1);
@@ -127,9 +125,7 @@ void MSettingsScene::waterLevelTouchCallback(Ref* sender, cocos2d::ui::Widget::T
 	cocos2d::Label* itemLabel;
 	switch (type) {
 	case ui::Widget::TouchEventType::ENDED:
-		std::cout << "slider stop move at " << slider->getPercent() << "percent" << std::endl;
 		slider->setPercent(floorPercent(slider->getPercent()));
-		std::cout << "Stick to: " << slider->getPercent() << "percent" << std::endl;
 		itemLabel = (cocos2d::Label*)this->getChildByName("lbl_slider_wtr");
 		memset(buffer, 0, 32);
 		snprintf(buffer, 32, "Water level: %d", slider->getPercent() / 33 + 1);
@@ -143,10 +139,8 @@ void MSettingsScene::waterLevelTouchCallback(Ref* sender, cocos2d::ui::Widget::T
 void MSettingsScene::musicTouchCallback(Ref* sender, cocos2d::ui::Widget::TouchEventType type) {
 	switch (type) {
 	case ui::Widget::TouchEventType::BEGAN:
-		std::cout << "slider start move" << std::endl;
 		break;
 	case ui::Widget::TouchEventType::ENDED:
-		std::cout << "slider stop move" << std::endl;
 		break;
 	default:
 		break;

@@ -16,7 +16,6 @@ class MArea;
 class MAdventurer;
 class MCard;
 class MArtifact;
-class MUI;
 
 class MProcessor {
 private:
@@ -37,8 +36,6 @@ private:
   std::map<std::string, bptr> functions;
   std::vector<std::string> vargs;
   std::string sargs;
-
-  MUI* ui;
 
   const std::string extractionArea;
   std::map<std::string, MObject*> areas;
@@ -104,6 +101,8 @@ public:
 
   bool adventureFailed();
   void setAdventurersNumber(int number);
+  void setFloodLevel(int number);
+  float getFloodLevel();
   void getSwimAreas(MArea* area, std::vector<std::string>& result, int level = 0);
 
   MArea* findArea(const std::string& name);
@@ -121,7 +120,7 @@ public:
 
   MAdventurer* getCurrentAdventurer();
   MArea* getAreaByIndex(int x, int y);
-  float getFloodLevel();
+
   int getCurrentActionNumber();
   bool actionNumberLimitReached();
   bool allActiveAdventurersOnArea(const std::string& name);

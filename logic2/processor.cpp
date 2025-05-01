@@ -4,7 +4,6 @@
 #include "adventurer.h"
 #include "card.h"
 #include "artifact.h"
-#include "ui.h"
 
 #include <chrono>
 #include <iostream>
@@ -568,8 +567,6 @@ MProcessor::MProcessor():extractionArea("adventurers_circle") {
   long nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).time_since_epoch().count();
   rng.seed(nsec);
 
-  ui = new MUI;
-
   functions = {{"start", &MProcessor::start},
     {"move", &MProcessor::move},
     {"abfluss", &MProcessor::abfluss},
@@ -677,8 +674,6 @@ MProcessor::~MProcessor() {
     }
     artifacts.clear();
 
-    if (ui) delete ui;
-
     itemDeck.clear();
     itemDropDeck.clear();
     floodDeck.clear();
@@ -734,6 +729,10 @@ bool MProcessor::adventureFailed() {
 void MProcessor::setAdventurersNumber(int number) {
     if (number <= 0 || number > ADVENTURES_LIMIT) adventurersNumber = 1;
     else adventurersNumber = number;
+}
+
+void MProcessor::setFloodLevel(int number) {
+    floodLevel = 0.1 + number;
 }
 
 bool MProcessor::execFunction(const std::string& name, const std::string& _sargs, bool increase) {

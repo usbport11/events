@@ -21,6 +21,7 @@ bool createAnimSpriteFromPlist(cocos2d::Scene* scene, const std::string& fileNam
     }
 
     cocos2d::Sprite* animSprite = cocos2d::Sprite::createWithSpriteFrame(animFrames.front());
+    if (!animSprite) return false;
     animSprite->setName(spriteName);
     animSprite->getTexture()->setAliasTexParameters();
     cocos2d::Animation* animation = cocos2d::Animation::createWithSpriteFrames(animFrames, step);
@@ -28,6 +29,44 @@ bool createAnimSpriteFromPlist(cocos2d::Scene* scene, const std::string& fileNam
     animSprite->runAction(cocos2d::RepeatForever::create(animate));
     scene->addChild(animSprite, 1);
     animFrames.clear();
+
+    return true;
+}
+
+bool createAnimSpritePackFromPlist(cocos2d::Scene* scene, const std::string& fileName, const std::string& spritePrefix, const std::string& framePrefix, int spriteCount, int framesCount, float step) {
+    if (fileName.empty() || spritePrefix.empty() || framePrefix.empty() || spriteCount <= 0 || framesCount <= 0) {
+        return false;
+    }
+    cocos2d::SpriteFrameCache* spritecache = cocos2d::SpriteFrameCache::getInstance();
+    if (!spritecache) {
+        return false;
+    }
+
+    cocos2d::Vector<cocos2d::SpriteFrame*> animFrames;
+    spritecache->addSpriteFramesWithFile(fileName);
+    std::string key;
+    char buffer[32];
+    for (int k = 0; k < spriteCount; k++) {
+        for (int i = k * framesCount; i < k * framesCount + framesCount; i++) {
+            memset(buffer, 0, 32);
+            snprintf(buffer, 32, "%d", i);
+            key = framePrefix + buffer;
+            animFrames.pushBack(spritecache->getSpriteFrameByName(key));
+        }
+        cocos2d::Sprite* animSprite = cocos2d::Sprite::createWithSpriteFrame(animFrames.front());
+        if (!animSprite) return false;
+        memset(buffer, 0, 32);
+        snprintf(buffer, 32, "%d", k);
+        key = spritePrefix + buffer;
+        animSprite->setName(key);
+        animSprite->getTexture()->setAliasTexParameters();
+        cocos2d::Animation* animation = cocos2d::Animation::createWithSpriteFrames(animFrames, step);
+        cocos2d::Animate* animate = cocos2d::Animate::create(animation);
+        animSprite->runAction(cocos2d::RepeatForever::create(animate));
+        animSprite->setPosition(-64, -64);
+        scene->addChild(animSprite, 1);
+        animFrames.clear();
+    }
 
     return true;
 }
